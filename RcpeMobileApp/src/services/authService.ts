@@ -1,3 +1,8 @@
+/**
+ * @file authService.ts
+ * @description Service for handling authentication logic, including login, logout,
+ * token storage (using AsyncStorage), and token refresh operations.
+ */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios'; // Assuming api.ts will handle base URL and interceptors
 

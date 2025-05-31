@@ -1,3 +1,9 @@
+/**
+ * @file api.ts
+ * @description Configures the main Axios instance for API communication.
+ * Includes interceptors to automatically attach JWT tokens to requests
+ * and handle token refresh logic using authService.
+ */
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import authService from './authService'; // Ensure this path is correct
 

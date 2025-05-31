@@ -1,3 +1,9 @@
+/**
+ * @file PushNotificationService.ts
+ * @description Service for managing push notifications using react-native-push-notification.
+ * Handles configuration, permission requests, token retrieval, local notifications,
+ * and setting up channels (for Android).
+ */
 import PushNotification, { Importance } from 'react-native-push-notification';
 import { Platform } from 'react-native';
 
