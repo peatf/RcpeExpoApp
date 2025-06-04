@@ -1,0 +1,44 @@
+{
+  "name": "rcpeexpoapp",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "web": "expo start --web"
+  },
+  "dependencies": {
+    "@expo/metro-runtime": "~5.0.4",
+    "@expo/vector-icons": "^14.1.0",
+    "@react-native-async-storage/async-storage": "^2.1.2",
+    "@react-native-community/slider": "^4.5.7",
+    "@react-navigation/bottom-tabs": "^7.3.14",
+    "@react-navigation/native": "^7.1.10",
+    "@react-navigation/stack": "^7.3.3",
+    "axios": "^1.9.0",
+    "cors": "^2.8.5",
+    "expo": "~53.0.9",
+    "expo-clipboard": "~7.1.4",
+    "expo-constants": "^17.1.6",
+    "expo-status-bar": "~2.2.3",
+    "express": "^5.1.0",
+    "node-fetch": "^3.3.2",
+    "react": "19.0.0",
+    "react-dom": "^19.0.0",
+    "react-native": "0.79.2",
+    "react-native-elements": "^3.4.3",
+    "react-native-gesture-handler": "~2.24.0",
+    "react-native-safe-area-context": "^5.4.0",
+    "react-native-screens": "~4.11.1",
+    "react-native-vector-icons": "^10.2.0",
+    "react-native-web": "^0.20.0",
+    "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.25.2",
+    "@types/react": "~19.0.10",
+    "typescript": "~5.8.3"
+  },
+  "private": true
+}
