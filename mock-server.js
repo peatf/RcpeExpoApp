@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const { v4: uuidv4 } = require('uuid');
+const { validateProfileLines, validateGCenterAccess } = require('./mock-server-validators');
 
 const app = express();
 const PORT = 3001;
@@ -462,9 +463,9 @@ app.get('/api/v1/profiles/:profileId/base_chart', async (req, res) => {
       hd_type: 'Manifestor', // Example, can be made dynamic
       typology_pair_key: 'ENFP-Leo', // Example, can be made dynamic
       energy_family: {
-        profile_lines: '6/2',
-        conscious_line: 6,
-        unconscious_line: 2,
+        profile_lines: '6/2', // Valid Human Design profile
+        conscious_line: 6,    // Matches first digit of profile_lines
+        unconscious_line: 2,  // Matches second digit of profile_lines
         astro_sun_sign: sunSign,
         astro_sun_house: birthData.birth_time?.startsWith('09') ? 3 : 5,
         astro_north_node_sign: 'Gemini',
@@ -489,14 +490,25 @@ app.get('/api/v1/profiles/:profileId/base_chart', async (req, res) => {
       manifestation_interface_rhythm: profile.manifestation_interface_rhythm || {},
       energy_architecture: profile.energy_architecture || {},
       tension_points: profile.tension_points || {},
-      evolutionary_path: profile.evolutionary_path || {},
+      evolutionary_path: profile.evolutionary_path || {
+        g_center_access: 'Fixed Identity', // Valid values: 'Fixed Identity' or 'Fluid Identity'
+        incarnation_cross: 'Right Angle Cross of Eden',
+        astro_north_node_sign: 'Gemini',
+        astro_north_node_house: 3,
+        conscious_line: 6, // Should match conscious_line in energy_family
+        unconscious_line: 2, // Should match unconscious_line in energy_family
+        core_priorities: ['Expression', 'Connection', 'Growth']
+      },
       dominant_mastery_values: masteryValues,
       manifestation_dimensions: profile.manifestation_dimensions || {} // Add default
     };
     
+    // Validate the mock base chart data
+    const validatedBaseChart = validateGCenterAccess(validateProfileLines(mockBaseChart));
+    
     res.json({
       status: 'success',
-      data: mockBaseChart
+      data: validatedBaseChart
     });
   } catch (error) {
     console.error('Error fetching profile base chart:', error);

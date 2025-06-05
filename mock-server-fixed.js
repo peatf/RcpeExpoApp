@@ -885,6 +885,503 @@ function calculateAstrologyFromBirthData(birthData) {
   return 'Leo';
 }
 
+// AI Service endpoints
+const sessions = new Map();
+
+// Initialize AI session
+app.post('/api/v1/ai/sessions/initialize', async (req, res) => {
+  console.log('🤖 AI session initialization request:', req.body);
+  
+  try {
+    const { user_id, session_id, tool_name, started_at } = req.body;
+    
+    const session = {
+      user_id,
+      session_id,
+      tool_name,
+      started_at: started_at || new Date().toISOString(),
+      status: 'active',
+      steps: []
+    };
+    
+    sessions.set(session_id, session);
+    
+    res.json({
+      status: 'success',
+      session_id,
+      message: 'Session initialized successfully'
+    });
+  } catch (error) {
+    console.error('Error initializing AI session:', error);
+    res.status(500).json({ error: 'Failed to initialize session' });
+  }
+});
+
+// Generate AI response for frequency mapper
+app.post('/api/v1/ai/frequency-mapper/generate', async (req, res) => {
+  console.log('🤖 AI frequency mapper generate request:', req.body);
+  
+  try {
+    const { template_id, inputs, drive_mechanics, session_id } = req.body;
+    
+    // Simulate processing delay
+    await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1500));
+    
+    // Generate response based on template_id
+    let response;
+    switch (template_id) {
+      case 'fm_initial_reflection_v2':
+        response = {
+          reflection_insight: `Based on your ${drive_mechanics?.motivation_color || 'unique'} energy, I sense you're seeking alignment with your deeper nature.`,
+          deepening_questions: [
+            "What sensations would you feel in your body if this desire were realized?",
+            "How would fulfilling this feel different from your current state?",
+            "What's the essence of what you're truly seeking beneath the surface details?"
+          ],
+          energetic_observation: `Your statement carries a ${drive_mechanics?.kinetic_drive_spectrum === 'Steady' ? 'grounded, consistent' : 'dynamic, flowing'} energy signature.`
+        };
+        break;
+      
+      case 'fm_directional_choices_v2':
+        response = {
+          choice_a: {
+            title: "Moving toward growth",
+            description: "This path focuses on actively expanding into new territory.",
+            energy_quality: "Expansive"
+          },
+          choice_b: {
+            title: "Releasing what limits",
+            description: "This path emphasizes letting go of what no longer serves you.",
+            energy_quality: "Liberating"
+          },
+          choice_context: `Your ${drive_mechanics?.motivation_color || 'unique'} motivation offers these complementary approaches.`
+        };
+        break;
+      
+      case 'fm_experiential_choices_v2':
+        response = {
+          choice_a: {
+            title: "Harmonious and balanced",
+            description: "A state where all elements of your experience align in perfect proportion.",
+            energy_quality: "Balanced"
+          },
+          choice_b: {
+            title: "Vibrant and expressive",
+            description: "A state where your authentic self shines through without limitation.",
+            energy_quality: "Authentic"
+          },
+          choice_context: `These options reflect different qualities of experience that resonate with your ${drive_mechanics?.venus_sign || 'unique'} way of processing value.`
+        };
+        break;
+      
+      case 'fm_essence_choices_v2':
+        response = {
+          choice_a: {
+            title: "Confidently authentic",
+            description: "A state of being fully aligned with your true nature.",
+            energy_quality: "Aligned"
+          },
+          choice_b: {
+            title: "Harmoniously connected",
+            description: "A state of deep resonance with others and your environment.",
+            energy_quality: "Resonant"
+          },
+          choice_context: "These core qualities represent different aspects of fulfillment based on your energy pattern."
+        };
+        break;
+      
+      case 'fm_final_crystallization_v2':
+        const essenceBlend = inputs.refinement_path?.filter(Boolean).join(' while ') || 'aligned and flowing';
+        response = {
+          desired_state: `I am ${essenceBlend}, expressing my authentic nature with confidence and flow`,
+          energetic_quality: "A harmonious blend of creative energy with grounded security that creates sustainable fulfillment.",
+          sensation_preview: "Like a warm current flowing through your body, creating gentle expansion in your chest while keeping you grounded.",
+          drive_mechanics_connection: "Your unique energy pattern creates this special blend of expression and security, perfectly aligned with your natural rhythms.",
+          calibration_preparation: "Now let's explore how aligned you currently are with this desired state, revealing your optimal path forward."
+        };
+        break;
+      
+      default:
+        response = {
+          message: "Response generated successfully",
+          template_id,
+          processed_at: new Date().toISOString()
+        };
+    }
+    
+    res.json({
+      status: 'success',
+      data: response,
+      session_id,
+      template_id
+    });
+  } catch (error) {
+    console.error('Error generating AI response:', error);
+    res.status(500).json({ error: 'Failed to generate AI response' });
+  }
+});
+
+// Update AI session progress
+app.post('/api/v1/ai/sessions/update', async (req, res) => {
+  console.log('🤖 AI session update request:', req.body);
+  
+  try {
+    const { session_id, step, data, timestamp } = req.body;
+    
+    const session = sessions.get(session_id);
+    if (session) {
+      session.steps.push({
+        step,
+        data,
+        timestamp: timestamp || new Date().toISOString()
+      });
+      session.updated_at = new Date().toISOString();
+    }
+    
+    res.json({
+      status: 'success',
+      message: 'Session updated successfully'
+    });
+  } catch (error) {
+    console.error('Error updating AI session:', error);
+    res.status(500).json({ error: 'Failed to update session' });
+  }
+});
+
+// Complete AI session
+app.post('/api/v1/ai/sessions/complete', async (req, res) => {
+  console.log('🤖 AI session completion request:', req.body);
+  
+  try {
+    const { session_id, final_output, next_tool, completed_at } = req.body;
+    
+    const session = sessions.get(session_id);
+    if (session) {
+      session.status = 'completed';
+      session.final_output = final_output;
+      session.completed_at = completed_at || new Date().toISOString();
+      session.next_tool = next_tool;
+    }
+    
+    const nextSessionId = next_tool ? uuidv4() : null;
+    
+    res.json({
+      status: 'success',
+      handoff_prepared: !!next_tool,
+      next_session_id: nextSessionId,
+      message: 'Session completed successfully'
+    });
+  } catch (error) {
+    console.error('Error completing AI session:', error);
+    res.status(500).json({ error: 'Failed to complete session' });
+  }
+});
+
+// Get frequency mapper output for calibration tool
+app.get('/api/v1/ai/sessions/:sessionId/frequency-mapper-output', async (req, res) => {
+  console.log('🤖 Frequency mapper output request for session:', req.params.sessionId);
+  
+  try {
+    const session = sessions.get(req.params.sessionId);
+    
+    if (!session) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+    
+    // Mock frequency mapper output for calibration tool
+    const mockOutput = {
+      desired_state: "I am confidently authentic while harmoniously connected, expressing my true nature with flow",
+      energetic_quality: "A harmonious blend of creative energy with grounded security that creates sustainable fulfillment.",
+      sensation_preview: "Like a warm current flowing through your body, creating gentle expansion in your chest while keeping you grounded.",
+      drive_mechanics_connection: "Your unique energy pattern creates this special blend of expression and security, perfectly aligned with your natural rhythms.",
+      refinement_path: ["confidently authentic", "harmoniously connected"],
+      raw_statement: session.final_output?.raw_statement || "I want to feel more aligned and authentic in my daily life"
+    };
+    
+    res.json({
+      status: 'success',
+      data: {
+        frequency_mapper_output: mockOutput
+      },
+      session_id: req.params.sessionId
+    });
+  } catch (error) {
+    console.error('Error fetching frequency mapper output:', error);
+    res.status(500).json({ error: 'Failed to fetch frequency mapper output' });
+  }
+});
+
+// Generate personalized sliders for calibration tool
+app.post('/api/v1/ai/calibration-tool/generate-sliders', async (req, res) => {
+  console.log('🎚️ Generate personalized sliders request:', req.body);
+  
+  try {
+    const { template_id, frequency_mapper_context, processing_core_summary, tension_points_summary } = req.body;
+    
+    // Simulate processing delay
+    await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000));
+    
+    // Generate personalized sliders based on frequency mapper context
+    const desired_state = frequency_mapper_context?.desired_state || "aligned and authentic";
+    const energetic_quality = frequency_mapper_context?.energetic_quality || "harmonious energy";
+    
+    const personalizedSliders = {
+      belief_slider: {
+        label: `Belief: Trusting "${desired_state}" is Possible`,
+        anchor_min: "Feels impossible",
+        anchor_max: "Totally possible",
+        microcopy: `Feel into whether you trust that "${desired_state}" can happen right now.`,
+        reflection_prompt: `When you think about "${desired_state}", what evidence do you see that it's achievable?`,
+        processing_core_note: `Your processing style shows intuitive knowing patterns.`
+      },
+      openness_slider: {
+        label: `Openness: Willing to Receive Support`,
+        anchor_min: "Completely closed",
+        anchor_max: "Totally open",
+        microcopy: `How willing are you to receive guidance and support toward "${desired_state}"?`,
+        reflection_prompt: `What part of you resists the "${energetic_quality}" energy of your desired state?`,
+        processing_core_note: `Your emotional authority suggests receiving support through trusted advisors.`
+      },
+      worthiness_slider: {
+        label: `Worthiness: Deserving This Experience`,
+        anchor_min: "Totally unworthy",
+        anchor_max: "Completely worthy",
+        microcopy: `How worthy do you feel to experience "${desired_state}"?`,
+        reflection_prompt: `What stories do you tell yourself about whether you deserve "${energetic_quality}"?`,
+        processing_core_note: `Your processing shows patterns around self-worth and authentic expression.`
+      },
+      embodiment_slider: {
+        label: `Embodiment: Feeling It in Your Body`,
+        anchor_min: "Disconnected",
+        anchor_max: "Fully embodied",
+        microcopy: `How connected do you feel to the physical sensation of "${desired_state}"?`,
+        reflection_prompt: `Where in your body do you feel the "${energetic_quality}" energy most strongly?`,
+        processing_core_note: `Your kinesthetic processing style supports body-based calibration.`
+      },
+      action_slider: {
+        label: `Action: Ready to Move Forward`,
+        anchor_min: "Stuck in place",
+        anchor_max: "Ready to act",
+        microcopy: `How ready are you to take action toward "${desired_state}"?`,
+        reflection_prompt: `What's the smallest step you could take today toward experiencing more "${energetic_quality}"?`,
+        processing_core_note: `Your natural strategy suggests timing and clarity before action.`
+      }
+    };
+    
+    res.json({
+      status: 'success',
+      data: personalizedSliders,
+      template_id
+    });
+  } catch (error) {
+    console.error('Error generating personalized sliders:', error);
+    res.status(500).json({ error: 'Failed to generate personalized sliders' });
+  }
+});
+
+// Generate integrated recommendation for calibration tool
+app.post('/api/v1/ai/calibration-tool/generate-recommendation', async (req, res) => {
+  console.log('🎯 Generate integrated recommendation request:', req.body);
+  
+  try {
+    const { calibration_data, frequency_mapper_context, processing_core_summary } = req.body;
+    
+    // Simulate processing delay
+    await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 1000));
+    
+    // Generate recommendation based on calibration results
+    const recommendation = {
+      overall_calibration_score: Math.round((Math.random() * 0.4 + 0.6) * 100), // 60-100%
+      key_insights: [
+        "Your belief patterns show strong potential for growth in authenticity",
+        "Openness to support is a significant strength for your journey",
+        "Embodiment practices will accelerate your manifestation abilities"
+      ],
+      priority_focus_areas: [
+        {
+          area: "Embodiment Practices",
+          current_level: calibration_data?.embodiment || 0.7,
+          recommendation: "Daily body awareness exercises to strengthen your connection to your desired state",
+          impact_potential: "High"
+        },
+        {
+          area: "Belief Strengthening", 
+          current_level: calibration_data?.belief || 0.6,
+          recommendation: "Evidence journaling to build trust in your desired state's possibility",
+          impact_potential: "Medium"
+        }
+      ],
+      next_steps: [
+        "Begin daily 5-minute embodiment practice",
+        "Create evidence journal for your desired state",
+        "Practice receiving support from trusted sources"
+      ],
+      oracle_preparation: {
+        readiness_score: 85,
+        personalized_approach: "Intuitive guidance with practical action steps",
+        focus_themes: ["embodied authenticity", "supported growth", "conscious manifestation"]
+      }
+    };
+    
+    res.json({
+      status: 'success',
+      data: recommendation
+    });
+  } catch (error) {
+    console.error('Error generating integrated recommendation:', error);
+    res.status(500).json({ error: 'Failed to generate integrated recommendation' });
+  }
+});
+
+// Prepare Oracle handoff from calibration tool
+app.post('/api/v1/ai/calibration-tool/prepare-oracle', async (req, res) => {
+  console.log('🔮 Prepare Oracle handoff request:', req.body);
+  
+  try {
+    const { calibration_data, recommendation, frequency_mapper_context } = req.body;
+    
+    // Create handoff data structure for Oracle
+    const oracleHandoff = {
+      handoff_id: uuidv4(),
+      source_tool: 'calibration_tool',
+      user_journey: {
+        frequency_mapper_output: frequency_mapper_context,
+        calibration_results: calibration_data,
+        integrated_recommendation: recommendation
+      },
+      oracle_context: {
+        primary_intention: frequency_mapper_context?.desired_state || "aligned and authentic",
+        calibration_insights: recommendation?.key_insights || [],
+        readiness_indicators: {
+          belief_level: calibration_data?.belief || 0.7,
+          openness_level: calibration_data?.openness || 0.8,
+          embodiment_level: calibration_data?.embodiment || 0.6
+        },
+        focus_areas: recommendation?.focus_themes || ["authenticity", "growth", "manifestation"]
+      },
+      session_metadata: {
+        created_at: new Date().toISOString(),
+        tools_completed: ['frequency_mapper', 'calibration_tool'],
+        next_tool: 'oracle'
+      }
+    };
+    
+    res.json({
+      status: 'success',
+      data: oracleHandoff
+    });
+  } catch (error) {
+    console.error('Error preparing Oracle handoff:', error);
+    res.status(500).json({ error: 'Failed to prepare Oracle handoff' });
+  }
+});
+
+// Initialize Oracle from calibration tool
+app.post('/api/v1/ai/oracle/initialize-from-calibration', async (req, res) => {
+  console.log('🔮 Initialize Oracle from calibration request:', req.body);
+  
+  try {
+    const { handoff_data } = req.body;
+    
+    // Simulate processing delay
+    await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000));
+    
+    // Create Oracle initialization based on calibration handoff
+    const oracleInitialization = {
+      oracle_session_id: uuidv4(),
+      personalized_greeting: `Welcome to your Oracle Wisdom session. Based on your journey toward "${handoff_data.oracle_context.primary_intention}", I'm here to provide guidance for your next steps.`,
+      available_spreads: [
+        {
+          id: 'manifestation_pathway',
+          name: 'Manifestation Pathway',
+          description: 'Reveals the optimal path for manifesting your desired state',
+          card_count: 3,
+          focus: 'action_oriented'
+        },
+        {
+          id: 'inner_wisdom',
+          name: 'Inner Wisdom Guidance', 
+          description: 'Connects you with your intuitive knowing about next steps',
+          card_count: 5,
+          focus: 'intuitive_insight'
+        },
+        {
+          id: 'alignment_check',
+          name: 'Alignment Check',
+          description: 'Shows where you are in harmony and where adjustments are needed',
+          card_count: 4,
+          focus: 'calibration_based'
+        }
+      ],
+      context_summary: {
+        journey_stage: 'Ready for Oracle guidance',
+        tools_completed: handoff_data.session_metadata.tools_completed,
+        calibration_readiness: handoff_data.oracle_context.readiness_indicators,
+        primary_focus: handoff_data.oracle_context.primary_intention
+      },
+      preparation_complete: true
+    };
+    
+    res.json({
+      status: 'success',
+      data: oracleInitialization
+    });
+  } catch (error) {
+    console.error('Error initializing Oracle from calibration:', error);
+    res.status(500).json({ error: 'Failed to initialize Oracle from calibration' });
+  }
+});
+
+// Get processing core summary for calibration tool
+app.get('/api/v1/users/:userId/processing-core-summary', async (req, res) => {
+  console.log('🧠 Processing core summary request for user:', req.params.userId);
+  
+  try {
+    const userId = req.params.userId;
+    
+    // Check for authorization header
+    const authUserId = getUserIdFromAuth(req);
+    if (!authUserId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+    
+    // Check if user matches or use auth user
+    const targetUserId = userId === authUserId ? userId : authUserId;
+    
+    // Mock processing core summary data
+    const mockProcessingCoreSummary = {
+      processing_core_summary: {
+        emotional_authority: "You process decisions through emotional waves, needing time for clarity.",
+        cognitive_style: "Analytical and detail-oriented with strong pattern recognition.",
+        energy_processing: "Steady and consistent energy flow with periodic renewal needs.",
+        information_intake: "Visual and kinesthetic learning with preference for structured information.",
+        decision_timing: "Benefits from sleeping on important decisions, especially emotional ones."
+      },
+      decision_growth_summary: {
+        natural_strategy: "Wait for emotional clarity before making significant decisions.",
+        growth_areas: ["Trust in timing", "Emotional intelligence", "Patience with process"],
+        strengths: ["Deep wisdom", "Authentic choices", "Emotional depth"],
+        optimal_conditions: "Quiet reflection time, trusted advisors, written processing."
+      },
+      tension_points_summary: {
+        pressure_points: ["Rushed decisions", "Emotional overwhelm", "Unclear boundaries"],
+        manifestation_blocks: ["Self-doubt", "Perfectionism", "Fear of judgment"],
+        calibration_opportunities: ["Daily emotional check-ins", "Boundary setting", "Intuitive validation"],
+        growth_edges: ["Leadership confidence", "Creative expression", "Authentic communication"]
+      }
+    };
+    
+    res.json({
+      status: 'success',
+      data: mockProcessingCoreSummary,
+      user_id: targetUserId
+    });
+  } catch (error) {
+    console.error('Error fetching processing core summary:', error);
+    res.status(500).json({ error: 'Failed to fetch processing core summary' });
+  }
+});
+
 // Start server
 console.log('🔧 Setting up server...');
 const server = app.listen(PORT, '0.0.0.0', () => {
@@ -896,6 +1393,16 @@ const server = app.listen(PORT, '0.0.0.0', () => {
   console.log('  GET  /api/v1/charts/base/:userId - Fetch base chart for user (legacy)');
   console.log('  GET  /api/v1/user-data/users/me/profiles - Fetch user profiles');
   console.log('  GET  /api/v1/profiles/:profileId/base_chart - Fetch profile-based base chart');
+  console.log('  POST /api/v1/ai/sessions/initialize - Initialize AI session');
+  console.log('  POST /api/v1/ai/frequency-mapper/generate - Generate AI frequency mapper response');
+  console.log('  POST /api/v1/ai/sessions/update - Update AI session progress');
+  console.log('  POST /api/v1/ai/sessions/complete - Complete AI session');
+  console.log('  GET  /api/v1/ai/sessions/:sessionId/frequency-mapper-output - Get frequency mapper output');
+  console.log('  POST /api/v1/ai/calibration-tool/generate-sliders - Generate personalized calibration sliders');
+  console.log('  POST /api/v1/ai/calibration-tool/generate-recommendation - Generate integrated recommendation');
+  console.log('  POST /api/v1/ai/calibration-tool/prepare-oracle - Prepare Oracle handoff');
+  console.log('  POST /api/v1/ai/oracle/initialize-from-calibration - Initialize Oracle from calibration');
+  console.log('  GET  /api/v1/users/:userId/processing-core-summary - Get processing core summary');
   console.log(`🎯 Default profile created with ID: ${defaultProfileId}`);
 });
 

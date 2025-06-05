@@ -25,6 +25,7 @@ export interface BaseChartData {
     astro_sun_house: number;
     astro_north_node_sign?: string;
   };
+// No duplicate declaration needed
   energy_class: {
     ascendant_sign: string;
     chart_ruler_sign: string;
@@ -353,6 +354,10 @@ export const baseChartService = {
   getChartSections: (
     data: BaseChartData,
   ): Array<{title: string; data: any}> => {
+    // Validate data before processing
+    data = baseChartService.validateProfileLines(data);
+    data = baseChartService.validateGCenterAccess(data);
+
     const sections = [];
 
     // Map the comprehensive backend data to display sections
@@ -494,6 +499,77 @@ export const baseChartService = {
 
     return sections;
   },
+
+  /**
+   * Validates profile lines to ensure they match a valid Human Design profile
+   * Valid profiles: 1/3, 1/4, 2/4, 2/5, 3/5, 3/6, 4/6, 4/1, 5/1, 5/2, 6/2, 6/3
+   */
+  validateProfileLines: (data: BaseChartData): BaseChartData => {
+    if (data.energy_family) {
+      const profileLines = data.energy_family.profile_lines;
+      
+      if (profileLines) {
+        // Parse profile line values
+        const [conscLine, uncLine] = profileLines.split('/').map(Number);
+        
+        // Valid HD profile combinations
+        const validProfiles = [
+          [1,3], [1,4], [2,4], [2,5], [3,5], [3,6],
+          [4,6], [4,1], [5,1], [5,2], [6,2], [6,3]
+        ];
+        
+        const isValid = validProfiles.some(([c, u]) => c === conscLine && u === uncLine);
+        
+        // If invalid profile, fix to a default valid profile
+        if (!isValid) {
+          console.warn(`Invalid profile lines ${profileLines}, using default 1/3`);
+          data.energy_family.profile_lines = "1/3";
+          data.energy_family.conscious_line = 1;
+          data.energy_family.unconscious_line = 3;
+          
+          // Also fix in evolutionary path if present
+          if (data.evolutionary_path) {
+            data.evolutionary_path.conscious_line = 1;
+            data.evolutionary_path.unconscious_line = 3;
+          }
+        } else {
+          // Ensure consistency between profile_lines and conscious/unconscious lines
+          if (data.energy_family.conscious_line !== conscLine) {
+            data.energy_family.conscious_line = conscLine;
+          }
+          
+          if (data.energy_family.unconscious_line !== uncLine) {
+            data.energy_family.unconscious_line = uncLine;
+          }
+          
+          // Also ensure consistency in evolutionary path if present
+          if (data.evolutionary_path) {
+            data.evolutionary_path.conscious_line = conscLine;
+            data.evolutionary_path.unconscious_line = uncLine;
+          }
+        }
+      }
+    }
+    
+    return data;
+  },
+
+  /**
+   * Validates G Center access to ensure it has a proper value
+   */
+  validateGCenterAccess: (data: BaseChartData): BaseChartData => {
+    if (data.evolutionary_path) {
+      const gCenterAccess = data.evolutionary_path.g_center_access;
+      
+      // If g_center_access is missing or invalid, set it to a default
+      if (!gCenterAccess || !['Fixed Identity', 'Fluid Identity'].includes(gCenterAccess)) {
+        console.warn(`Invalid G Center Access: ${gCenterAccess}, using default 'Fixed Identity'`);
+        data.evolutionary_path.g_center_access = 'Fixed Identity';
+      }
+    }
+    
+    return data;
+  }
 };
 
 export default baseChartService;

@@ -123,8 +123,15 @@ export type RootStackParamList = {
 export type MainTabParamList = {
   Dashboard: undefined;
   FrequencyMapper: undefined;
-  CalibrationTool: undefined;
-  Oracle: undefined;
+  CalibrationTool: {
+    sessionId?: string;
+    frequencyMapperOutput?: FrequencyMapperOutput;
+    previousTool?: 'frequency_mapper';
+  } | undefined;
+  Oracle: {
+    handoffData?: any;
+    previousTool?: 'calibration' | 'frequency_mapper';
+  } | undefined;
   UserBaseChart: undefined;
   ProfileCreation: undefined;
 };
@@ -161,4 +168,145 @@ export interface ConnectionTestResult {
   error?: string;
   timestamp: number;
   latency?: number;
+}
+
+// AI Tool Session Management types
+export interface AIToolSession {
+  user_id: string;
+  session_id: string;
+  current_tool: 'frequency_mapper' | 'calibration_tool' | 'oracle';
+  started_at: string;
+  tools_completed: string[];
+  frequency_mapper_output?: FrequencyMapperOutput;
+  calibration_tool_output?: CalibrationToolOutput;
+  oracle_output?: OracleOutput;
+}
+
+// Frequency Mapper specific types
+export interface FrequencyMapperOutput {
+  desired_state: string;
+  source_statement: string;
+  mapped_drive_mechanic: string;
+  contextual_energy_family: string;
+  energetic_quality: string;
+  sensation_preview: string;
+  refinement_path: string[];
+  session_metadata: {
+    session_id: string;
+    completion_timestamp: string;
+    rounds_completed: number;
+  };
+}
+
+export interface ReflectionOutput {
+  reflection_insight: string;
+  deepening_questions: string[];
+  energetic_observation: string;
+}
+
+export interface ChoiceOption {
+  title: string;
+  description: string;
+  energy_quality: string;
+}
+
+export interface ChoiceOutput {
+  choice_a: ChoiceOption;
+  choice_b: ChoiceOption;
+  choice_context: string;
+}
+
+export interface CrystallizationOutput {
+  desired_state: string;
+  energetic_quality: string;
+  sensation_preview: string;
+  drive_mechanics_connection: string;
+  calibration_preparation: string;
+}
+
+// Enhanced Calibration Tool Types
+export interface CalibrationSliderValues {
+  belief: number;
+  openness: number;
+  worthiness: number;
+}
+
+export interface CalibrationReflections {
+  belief_reflection: string;
+  openness_reflection: string;
+  worthiness_reflection: string;
+}
+
+export interface CalibrationPathRecommendation {
+  recommended_path: 'shadow' | 'expansion' | 'balanced';
+  path_reasoning: string;
+  oracle_preparation: {
+    primary_focus_area: 'belief' | 'openness' | 'worthiness';
+    energy_signature: string;
+    processing_style: string;
+    specific_shadow_theme?: string;
+    expansion_leverage_point?: string;
+  };
+}
+
+export interface CalibrationToolOutput {
+  perceptual_map: CalibrationSliderValues;
+  reflections: CalibrationReflections;
+  path_recommendation: CalibrationPathRecommendation;
+  processing_core_alignment: any;
+  map_summary: string;
+  core_insights: string[];
+  micro_plan: {
+    step1: string;
+    step2: string;
+    step3: string;
+  };
+  button_ctas: {
+    oracle_ready: string;
+    save_progress: string;
+  };
+}
+
+// Oracle Output (placeholder for future implementation)
+export interface OracleOutput {
+  guidance_type: 'quest' | 'hint' | 'reflection';
+  content: string;
+  personalization_applied: Record<string, any>;
+}
+
+// Drive Mechanics types for enhanced personalization
+export type MotivationColor = 'Need' | 'Want' | 'Desire' | 'Transfer';
+export type HeartState = 'Defined' | 'Undefined';
+export type RootState = 'Defined' | 'Undefined';
+export type VenusSign = 'Aries' | 'Taurus' | 'Gemini' | 'Cancer' | 'Leo' | 'Virgo' | 'Libra' | 'Scorpio' | 'Sagittarius' | 'Capricorn' | 'Aquarius' | 'Pisces';
+export type KineticDriveSpectrum = 'Steady' | 'Dynamic';
+
+export interface DriveProfile {
+  motivation_color?: MotivationColor;
+  heart_state?: HeartState;
+  root_state?: RootState;
+  venus_sign?: VenusSign;
+  kinetic_drive_spectrum?: KineticDriveSpectrum;
+  resonance_field_spectrum?: string;
+}
+
+// AI Template interfaces
+export interface AITemplateInputs {
+  raw_statement: string;
+  drive_mechanic_summary: string;
+  motivation_color?: string;
+  heart_state?: string;
+  venus_sign?: string;
+  previous_choices?: string[];
+  round_type?: string;
+  refinement_path?: string[];
+  energy_family_summary?: string;
+}
+
+export interface AIServiceResponse<T = any> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  session_id?: string;
+  timestamp?: string;
 }

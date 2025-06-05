@@ -6,7 +6,8 @@
     "start": "expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "dev": "zsh dev-start.sh"
   },
   "dependencies": {
     "@expo/metro-runtime": "~5.0.4",
@@ -16,6 +17,7 @@
     "@react-navigation/bottom-tabs": "^7.3.14",
     "@react-navigation/native": "^7.1.10",
     "@react-navigation/stack": "^7.3.3",
+    "@types/uuid": "^10.0.0",
     "axios": "^1.9.0",
     "cors": "^2.8.5",
     "expo": "~53.0.9",
