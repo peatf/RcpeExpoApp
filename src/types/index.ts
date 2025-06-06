@@ -134,6 +134,13 @@ export type MainTabParamList = {
   } | undefined;
   UserBaseChart: undefined;
   ProfileCreation: undefined;
+  LivingLog: undefined;
+  WaveWitness: undefined;
+  ResponseIntelligence: undefined;
+  ProjectFlowDynamics: undefined;
+  ImpulseIntegration: undefined;
+  RecognitionNavigation: undefined;
+  EnvironmentalAttunement: undefined; // Added now
 };
 
 // Screen props

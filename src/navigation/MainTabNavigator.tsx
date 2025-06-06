@@ -11,6 +11,13 @@ import CalibrationToolScreen from '../screens/Main/CalibrationToolScreen';
 import OracleScreen from '../screens/Main/OracleScreen';
 import UserBaseChartScreen from '../screens/Main/UserBaseChartScreen';
 import ProfileCreationScreen from '../screens/Main/ProfileCreationScreen';
+import LivingLogScreen from '../screens/Main/HumanDesignTools/LivingLogScreen';
+import WaveWitnessScreen from '../screens/Main/HumanDesignTools/WaveWitnessScreen';
+import ResponseIntelligenceScreen from '../screens/Main/HumanDesignTools/ResponseIntelligenceScreen';
+import ProjectFlowDynamicsScreen from '../screens/Main/HumanDesignTools/ProjectFlowDynamicsScreen';
+import ImpulseIntegrationScreen from '../screens/Main/HumanDesignTools/ImpulseIntegrationScreen';
+import RecognitionNavigationScreen from '../screens/Main/HumanDesignTools/RecognitionNavigationScreen';
+import EnvironmentalAttunementScreen from '../screens/Main/HumanDesignTools/EnvironmentalAttunementScreen'; // Import EnvironmentalAttunementScreen
 import {MainTabParamList} from '../types';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -40,6 +47,27 @@ const MainTabNavigator: React.FC = () => {
               break;
             case 'ProfileCreation':
               iconName = focused ? 'person-add' : 'person-add-outline';
+              break;
+            case 'LivingLog':
+              iconName = focused ? 'journal' : 'journal-outline';
+              break;
+            case 'WaveWitness':
+              iconName = focused ? 'pulse' : 'pulse-outline';
+              break;
+            case 'ResponseIntelligence':
+              iconName = focused ? 'flash' : 'flash-outline';
+              break;
+            case 'ProjectFlowDynamics':
+              iconName = focused ? 'git-network' : 'git-network-outline';
+              break;
+            case 'ImpulseIntegration':
+              iconName = focused ? 'bulb' : 'bulb-outline';
+              break;
+            case 'RecognitionNavigation':
+              iconName = focused ? 'magnet' : 'magnet-outline';
+              break;
+            case 'EnvironmentalAttunement':
+              iconName = focused ? 'moon' : 'moon-outline';
               break;
             default:
               iconName = 'help-outline';
@@ -97,6 +125,55 @@ const MainTabNavigator: React.FC = () => {
         component={ProfileCreationScreen}
         options={{
           tabBarLabel: 'Profile',
+        }}
+      />
+      <Tab.Screen
+        name="LivingLog"
+        component={LivingLogScreen}
+        options={{
+          tabBarLabel: 'Living Log',
+        }}
+      />
+      <Tab.Screen
+        name="WaveWitness"
+        component={WaveWitnessScreen}
+        options={{
+          tabBarLabel: 'Wave Witness',
+        }}
+      />
+      <Tab.Screen
+        name="ResponseIntelligence"
+        component={ResponseIntelligenceScreen}
+        options={{
+          tabBarLabel: 'Response Intel',
+        }}
+      />
+      <Tab.Screen
+        name="ProjectFlowDynamics"
+        component={ProjectFlowDynamicsScreen}
+        options={{
+          tabBarLabel: 'Project Flow',
+        }}
+      />
+      <Tab.Screen
+        name="ImpulseIntegration"
+        component={ImpulseIntegrationScreen}
+        options={{
+          tabBarLabel: 'Impulse Intel',
+        }}
+      />
+      <Tab.Screen
+        name="RecognitionNavigation"
+        component={RecognitionNavigationScreen}
+        options={{
+          tabBarLabel: 'Recognition Nav',
+        }}
+      />
+      <Tab.Screen
+        name="EnvironmentalAttunement"
+        component={EnvironmentalAttunementScreen}
+        options={{
+          tabBarLabel: 'Env. Tune',
         }}
       />
     </Tab.Navigator>
