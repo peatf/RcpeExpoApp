@@ -31,8 +31,9 @@ const LivingLogScreen: React.FC = () => {
       // Convert enum to string for the service call, if your service expects string
       const authorityString = MOCK_USER_AUTHORITY.toString();
       const patternsData = await livingLogService.getLogPatterns("month", authorityString);
-      setPatterns(patternsData.patterns);
-      setInsights(patternsData.insights);
+      // Filter out any undefined patterns before updating state
+      setPatterns(patternsData.patterns.filter(pattern => pattern !== undefined && pattern !== null));
+      setInsights(patternsData.insights || []);
 
     } catch (error) {
       console.error("Error loading log data:", error);
@@ -94,12 +95,17 @@ const LivingLogScreen: React.FC = () => {
     <LogListItem entry={item} onPress={() => handleLogItemPress(item.id)} />
   );
 
-  const renderPattern = ({ item }: { item: LivingLogPattern }) => (
-     <InsightDisplay
-        insightText={item.description}
-        source={`Pattern Type: ${item.patternType} (Confidence: ${item.confidence.toFixed(2)})`}
+  // Helper function to render a pattern - modified to take pattern directly
+  const renderPattern = (pattern: LivingLogPattern, index: number) => {
+    if (!pattern) return null;
+    return (
+      <InsightDisplay
+        key={`pattern-${index}`}
+        insightText={pattern.description}
+        source={`Pattern Type: ${pattern.patternType} (Confidence: ${pattern.confidence.toFixed(2)})`}
       />
-  );
+    );
+  };
 
   const renderInsight = (insight: string, index: number) => (
     <InsightDisplay

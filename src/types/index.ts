@@ -140,7 +140,8 @@ export type MainTabParamList = {
   ProjectFlowDynamics: undefined;
   ImpulseIntegration: undefined;
   RecognitionNavigation: undefined;
-  EnvironmentalAttunement: undefined; // Added now
+  EnvironmentalAttunement: undefined;
+  PatternRecognitionEngine: undefined;
 };
 
 // Screen props

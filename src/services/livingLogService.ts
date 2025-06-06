@@ -26,8 +26,11 @@ const apiClient = {
     if (endpoint === '/api/v1/logs/patterns') {
       const mockPatterns: LivingLogPattern[] = [
         { id: 'p1', description: 'Tendency to have creative ideas in the morning.', confidence: 0.8, relatedEntryIds: ['2'], authorityType: 'Emotional', patternType: 'idea-timing', discoveredAt: new Date().toISOString() },
+        // Add more mock patterns here as needed
       ];
-      return new Promise((resolve) => setTimeout(() => resolve({ data: { patterns: mockPatterns, insights: ['You often get ideas early in the day.'] } as any }), 500));
+      // Filter out any potential undefined values to prevent rendering issues
+      const filteredPatterns = mockPatterns.filter(pattern => pattern !== undefined && pattern !== null);
+      return new Promise((resolve) => setTimeout(() => resolve({ data: { patterns: filteredPatterns, insights: ['You often get ideas early in the day.'] } as any }), 500));
     }
     return Promise.reject(new Error(`Unknown GET endpoint: ${endpoint}`));
   },

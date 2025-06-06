@@ -23,9 +23,15 @@ export interface InsightDisplayProps {
  * @returns {JSX.Element} A view that highlights an insight.
  */
 const InsightDisplay: React.FC<InsightDisplayProps> = ({ insightText, source }) => {
+  // Dynamic styles based on props
+  const insightTextStyle = {
+    ...styles.insightText,
+    marginBottom: source ? 8 : 0, // Add margin only if source is present
+  };
+
   return (
     <View style={styles.container}>
-      <Text style={styles.insightText}>{insightText}</Text>
+      <Text style={insightTextStyle}>{insightText}</Text>
       {source && <Text style={styles.sourceText}>Source: {source}</Text>}
     </View>
   );
@@ -44,7 +50,7 @@ const styles = StyleSheet.create({
   insightText: {
     fontSize: 16,
     color: '#023e7d', // Darker blue for text
-    marginBottom: source ? 8 : 0, // Add margin only if source is present
+    marginBottom: 8, // Standard bottom margin
     lineHeight: 22,
   },
   sourceText: {

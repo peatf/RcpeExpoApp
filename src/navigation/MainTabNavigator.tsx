@@ -17,7 +17,8 @@ import ResponseIntelligenceScreen from '../screens/Main/HumanDesignTools/Respons
 import ProjectFlowDynamicsScreen from '../screens/Main/HumanDesignTools/ProjectFlowDynamicsScreen';
 import ImpulseIntegrationScreen from '../screens/Main/HumanDesignTools/ImpulseIntegrationScreen';
 import RecognitionNavigationScreen from '../screens/Main/HumanDesignTools/RecognitionNavigationScreen';
-import EnvironmentalAttunementScreen from '../screens/Main/HumanDesignTools/EnvironmentalAttunementScreen'; // Import EnvironmentalAttunementScreen
+import EnvironmentalAttunementScreen from '../screens/Main/HumanDesignTools/EnvironmentalAttunementScreen';
+import PatternRecognitionEngineScreen from '../screens/Main/HumanDesignTools/PatternRecognitionEngineScreen';
 import {MainTabParamList} from '../types';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -68,6 +69,9 @@ const MainTabNavigator: React.FC = () => {
               break;
             case 'EnvironmentalAttunement':
               iconName = focused ? 'moon' : 'moon-outline';
+              break;
+            case 'PatternRecognitionEngine':
+              iconName = focused ? 'analytics' : 'analytics-outline';
               break;
             default:
               iconName = 'help-outline';
@@ -174,6 +178,13 @@ const MainTabNavigator: React.FC = () => {
         component={EnvironmentalAttunementScreen}
         options={{
           tabBarLabel: 'Env. Tune',
+        }}
+      />
+      <Tab.Screen
+        name="PatternRecognitionEngine"
+        component={PatternRecognitionEngineScreen}
+        options={{
+          tabBarLabel: 'Pattern Engine',
         }}
       />
     </Tab.Navigator>
