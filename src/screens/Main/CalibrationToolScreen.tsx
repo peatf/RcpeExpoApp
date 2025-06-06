@@ -49,18 +49,24 @@ const CalibrationToolScreen: React.FC<CalibrationToolScreenProps> = ({navigation
   // Slider state
   const [sliderValues, setSliderValues] = useState<SliderValues>({
     belief: 0.5,
+    belief_logical: 0.5,
     openness: 0.5,
+    openness_acceptance: 0.5,
     worthiness: 0.5,
+    worthiness_receiving: 0.5,
   });
   const [personalizedSliders, setPersonalizedSliders] = useState<PersonalizedSliderSet | null>(null);
 
   // Reflection state
   const [reflections, setReflections] = useState<CalibrationReflections>({
     belief_reflection: '',
+    belief_logical_reflection: '',
     openness_reflection: '',
+    openness_acceptance_reflection: '',
     worthiness_reflection: '',
+    worthiness_receiving_reflection: '',
   });
-  const [currentReflectionStep, setCurrentReflectionStep] = useState<'belief' | 'openness' | 'worthiness'>('belief');
+  const [currentReflectionStep, setCurrentReflectionStep] = useState<'belief' | 'belief_logical' | 'openness' | 'openness_acceptance' | 'worthiness' | 'worthiness_receiving'>('belief');
 
   // Results state
   const [recommendation, setRecommendation] = useState<IntegratedCalibrationRecommendation | null>(null);
@@ -186,7 +192,7 @@ const CalibrationToolScreen: React.FC<CalibrationToolScreenProps> = ({navigation
 
   // Process next reflection step
   const handleNextReflection = () => {
-    const steps: Array<keyof CalibrationReflections> = ['belief', 'openness', 'worthiness'];
+    const steps: Array<'belief' | 'belief_logical' | 'openness' | 'openness_acceptance' | 'worthiness' | 'worthiness_receiving'> = ['belief', 'belief_logical', 'openness', 'openness_acceptance', 'worthiness', 'worthiness_receiving'];
     const currentIndex = steps.indexOf(currentReflectionStep);
     
     if (currentIndex < steps.length - 1) {
@@ -342,26 +348,26 @@ const CalibrationToolScreen: React.FC<CalibrationToolScreenProps> = ({navigation
         <View style={styles.calibrationExplanation}>
           <Text style={styles.explanationTitle}>Now let's calibrate your alignment</Text>
           <Text style={styles.explanationText}>
-            We'll measure where you stand across three key dimensions:
+            We'll measure where you stand across six key dimensions:
           </Text>
           
           <View style={styles.dimensionsList}>
             <View style={styles.dimensionItem}>
               <Ionicons name="checkmark-circle" size={20} color="#007AFF" />
               <Text style={styles.dimensionText}>
-                <Text style={styles.dimensionLabel}>Belief</Text> - How much you trust it's possible
+                <Text style={styles.dimensionLabel}>Belief</Text> - How much you trust it's possible & logical
               </Text>
             </View>
             <View style={styles.dimensionItem}>
               <Ionicons name="heart-circle" size={20} color="#007AFF" />
               <Text style={styles.dimensionText}>
-                <Text style={styles.dimensionLabel}>Openness</Text> - Willingness to receive support
+                <Text style={styles.dimensionLabel}>Openness</Text> - Willingness to receive & accept current reality
               </Text>
             </View>
             <View style={styles.dimensionItem}>
               <Ionicons name="star-outline" size={20} color="#007AFF" />
               <Text style={styles.dimensionText}>
-                <Text style={styles.dimensionLabel}>Worthiness</Text> - How much you feel you deserve it
+                <Text style={styles.dimensionLabel}>Worthiness</Text> - How much you deserve it & comfort receiving
               </Text>
             </View>
           </View>
@@ -430,8 +436,11 @@ const CalibrationToolScreen: React.FC<CalibrationToolScreenProps> = ({navigation
       </Text>
       
       {renderSlider('belief')}
+      {renderSlider('belief_logical')}
       {renderSlider('openness')}
+      {renderSlider('openness_acceptance')}
       {renderSlider('worthiness')}
+      {renderSlider('worthiness_receiving')}
       
       <TouchableOpacity
         style={styles.continueButton}
@@ -448,12 +457,25 @@ const CalibrationToolScreen: React.FC<CalibrationToolScreenProps> = ({navigation
     if (!personalizedSliders) return null;
     
     const currentSlider = personalizedSliders[`${currentReflectionStep}_slider`];
-    const isLastStep = currentReflectionStep === 'worthiness';
+    const isLastStep = currentReflectionStep === 'worthiness_receiving';
+    
+    // Format the step name for display
+    const getFormattedStepName = (step: string) => {
+      const names: Record<string, string> = {
+        'belief': 'Belief',
+        'belief_logical': 'Logical Belief',
+        'openness': 'Openness',
+        'openness_acceptance': 'Acceptance',
+        'worthiness': 'Worthiness',
+        'worthiness_receiving': 'Receiving Comfort'
+      };
+      return names[step] || step;
+    };
     
     return (
       <View style={styles.reflectionContainer}>
         <Text style={styles.stepTitle}>
-          Reflect on {currentReflectionStep.charAt(0).toUpperCase() + currentReflectionStep.slice(1)}
+          Reflect on {getFormattedStepName(currentReflectionStep)}
         </Text>
         
         <View style={styles.reflectionCard}>

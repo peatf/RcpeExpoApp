@@ -1150,21 +1150,45 @@ app.post('/api/v1/ai/calibration-tool/generate-sliders', async (req, res) => {
         reflection_prompt: `What stories do you tell yourself about whether you deserve "${energetic_quality}"?`,
         processing_core_note: `Your processing shows patterns around self-worth and authentic expression.`
       },
-      embodiment_slider: {
-        label: `Embodiment: Feeling It in Your Body`,
-        anchor_min: "Disconnected",
-        anchor_max: "Fully embodied",
-        microcopy: `How connected do you feel to the physical sensation of "${desired_state}"?`,
-        reflection_prompt: `Where in your body do you feel the "${energetic_quality}" energy most strongly?`,
-        processing_core_note: `Your kinesthetic processing style supports body-based calibration.`
+      belief_logical_slider: {
+        label: `Belief: Receiving "${desired_state}" Makes Sense`,
+        anchor_min: "Illogical",
+        anchor_max: "Makes perfect sense",
+        microcopy: `Does it make logical sense that you could receive "${desired_state}"?`,
+        reflection_prompt: `What logical reasons support or oppose you experiencing "${desired_state}"?`,
+        processing_core_note: `Your cognitive style influences how you rationalize possibilities.`
       },
-      action_slider: {
-        label: `Action: Ready to Move Forward`,
-        anchor_min: "Stuck in place",
-        anchor_max: "Ready to act",
-        microcopy: `How ready are you to take action toward "${desired_state}"?`,
-        reflection_prompt: `What's the smallest step you could take today toward experiencing more "${energetic_quality}"?`,
-        processing_core_note: `Your natural strategy suggests timing and clarity before action.`
+      openness_slider: {
+        label: `Openness: Willing to Receive Support`,
+        anchor_min: "Completely closed",
+        anchor_max: "Totally open",
+        microcopy: `How willing are you to receive guidance and support toward "${desired_state}"?`,
+        reflection_prompt: `What part of you resists the "${energetic_quality}" energy of your desired state?`,
+        processing_core_note: `Your emotional authority suggests receiving support through trusted advisors.`
+      },
+      openness_acceptance_slider: {
+        label: `Openness: Accepting Your Current Reality`,
+        anchor_min: "Rejecting reality",
+        anchor_max: "Fully accepting",
+        microcopy: `How well do you accept where you are right now on your journey?`,
+        reflection_prompt: `What aspects of your current reality feel hard to accept regarding "${desired_state}"?`,
+        processing_core_note: `Acceptance creates the foundation for authentic transformation.`
+      },
+      worthiness_slider: {
+        label: `Worthiness: Deserving This Experience`,
+        anchor_min: "Totally unworthy",
+        anchor_max: "Completely worthy",
+        microcopy: `How worthy do you feel to experience "${desired_state}"?`,
+        reflection_prompt: `What stories do you tell yourself about whether you deserve "${energetic_quality}"?`,
+        processing_core_note: `Your processing shows patterns around self-worth and authentic expression.`
+      },
+      worthiness_receiving_slider: {
+        label: `Worthiness: Comfortable with Receiving`,
+        anchor_min: "Uncomfortable receiving",
+        anchor_max: "Comfortable receiving",
+        microcopy: `How comfortable do you feel receiving support while working toward "${desired_state}"?`,
+        reflection_prompt: `What makes receiving support feel uncomfortable or natural for you?`,
+        processing_core_note: `Your ability to receive reflects your relationship with your own value.`
       }
     };
     

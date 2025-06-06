@@ -29,14 +29,20 @@ export interface FrequencyMapperHandoff {
 
 export interface SliderValues {
   belief: number;
+  belief_logical: number;
   openness: number;
+  openness_acceptance: number;
   worthiness: number;
+  worthiness_receiving: number;
 }
 
 export interface CalibrationReflections {
   belief_reflection: string;
+  belief_logical_reflection: string;
   openness_reflection: string;
+  openness_acceptance_reflection: string;
   worthiness_reflection: string;
+  worthiness_receiving_reflection: string;
 }
 
 export interface EnhancedSliderUI {
@@ -50,15 +56,18 @@ export interface EnhancedSliderUI {
 
 export interface PersonalizedSliderSet {
   belief_slider: EnhancedSliderUI;
+  belief_logical_slider: EnhancedSliderUI;
   openness_slider: EnhancedSliderUI;
+  openness_acceptance_slider: EnhancedSliderUI;
   worthiness_slider: EnhancedSliderUI;
+  worthiness_receiving_slider: EnhancedSliderUI;
 }
 
 export interface PathRecommendation {
   recommended_path: 'shadow' | 'expansion' | 'balanced';
   path_reasoning: string;
   oracle_preparation: {
-    primary_focus_area: 'belief' | 'openness' | 'worthiness';
+    primary_focus_area: 'belief' | 'belief_logical' | 'openness' | 'openness_acceptance' | 'worthiness' | 'worthiness_receiving';
     energy_signature: string;
     processing_style: string;
     specific_shadow_theme?: string;
@@ -129,10 +138,12 @@ export const aiCalibrationToolService = {
       // Get Processing Core data
       const processingCorePromise = apiClient.get(`/api/v1/users/${userId}/processing-core-summary`);
       
-      const [response, processingCoreResponse] = await Promise.race([
+      const responses = await Promise.race([
         Promise.all([responsePromise, processingCorePromise]),
         timeoutPromise
-      ]);
+      ]) as [any, any];
+      
+      const [response, processingCoreResponse] = responses;
       
       return {
         session_id: sessionId,
@@ -167,7 +178,7 @@ export const aiCalibrationToolService = {
         tension_points_summary: handoffData.tension_points_summary
       });
 
-      const response = await Promise.race([apiPromise, timeoutPromise]);
+      const response = await Promise.race([apiPromise, timeoutPromise]) as any;
       // Extract data from API response if it's wrapped
       return response.data.data || response.data;
     } catch (error) {
@@ -202,7 +213,7 @@ export const aiCalibrationToolService = {
         reflections: reflections
       });
 
-      const response = await Promise.race([apiPromise, timeoutPromise]);
+      const response = await Promise.race([apiPromise, timeoutPromise]) as any;
       return response.data;
     } catch (error) {
       console.warn('Failed to generate integrated recommendation, using fallback:', error);
@@ -230,7 +241,7 @@ export const aiCalibrationToolService = {
         calibration_results: calibrationResults
       });
 
-      const response = await Promise.race([apiPromise, timeoutPromise]);
+      const response = await Promise.race([apiPromise, timeoutPromise]) as any;
       return response.data;
     } catch (error) {
       console.warn('Oracle handoff preparation failed, using local data:', error);
@@ -288,7 +299,15 @@ async function simulatePersonalizedSliders(
       anchor_max: `Totally possible`,
       microcopy: `Feel into whether you trust that "${desired_state}" can happen right now.`,
       reflection_prompt: `When you think about "${desired_state}", what evidence do you see that it's achievable?`,
-      processing_core_note: `Your processing style shows ${processingCore.includes('logical') ? 'analytical trust patterns' : 'intuitive knowing patterns'}.`
+      processing_core_note: `Your processing style shows ${typeof processingCore === 'string' && processingCore.includes('logical') ? 'analytical trust patterns' : 'intuitive knowing patterns'}.`
+    },
+    belief_logical_slider: {
+      label: `Belief: Receiving "${desired_state}" Makes Sense`,
+      anchor_min: "Illogical",
+      anchor_max: "Makes perfect sense",
+      microcopy: `Does it make logical sense that you could receive "${desired_state}"?`,
+      reflection_prompt: `What logical reasons support or oppose you experiencing "${desired_state}"?`,
+      processing_core_note: `Your cognitive style influences how you rationalize possibilities.`
     },
     openness_slider: {
       label: `Openness: Willing to Receive Support`,
@@ -296,7 +315,15 @@ async function simulatePersonalizedSliders(
       anchor_max: "Totally open",
       microcopy: `How willing are you to receive guidance and support toward "${desired_state}"?`,
       reflection_prompt: `What part of you resists the "${energetic_quality}" energy of your desired state?`,
-      processing_core_note: `Your authority type shows ${processingCore.includes('defined') ? 'clear decision-making patterns' : 'flow-responsive openness patterns'}.`
+      processing_core_note: `Your authority type shows ${typeof processingCore === 'string' && processingCore.includes('defined') ? 'clear decision-making patterns' : 'flow-responsive openness patterns'}.`
+    },
+    openness_acceptance_slider: {
+      label: `Openness: Accepting Your Current Reality`,
+      anchor_min: "Rejecting reality",
+      anchor_max: "Fully accepting",
+      microcopy: `How well do you accept where you are right now on your journey?`,
+      reflection_prompt: `What aspects of your current reality feel hard to accept regarding "${desired_state}"?`,
+      processing_core_note: `Acceptance creates the foundation for authentic transformation.`
     },
     worthiness_slider: {
       label: `Worthiness: Deserving This Experience`,
@@ -304,7 +331,15 @@ async function simulatePersonalizedSliders(
       anchor_max: "Completely worthy",
       microcopy: `Do you feel worthy of experiencing "${sensation_preview}"?`,
       reflection_prompt: `What belief about your value makes experiencing "${sensation_preview}" feel out of reach?`,
-      processing_core_note: `Your chart shows ${handoffData.tension_points_summary.includes('self-worth') ? 'areas for compassionate self-value work' : 'natural self-acceptance patterns'}.`
+      processing_core_note: `Your chart shows ${typeof handoffData.tension_points_summary === 'string' && handoffData.tension_points_summary.includes('self-worth') ? 'areas for compassionate self-value work' : 'natural self-acceptance patterns'}.`
+    },
+    worthiness_receiving_slider: {
+      label: `Worthiness: Comfortable with Receiving`,
+      anchor_min: "Uncomfortable receiving",
+      anchor_max: "Comfortable receiving",
+      microcopy: `How comfortable do you feel receiving support while working toward "${desired_state}"?`,
+      reflection_prompt: `What makes receiving support feel uncomfortable or natural for you?`,
+      processing_core_note: `Your ability to receive reflects your relationship with your own value.`
     }
   };
 }
@@ -324,7 +359,7 @@ async function simulateIntegratedRecommendation(
   } = frequencyOutput;
   
   const lowestDimension = getLowestDimension(sliderValues);
-  const averageAlignment = (sliderValues.belief + sliderValues.openness + sliderValues.worthiness) / 3;
+  const averageAlignment = (sliderValues.belief + sliderValues.belief_logical + sliderValues.openness + sliderValues.openness_acceptance + sliderValues.worthiness + sliderValues.worthiness_receiving) / 6;
   const recommendedPath = averageAlignment < 0.5 ? 'shadow' : averageAlignment > 0.7 ? 'expansion' : 'balanced';
 
   return {
@@ -338,7 +373,7 @@ async function simulateIntegratedRecommendation(
       recommended_path: recommendedPath as 'shadow' | 'expansion' | 'balanced',
       path_reasoning: `Your ${lowestDimension} score of ${Math.round(sliderValues[lowestDimension as keyof SliderValues] * 100)}% ${recommendedPath === 'shadow' ? 'indicates shadow work will be most supportive' : 'suggests expansion work can build on your strengths'}.`,
       oracle_preparation: {
-        primary_focus_area: lowestDimension as 'belief' | 'openness' | 'worthiness',
+        primary_focus_area: lowestDimension as 'belief' | 'belief_logical' | 'openness' | 'openness_acceptance' | 'worthiness' | 'worthiness_receiving',
         energy_signature: energetic_quality,
         processing_style: handoffData.processing_core_summary || 'adaptive flow',
         specific_shadow_theme: recommendedPath === 'shadow' ? `${lowestDimension} blocks around "${desired_state}"` : undefined,
