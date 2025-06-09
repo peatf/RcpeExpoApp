@@ -31,6 +31,7 @@ export interface BaseChartData {
     chart_ruler_sign: string;
     chart_ruler_house?: number;
     incarnation_cross: string;
+    incarnation_cross_quarter: string;
     profile_type?: string;
   };
   processing_core: {
@@ -383,6 +384,7 @@ export const baseChartService = {
           'Chart Ruler': data.energy_class.chart_ruler_sign,
           'Chart Ruler House': data.energy_class.chart_ruler_house || 'N/A',
           'Incarnation Cross': data.energy_class.incarnation_cross,
+          'Incarnation Cross Quarter': data.energy_class.incarnation_cross_quarter,
           'Profile Type': data.energy_class.profile_type || 'N/A',
         },
       });

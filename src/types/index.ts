@@ -43,7 +43,15 @@ export interface ApiResponse<T = any> {
 // Base Chart types
 export interface BaseChartData {
   energy_family?: Record<string, any>;
-  energy_class?: Record<string, any>;
+  energy_class?: {
+    ascendant_sign?: string;
+    chart_ruler_sign?: string;
+    chart_ruler_house?: number;
+    incarnation_cross?: string;
+    incarnation_cross_quarter?: string;
+    profile_type?: string;
+    [key: string]: any;
+  };
   processing_core?: Record<string, any>;
   fetchedAt?: number;
 }

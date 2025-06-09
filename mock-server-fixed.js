@@ -257,6 +257,7 @@ app.get('/api/v1/profiles/:profileId/base_chart', async (req, res) => {
     const calculatedTypology = calculateTypologyFromAssessment(profile.assessment_responses);
     const astrologySign = calculateAstrologyFromBirthData(profile.birth_data);
     const personalityType = calculatedTypology.split('-')[0];
+    const incarnationCross = generateIncarnationCross();
     
     // Generate comprehensive base chart data matching backend structure
     const chartData = {
@@ -293,7 +294,8 @@ app.get('/api/v1/profiles/:profileId/base_chart', async (req, res) => {
           ascendant_sign: generateRandomSign(),
           chart_ruler_sign: generateRandomSign(),
           chart_ruler_house: Math.floor(Math.random() * 12) + 1,
-          incarnation_cross: generateIncarnationCross(),
+          incarnation_cross: incarnationCross,
+          incarnation_cross_quarter: getIncarnationCrossQuarter(incarnationCross),
           profile_type: generateProfileType(),
           ascendant_placement: {
             sign: generateRandomSign(),
@@ -680,6 +682,18 @@ function generateIncarnationCross() {
     "Right Angle Cross of the Four Ways"
   ];
   return crosses[Math.floor(Math.random() * crosses.length)];
+}
+
+function getIncarnationCrossQuarter(crossName) {
+  // Map the mock cross names to quarters based on the real data patterns
+  const quarterMap = {
+    "Right Angle Cross of Planning": "Quarter of Initiation",
+    "Left Angle Cross of Wishes": "Quarter of Initiation", 
+    "Juxtaposition Cross of Service": "Quarter of Duality", // Made up since this doesn't exist in real data
+    "Right Angle Cross of the Four Ways": "Quarter of Initiation"
+  };
+  
+  return quarterMap[crossName] || "Quarter of Initiation"; // Default fallback
 }
 
 function generateProfileType() {
