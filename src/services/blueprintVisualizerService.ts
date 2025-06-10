@@ -3,6 +3,7 @@
  * @description Service for managing the Energetic Blueprint Visualizer
  */
 import baseChartService, { BaseChartData } from './baseChartService';
+import apiClient from './api';
 
 export interface VisualizationData {
   profile_lines: string;
@@ -159,6 +160,118 @@ const blueprintVisualizerService = {
       unconscious_line: "3",
       core_priorities: "Self-love, Direction",
     };
+  },
+
+  /**
+   * Fetch visualization data directly from the new backend endpoint
+   */
+  fetchVisualizationData: async (userId: string): Promise<{success: boolean; data?: BaseChartData; error?: string}> => {
+    try {
+      console.log('Fetching visualization data from backend for user:', userId);
+      
+      // First, get the user's profile ID
+      const profileId = await baseChartService.getUserProfileId(userId);
+      if (!profileId) {
+        return {
+          success: false,
+          error: 'Could not determine profile ID for user',
+        };
+      }
+
+      console.log('Using profile ID for visualization:', profileId);
+      
+      // Use the new visualization endpoint: /api/v1/profiles/{profile_id}/visualization
+      const response = await apiClient.get(`/api/v1/profiles/${profileId}/visualization`);
+
+      console.log('Visualization API response:', {
+        status: response.status,
+        hasData: !!response.data,
+        dataKeys: response.data ? Object.keys(response.data) : []
+      });
+
+      if (response.data && response.data.data) {
+        // Backend returns { status: "success", data: BaseChart }
+        const visualizationData = response.data.data;
+        
+        return {
+          success: true,
+          data: visualizationData,
+        };
+      } else {
+        console.warn('No visualization data in response:', response.data);
+        return {
+          success: false,
+          error: 'No visualization data found for this user',
+        };
+      }
+    } catch (error: any) {
+      console.error('Failed to fetch visualization data from API:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+        code: error.code
+      });
+
+      const errorMessage =
+        error.response?.data?.detail ||
+        error.response?.data?.message ||
+        error.message ||
+        'Failed to fetch visualization data';
+
+      return {
+        success: false,
+        error: errorMessage,
+      };
+    }
+  },
+
+  /**
+   * Get visualization data optimized for the frontend
+   * This method can use either the base chart or the specialized visualization endpoint
+   */
+  getOptimizedVisualizationData: async (
+    userId: string, 
+    useVisualizationEndpoint: boolean = true
+  ): Promise<{success: boolean; data?: VisualizationData; error?: string}> => {
+    try {
+      let chartData: BaseChartData;
+      
+      if (useVisualizationEndpoint) {
+        // Use the new specialized visualization endpoint
+        const result = await blueprintVisualizerService.fetchVisualizationData(userId);
+        if (!result.success || !result.data) {
+          return {
+            success: false,
+            error: result.error || 'Failed to fetch visualization data'
+          };
+        }
+        chartData = result.data;
+      } else {
+        // Fallback to base chart service
+        const result = await baseChartService.getUserBaseChart(userId);
+        if (!result.success || !result.data) {
+          return {
+            success: false,
+            error: result.error || 'Failed to fetch base chart data'
+          };
+        }
+        chartData = result.data;
+      }
+
+      // Convert to visualization format
+      const visualizationData = blueprintVisualizerService.prepareVisualizationData(chartData);
+      
+      return {
+        success: true,
+        data: visualizationData
+      };
+    } catch (error: any) {
+      console.error('Failed to get optimized visualization data:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to process visualization data'
+      };
+    }
   }
 };
 

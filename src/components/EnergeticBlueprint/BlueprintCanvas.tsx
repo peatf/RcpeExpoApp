@@ -18,9 +18,7 @@ const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({
   onCanvasReady
 }) => {
   const canvasRef = useRef<Canvas | null>(null);
-  const pixelCanvasRef = useRef<Canvas | null>(null);
   const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
-  const mainCtxRef = useRef<CanvasRenderingContext2D | null>(null);
 
   // Constants similar to your web implementation
   const THEME = {
@@ -29,7 +27,6 @@ const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({
     accent: '#BFBFBF',
     faint: '#EAE6DA'
   };
-  const PIXEL_RESOLUTION = 250;
 
   useEffect(() => {
     if (!data) return;
@@ -41,22 +38,15 @@ const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({
       canvas.width = width;
       canvas.height = height;
       
-      // Make sure rendering stays crisp without anti-aliasing
+      // Get canvas context
       const ctx = canvas.getContext('2d');
       if (ctx) {
-        ctx.imageSmoothingEnabled = false;
-        mainCtxRef.current = ctx;
-      }
-      
-      // Create offscreen pixel canvas
-      const pixelCanvas = new Canvas();
-      pixelCanvas.width = PIXEL_RESOLUTION;
-      pixelCanvas.height = PIXEL_RESOLUTION;
-      
-      pixelCanvasRef.current = pixelCanvas;
-      const pixelCtx = pixelCanvas.getContext('2d');
-      if (pixelCtx) {
-        ctxRef.current = pixelCtx;
+        // Note: imageSmoothingEnabled may not be available in react-native-canvas
+        // @ts-ignore - Suppress TypeScript error for this property
+        if ('imageSmoothingEnabled' in ctx) {
+          (ctx as any).imageSmoothingEnabled = false;
+        }
+        ctxRef.current = ctx;
         if (onCanvasReady) onCanvasReady();
         
         // Start animation
@@ -104,23 +94,23 @@ const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({
     let animationFrameId: number;
     
     const animate = () => {
-      if (!ctxRef.current || !mainCtxRef.current || !pixelCanvasRef.current) return;
+      if (!ctxRef.current) return;
       
       animationFrameId = requestAnimationFrame(animate);
       time += 0.01; // Simplified from your implementation
       
       // Clear canvas
       ctxRef.current.fillStyle = THEME.background;
-      ctxRef.current.fillRect(0, 0, PIXEL_RESOLUTION, PIXEL_RESOLUTION);
+      ctxRef.current.fillRect(0, 0, width, height);
       
       // Call drawing functions here
       // drawEnergyArchitecture(data);
       // drawDriveMechanics(data);
       // etc...
       
-      // Render pixel canvas to main canvas (scaled up)
-      mainCtxRef.current.clearRect(0, 0, width, height);
-      mainCtxRef.current.drawImage(pixelCanvasRef.current, 0, 0, width, height);
+      // Draw some basic content for now
+      ctxRef.current.fillStyle = THEME.primary;
+      ctxRef.current.fillRect(width / 2 - 50, height / 2 - 50, 100, 100);
     };
     
     handleCanvas(canvasRef.current);

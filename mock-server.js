@@ -17,7 +17,7 @@ const profiles = new Map();
 const defaultProfileId = uuidv4();
 const defaultProfile = {
   id: defaultProfileId,
-  user_id: 'test@example.com',
+  user_id: 'mock-user-123', // Match the token mapping
   name: 'Test User Profile',
   birth_date: '1990-06-15',
   birth_time: '14:30',
@@ -49,6 +49,42 @@ const defaultProfile = {
   status: 'completed'
 };
 profiles.set(defaultProfileId, defaultProfile);
+
+// Create a specific default profile for testing with predictable ID
+const testProfile = {
+  id: 'default-profile-123',
+  user_id: 'mock-user-123',
+  name: 'Default Test Profile',
+  birth_date: '1990-06-15',
+  birth_time: '14:30',
+  birth_location: 'New York, NY',
+  birth_data: {
+    birth_date: '1990-06-15',
+    birth_time: '14:30:00',
+    city_of_birth: 'New York',
+    country_of_birth: 'USA'
+  },
+  assessment_responses: {
+    typology: {
+      'cognitive-alignment': 'right',
+      'perceptual-focus': 'center',
+      'kinetic-drive': 'left',
+      'choice-navigation': 'right',
+      'resonance-field': 'center'
+    },
+    mastery: {
+      'core-strength-1': 'Strategic thinking and innovative problem-solving',
+      'core-strength-2': 'Creative expression and authentic communication',
+      'growth-area-1': 'Leadership development and team collaboration',
+      'growth-area-2': 'Emotional intelligence and manifestation abilities',
+      'mastery-focus': 'Innovation and strategic planning',
+      'development-priority': 'Leadership qualities and authentic presence'
+    }
+  },
+  created_at: new Date().toISOString(),
+  status: 'completed'
+};
+profiles.set('default-profile-123', testProfile);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -519,6 +555,181 @@ app.get('/api/v1/profiles/:profileId/base_chart', async (req, res) => {
   }
 });
 
+// Visualization endpoint - optimized for frontend visualization
+app.get('/api/v1/profiles/:profileId/visualization', async (req, res) => {
+  console.log('Received profile visualization request for profile ID:', req.params.profileId);
+  
+  try {
+    // Check for authorization header with case insensitivity
+    const authHeader = req.headers.authorization || req.headers.Authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.warn('Missing or invalid auth header for visualization:', authHeader);
+      return res.status(403).json({
+        error: 'Access denied',
+        detail: 'Authentication token required'
+      });
+    }
+    
+    // Get authenticated user ID
+    const authUserId = getUserIdFromAuth(req);
+    console.log(`User ${authUserId} requesting visualization data for profile ${req.params.profileId}`);
+    
+    await new Promise(resolve => setTimeout(resolve, 300)); // Slightly faster than base chart
+    
+    const profileId = req.params.profileId;
+    
+    // Handle default profile ID mapping (same logic as base chart)
+    let resolvedProfileId = profileId;
+    let profile = profiles.get(profileId);
+    
+    if (!profile && profileId === 'default-profile-123') {
+      const userProfiles = Array.from(profiles.values())
+        .filter(p => p.user_id === authUserId)
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      
+      if (userProfiles.length > 0) {
+        profile = userProfiles[0];
+        resolvedProfileId = profile.id;
+        console.log(`Mapped default profile for visualization: ${resolvedProfileId}`);
+      } else {
+        // Create temporary profile (same as base chart logic)
+        profile = {
+          id: profileId,
+          user_id: authUserId,
+          birth_data: { birth_date: '1990-06-15', birth_time: '14:30:00', city_of_birth: 'New York', country_of_birth: 'USA' },
+          assessment_responses: { typology: {}, mastery: {} },
+          created_at: new Date().toISOString(),
+          status: 'completed'
+        };
+      }
+    }
+    
+    if (!profile) {
+      return res.status(404).json({
+        error: 'Profile not found',
+        detail: `Profile ${profileId} not found`
+      });
+    }
+    
+    // Get the same data as base chart but optimized for visualization
+    const birthData = profile.birth_data || { birth_date: '1990-06-15', birth_time: '14:30:00', city_of_birth: 'New York', country_of_birth: 'USA' };
+    const assessmentData = profile.assessment_responses?.mastery || {};
+    const masteryValues = Object.entries(assessmentData).slice(0, 3).map(([key, value]) => `${key}: ${value}`);
+    
+    // Determine sun sign from birth date
+    const birthDate = new Date(birthData.birth_date);
+    const month = birthDate.getMonth() + 1;
+    const day = birthDate.getDate();
+    let sunSign = 'Aries'; // default
+    if ((month === 3 && day >= 21) || (month === 4 && day <= 19)) sunSign = 'Aries';
+    else if ((month === 4 && day >= 20) || (month === 5 && day <= 20)) sunSign = 'Taurus';
+    else if ((month === 5 && day >= 21) || (month === 6 && day <= 20)) sunSign = 'Gemini';
+    else if ((month === 6 && day >= 21) || (month === 7 && day <= 22)) sunSign = 'Cancer';
+    else if ((month === 7 && day >= 23) || (month === 8 && day <= 22)) sunSign = 'Leo';
+    else if ((month === 8 && day >= 23) || (month === 9 && day <= 22)) sunSign = 'Virgo';
+    // ... continuing with other signs
+    
+    // Check query parameters for optimization
+    const includeAspects = req.query.include_aspects === 'true';
+    const includeChannels = req.query.include_channels === 'true';
+    
+    // Create optimized visualization data (same structure as base chart)
+    const visualizationData = {
+      metadata: {
+        profile_id: resolvedProfileId,
+        user_id: profile.user_id,
+        created_at: profile.created_at,
+        updated_at: new Date().toISOString(),
+        status: 'completed',
+        version: '1.0'
+      },
+      hd_type: 'Manifestor',
+      typology_pair_key: 'ENFP-Leo',
+      energy_family: {
+        profile_lines: '6/2',
+        conscious_line: 6,
+        unconscious_line: 2,
+        astro_sun_sign: sunSign,
+        astro_sun_house: birthData.birth_time?.startsWith('09') ? 3 : 5,
+        astro_north_node_sign: 'Gemini',
+        birth_location: `${birthData.city_of_birth || 'Unknown'}, ${birthData.country_of_birth || 'Unknown'}`
+      },
+      energy_class: {
+        ascendant_sign: 'Virgo',
+        chart_ruler_sign: 'Mercury in Cancer',
+        chart_ruler_house: 11,
+        incarnation_cross: 'Right Angle Cross of Eden',
+        profile_type: 'Role Model/Hermit'
+      },
+      processing_core: {
+        astro_moon_sign: 'Pisces',
+        astro_moon_house: 7,
+        astro_mercury_sign: 'Gemini',
+        head_state: 'Defined',
+        ajna_state: 'Defined',
+        emotional_state: 'Defined',
+        chiron_gate: 51
+      },
+      decision_growth_vector: profile.decision_growth_vector || {
+        strategy: 'To inform',
+        authority: 'Emotional Authority',
+        choice_navigation_spectrum: 'Balanced'
+      },
+      drive_mechanics: profile.drive_mechanics || {
+        motivation_color: 'Fear',
+        kinetic_drive_spectrum: 'Focused',
+        resonance_field_spectrum: 'Focused'
+      },
+      manifestation_interface_rhythm: profile.manifestation_interface_rhythm || {
+        throat_definition: 'Defined',
+        manifestation_rhythm_spectrum: 'Consistent'
+      },
+      energy_architecture: profile.energy_architecture || {
+        definition_type: 'Single',
+        channel_list: ['1-8', '11-56', '13-33']
+      },
+      tension_points: profile.tension_points || {},
+      evolutionary_path: profile.evolutionary_path || {
+        g_center_access: 'Fixed Identity',
+        incarnation_cross: 'Right Angle Cross of Eden',
+        astro_north_node_sign: 'Gemini',
+        astro_north_node_house: 3,
+        conscious_line: 6,
+        unconscious_line: 2,
+        core_priorities: ['Expression', 'Connection', 'Growth']
+      },
+      dominant_mastery_values: masteryValues,
+      manifestation_dimensions: profile.manifestation_dimensions || {},
+      
+      // Add visualization-specific metadata
+      visualization_metadata: {
+        optimized_for_visualization: true,
+        includes_aspects: includeAspects,
+        includes_channels: includeChannels,
+        api_version: 'v1',
+        endpoint: 'visualization',
+        response_optimized: !includeAspects && !includeChannels
+      }
+    };
+    
+    // Validate the visualization data
+    const validatedVisualizationData = validateGCenterAccess(validateProfileLines(visualizationData));
+    
+    console.log(`✅ Visualization data prepared for profile ${resolvedProfileId} (optimized: ${!includeAspects && !includeChannels})`);
+    
+    res.json({
+      status: 'success',
+      data: validatedVisualizationData
+    });
+  } catch (error) {
+    console.error('Error fetching profile visualization data:', error);
+    res.status(500).json({
+      status: 'error',
+      error: 'Failed to fetch visualization data'
+    });
+  }
+});
+
 // Legacy base chart endpoint (for backward compatibility)
 app.get('/api/v1/charts/base/:userId', async (req, res) => {
   console.log('Received legacy base chart request for user ID:', req.params.userId);
@@ -627,6 +838,7 @@ app.listen(PORT, () => {
   console.log('  GET /api/v1/charts/base/:userId - Fetch base chart for user (legacy)');
   console.log('  GET /api/v1/user-data/users/me/profiles - Fetch user profiles');
   console.log('  GET /api/v1/profiles/:profileId/base_chart - Fetch profile-based base chart');
+  console.log('  GET /api/v1/profiles/:profileId/visualization - Fetch visualization-optimized chart data');
   console.log('  GET /health - Health check');
   console.log(`Default profile created with ID: ${defaultProfileId}`);
 }).on('error', (err) => {

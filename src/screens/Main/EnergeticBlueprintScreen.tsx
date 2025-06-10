@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
 import baseChartService from '../../services/baseChartService';
+import blueprintVisualizerService from '../../services/blueprintVisualizerService';
 import BlueprintCanvas from '../../components/EnergeticBlueprint/BlueprintCanvas';
 import BlueprintDescription from '../../components/EnergeticBlueprint/BlueprintDescription';
 
@@ -40,13 +41,32 @@ const EnergeticBlueprintScreen: React.FC<{navigation: any}> = ({ navigation }) =
     setIsLoading(true);
     setError(null);
     try {
-      const result = await baseChartService.getUserBaseChart(user?.id || '', forceRefresh);
+      // Try to use the optimized visualization endpoint first
+      const result = await blueprintVisualizerService.getOptimizedVisualizationData(
+        user?.id || '', 
+        true // Use visualization endpoint
+      );
+      
       if (result.success && result.data) {
-        setChartData(result.data);
+        // Convert visualization data back to base chart format for compatibility
+        const baseChartResult = await baseChartService.getUserBaseChart(user?.id || '', forceRefresh);
+        if (baseChartResult.success && baseChartResult.data) {
+          setChartData(baseChartResult.data);
+        } else {
+          setError('Failed to load chart data');
+        }
       } else {
-        setError('Failed to load chart data');
+        // Fallback to base chart service
+        console.log('Visualization endpoint failed, falling back to base chart service:', result.error);
+        const fallbackResult = await baseChartService.getUserBaseChart(user?.id || '', forceRefresh);
+        if (fallbackResult.success && fallbackResult.data) {
+          setChartData(fallbackResult.data);
+        } else {
+          setError(fallbackResult.error || 'Failed to load chart data');
+        }
       }
     } catch (err: any) {
+      console.error('Error loading chart data:', err);
       setError(err.message || 'An error occurred while loading chart data');
     } finally {
       setIsLoading(false);
