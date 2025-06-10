@@ -1,7 +1,4 @@
-/**
- * @file UserBaseChartScreen.tsx
- * @description Screen for displaying user's base energy chart
- */
+// Inside src/screens/Main/UserBaseChartScreen.tsx
 import React, {useState, useEffect, useCallback} from 'react';
 import {
   View,
@@ -12,51 +9,54 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Platform,
+  Dimensions,
 } from 'react-native';
 import {useAuth} from '../../contexts/AuthContext';
 import baseChartService, {BaseChartData} from '../../services/baseChartService';
+import blueprintVisualizerService from '../../services/blueprintVisualizerService';
+import BlueprintCanvas from '../../components/EnergeticBlueprint/BlueprintCanvas';
+import BlueprintDescription from '../../components/EnergeticBlueprint/BlueprintDescription';
 
 const UserBaseChartScreen: React.FC<{navigation: any}> = ({navigation}) => {
+  // Original state
   const {user, isAuthenticated, isLoading: authLoading} = useAuth();
   const [chartData, setChartData] = useState<BaseChartData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fromCache, setFromCache] = useState(false);
-
+  
+  // New state for blueprint visualization
+  const [viewMode, setViewMode] = useState<'text' | 'visualization'>('text');
+  const [highlightedCategory, setHighlightedCategory] = useState<string | null>(null);
+  const [canvasReady, setCanvasReady] = useState(false);
+  
+  // Get screen dimensions for canvas
+  const screenWidth = Dimensions.get('window').width;
+  const canvasSize = Math.min(screenWidth * 0.9, 500); // Cap at 500 for larger screens
+  
+  // Original loadBaseChart function
   const loadBaseChart = useCallback(async (forceRefresh = false) => {
-    // Check authentication state first
+    // Your existing code for loading chart data
     if (!isAuthenticated) {
-      setError('Please log in to view your base chart');
+      setError('Please log in to view your chart');
       return;
     }
-
-    if (!user?.id) {
-      setError('User profile not found. Please try logging in again.');
-      return;
-    }
-
+    
     setIsLoading(true);
     setError(null);
-
+    
     try {
-      console.log('Loading base chart for user:', user.id);
-      const result = await baseChartService.getUserBaseChart(user.id, forceRefresh);
-      
+      const result = await baseChartService.getUserBaseChart(user?.id || '', forceRefresh);
       if (result.success && result.data) {
         setChartData(result.data);
-        setFromCache(result.fromCache || false);
-        console.log('Base chart loaded successfully, from cache:', result.fromCache);
+        setFromCache(!!result.fromCache);
       } else {
-        const errorMsg = result.error || 'Failed to load base chart';
-        console.error('Failed to load base chart:', errorMsg);
-        setError(errorMsg);
+        setError('Failed to load chart data: ' + result.error);
       }
     } catch (err: any) {
-      console.error('Error loading base chart:', err);
-      
-      // Handle different types of errors
-      if (err.message?.includes('Authentication required')) {
-        setError('Please log in again to access your base chart');
+      console.error('Error loading chart:', err);
+      if (err.message?.includes('auth')) {
+        setError('Authentication error. Please log in again.');
       } else if (err.message?.includes('profile ID')) {
         setError('No profile found. Please create a profile first.');
       } else if (err.message?.includes('Network')) {
@@ -68,25 +68,54 @@ const UserBaseChartScreen: React.FC<{navigation: any}> = ({navigation}) => {
       setIsLoading(false);
     }
   }, [user?.id, isAuthenticated]);
-
+  
+  // Initial data load
   useEffect(() => {
-    // Wait for auth loading to complete before attempting to load chart
     if (!authLoading && isAuthenticated && user?.id) {
       loadBaseChart();
     } else if (!authLoading && !isAuthenticated) {
       setError('Please log in to view your base chart');
     }
   }, [user?.id, loadBaseChart, authLoading, isAuthenticated]);
-
+  
+  // Handle refresh
   const handleRefresh = () => {
     loadBaseChart(true);
   };
-
+  
+  // Handle view mode toggle
+  const toggleViewMode = () => {
+    setViewMode(viewMode === 'text' ? 'visualization' : 'text');
+  };
+  
+  // Handle category highlight for visualization
+  const handleHighlight = (category: string) => {
+    setHighlightedCategory(category === highlightedCategory ? null : category);
+  };
+  
+  // Get blueprint descriptions for visualization mode
+  const getBlueprintDescriptions = useCallback(() => {
+    if (!chartData) return [];
+    
+    return [
+      {
+        category: "Energy Family",
+        description: `Core identity shaped by a ${chartData.energy_family?.profile_lines} profile, radiating from the ${chartData.energy_family?.astro_sun_sign} frequency in the ${chartData.energy_family?.astro_sun_house} house.`
+      },
+      {
+        category: "Energy Class",
+        description: `Interface with the world, projecting a ${chartData.energy_class?.ascendant_sign} aura, guided by the ${chartData.energy_class?.incarnation_cross_quarter} quarter.`
+      },
+      // ... other categories as previously defined
+    ];
+  }, [chartData]);
+  
+  // Your existing renderChartSection function
   const renderChartSection = (title: string, data: any) => {
     if (!data || typeof data !== 'object') {
       return null;
     }
-
+    
     return (
       <View key={title} style={styles.sectionCard}>
         <Text style={styles.sectionTitle}>{title}</Text>
@@ -104,6 +133,61 @@ const UserBaseChartScreen: React.FC<{navigation: any}> = ({navigation}) => {
     );
   };
 
+  // Render the text view (original chart display)
+  const renderTextView = () => {
+    if (!chartData) return null;
+    
+    return (
+      <View style={styles.content}>
+        {baseChartService.getChartSections(chartData).map(section =>
+          renderChartSection(section.title, section.data)
+        )}
+      </View>
+    );
+  };
+  
+  // Render the visualization view
+  const renderVisualizationView = () => {
+    if (!chartData) return null;
+    
+    const visualizationData = blueprintVisualizerService.prepareVisualizationData(chartData);
+    
+    return (
+      <View style={styles.visualizationContainer}>
+        <View style={[styles.canvasContainer, {width: canvasSize, height: canvasSize}]}>
+          <BlueprintCanvas 
+            data={visualizationData} 
+            highlightedCategory={highlightedCategory} 
+            width={canvasSize} 
+            height={canvasSize} 
+            onCanvasReady={() => setCanvasReady(true)}
+          />
+          {!canvasReady && (
+            <View style={styles.canvasOverlay}>
+              <ActivityIndicator size="large" color="#007AFF" />
+            </View>
+          )}
+        </View>
+        
+        <ScrollView 
+          style={styles.descriptionsScroll} 
+          contentContainerStyle={styles.descriptionsContainer}
+        >
+          {getBlueprintDescriptions().map((item, index) => (
+            <BlueprintDescription 
+              key={`desc-${index}`}
+              category={item.category}
+              description={item.description}
+              isHighlighted={highlightedCategory === item.category}
+              onPress={() => handleHighlight(item.category)}
+            />
+          ))}
+        </ScrollView>
+      </View>
+    );
+  };
+
+  // Main render function
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -112,9 +196,16 @@ const UserBaseChartScreen: React.FC<{navigation: any}> = ({navigation}) => {
         {fromCache && (
           <Text style={styles.cacheIndicator}>Data from cache</Text>
         )}
-        <TouchableOpacity style={styles.refreshButton} onPress={handleRefresh}>
-          <Text style={styles.refreshText}>Refresh</Text>
-        </TouchableOpacity>
+        <View style={styles.headerControls}>
+          <TouchableOpacity style={styles.viewToggle} onPress={toggleViewMode}>
+            <Text style={styles.viewToggleText}>
+              {viewMode === 'text' ? 'Show Visualization' : 'Show Text View'}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.refreshButton} onPress={handleRefresh}>
+            <Text style={styles.refreshText}>Refresh</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView style={styles.scrollView}>
@@ -146,11 +237,7 @@ const UserBaseChartScreen: React.FC<{navigation: any}> = ({navigation}) => {
             </TouchableOpacity>
           </View>
         ) : chartData ? (
-          <View style={styles.content}>
-            {baseChartService.getChartSections(chartData).map(section =>
-              renderChartSection(section.title, section.data)
-            )}
-          </View>
+          viewMode === 'text' ? renderTextView() : renderVisualizationView()
         ) : (
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyText}>No base chart data available</Text>
@@ -164,7 +251,9 @@ const UserBaseChartScreen: React.FC<{navigation: any}> = ({navigation}) => {
   );
 };
 
+// Add new styles to support visualization
 const styles = StyleSheet.create({
+  // Your existing styles
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
@@ -179,30 +268,42 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
     color: '#333',
-    marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
     color: '#666',
-    marginBottom: 12,
+    marginTop: 4,
   },
-  cacheIndicator: {
-    fontSize: 12,
-    color: '#28a745',
-    fontStyle: 'italic',
-    marginBottom: 8,
+  headerControls: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 16,
   },
   refreshButton: {
-    backgroundColor: '#007AFF',
-    paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 6,
-    alignSelf: 'flex-start',
+    paddingHorizontal: 16,
+    backgroundColor: '#007AFF',
+    borderRadius: 4,
   },
   refreshText: {
     color: '#fff',
-    fontSize: 14,
     fontWeight: '600',
+  },
+  viewToggle: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: '#333',
+    borderRadius: 4,
+  },
+  viewToggleText: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+  cacheIndicator: {
+    fontSize: 12,
+    color: '#999',
+    fontStyle: 'italic',
+    marginTop: 4,
   },
   scrollView: {
     flex: 1,
@@ -211,10 +312,10 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   sectionCard: {
+    marginBottom: 24,
+    padding: 16,
     backgroundColor: '#fff',
-    padding: 20,
-    marginBottom: 16,
-    borderRadius: 12,
+    borderRadius: 8,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -262,35 +363,63 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   errorContainer: {
-    padding: 40,
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
+    padding: 40,
   },
   errorText: {
+    marginBottom: 16,
     fontSize: 16,
-    color: '#dc3545',
+    color: '#e53935',
     textAlign: 'center',
-    marginBottom: 20,
-  },
-  retryButton: {
-    backgroundColor: '#007AFF',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  retryText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
   },
   emptyContainer: {
-    padding: 40,
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
+    padding: 40,
   },
   emptyText: {
+    marginBottom: 16,
     fontSize: 16,
     color: '#666',
     textAlign: 'center',
-    marginBottom: 20,
+  },
+  retryButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: '#007AFF',
+    borderRadius: 4,
+  },
+  retryText: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+  
+  // New styles for visualization
+  visualizationContainer: {
+    alignItems: 'center',
+    padding: 16,
+  },
+  canvasContainer: {
+    backgroundColor: '#F8F4E9',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  canvasOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(248, 244, 233, 0.7)',
+  },
+  descriptionsScroll: {
+    width: '100%',
+    maxWidth: 500,
+  },
+  descriptionsContainer: {
+    padding: 8,
   },
 });
 
