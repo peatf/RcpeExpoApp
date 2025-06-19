@@ -150,6 +150,7 @@ export type MainTabParamList = {
   RecognitionNavigation: undefined;
   EnvironmentalAttunement: undefined;
   PatternRecognitionEngine: undefined;
+  DecisionMaker: undefined; // Added new route
 };
 
 // Screen props

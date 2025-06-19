@@ -16,6 +16,8 @@ import {
   Modal,
 } from 'react-native';
 // Navigation hooks not needed in this implementation
+import StepTracker from '../../components/StepTracker'; // Import StepTracker
+import { FLOW_STEPS, STEP_LABELS } from '../../constants/flowSteps'; // Import constants
 import {Ionicons} from '@expo/vector-icons';
 import StackedButton from '../../components/StackedButton';
 import { colors, typography, spacing } from '../../constants/theme';
@@ -41,6 +43,7 @@ const OracleScreen: React.FC<OracleScreenProps> = ({navigation, route}) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [loadingMessage, setLoadingMessage] = useState<string>('Awakening the Oracle...');
   const [currentView, setCurrentView] = useState<'awakening' | 'quest_selection' | 'active_quest' | 'quest_completed' | 'oracle_wisdom'>('awakening');
+  const [visualCurrentStep, setVisualCurrentStep] = useState<number>(1); // State for visual tracker
 
   // Three-tool integration
   const [oracleSynthesis, setOracleSynthesis] = useState<OracleInputSynthesis | null>(null);
@@ -198,6 +201,31 @@ const OracleScreen: React.FC<OracleScreenProps> = ({navigation, route}) => {
 
     initializeOracle();
   }, [route?.params]);
+
+  // Effect to update visualCurrentStep based on currentView
+  useEffect(() => {
+    switch (currentView) {
+      case 'awakening':
+      case 'quest_selection':
+        setVisualCurrentStep(1);
+        break;
+      // case 'path_choice_equivalent_if_any': // If there was a clear step 2 view
+      //   setVisualCurrentStep(2);
+      //   break;
+      case 'active_quest':
+        // Assuming selecting a quest implies path choice is made, so we are in implementation
+        setVisualCurrentStep(3);
+        break;
+      case 'quest_completed':
+        setVisualCurrentStep(4);
+        break;
+      case 'oracle_wisdom': // Fallback for non-quest mode
+        setVisualCurrentStep(1); // Or hide tracker
+        break;
+      default:
+        setVisualCurrentStep(1);
+    }
+  }, [currentView]);
 
   // Generate initial quest options
   const generateInitialQuests = async (synthesis: OracleInputSynthesis) => {
@@ -653,6 +681,13 @@ const OracleScreen: React.FC<OracleScreenProps> = ({navigation, route}) => {
 
   return (
     <View style={styles.container}>
+      {/* Render StepTracker if not in wisdom mode or if desired */}
+      {/* For now, always render it based on current logic */}
+      <StepTracker
+        currentStep={visualCurrentStep}
+        totalSteps={FLOW_STEPS.ORACLE}
+        stepLabels={STEP_LABELS.ORACLE}
+      />
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
         {!hasCompleteJourney && renderOracleWisdom()}
         {hasCompleteJourney && currentView === 'awakening' && renderAwakeningScreen()}

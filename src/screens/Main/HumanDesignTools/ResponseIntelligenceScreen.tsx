@@ -4,6 +4,8 @@
  */
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, Button, ActivityIndicator, Alert, FlatList } from 'react-native';
+import OnboardingBanner from '../../../components/OnboardingBanner'; // Import Banner
+import useOnboardingBanner from '../../../hooks/useOnboardingBanner'; // Import Hook
 import { InfoCard, InsightDisplay, LogInput } from '../../../components/HumanDesignTools';
 import * as responseIntelligenceService from '../../../services/responseIntelligenceService';
 import * as authorityService from '../../../services/authorityService';
@@ -11,6 +13,7 @@ import { AuthorityType, Response as SacralResponseType, ResponsePattern, Satisfa
 import ResponseListItem from './ResponseIntelligenceComponents/ResponseListItem'; // Import ResponseListItem
 
 const ResponseIntelligenceScreen: React.FC = () => {
+  const { showBanner, dismissBanner, isLoadingBanner } = useOnboardingBanner('Response Inventory'); // Use Hook
   const [userAuthority, setUserAuthority] = useState<AuthorityType | null>(null);
   const [isLoadingAuthority, setIsLoadingAuthority] = useState(true);
 
@@ -156,6 +159,13 @@ const ResponseIntelligenceScreen: React.FC = () => {
 
   return (
     <ScrollView style={styles.container}>
+      {!isLoadingBanner && showBanner && (
+        <OnboardingBanner
+          toolName="Response Inventory"
+          description="Discover your Response Intelligence. This tool helps Generators and Manifesting Generators understand their Sacral responses."
+          onDismiss={dismissBanner}
+        />
+      )}
       <Text style={styles.header}>Response Intelligence</Text>
       <Text style={styles.subHeader}>Authority Context: {userAuthority}</Text>
 

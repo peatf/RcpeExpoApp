@@ -16,6 +16,8 @@ import {
   Animated,
 } from 'react-native';
 import {useNavigation, useRoute} from '@react-navigation/native';
+import StepTracker from '../../components/StepTracker'; // Import StepTracker
+import { FLOW_STEPS, STEP_LABELS } from '../../constants/flowSteps'; // Import constants
 import {Ionicons} from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -41,6 +43,7 @@ const CalibrationToolScreen: React.FC<CalibrationToolScreenProps> = ({navigation
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [loadingMessage, setLoadingMessage] = useState<string>('Loading your refined desire...');
   const [currentStep, setCurrentStep] = useState<'intro' | 'sliders' | 'reflections' | 'results'>('intro');
+  const [visualCurrentStep, setVisualCurrentStep] = useState<number>(1); // State for visual tracker
 
   // Frequency Mapper integration
   const [handoffData, setHandoffData] = useState<FrequencyMapperHandoff | null>(null);
@@ -168,6 +171,35 @@ const CalibrationToolScreen: React.FC<CalibrationToolScreenProps> = ({navigation
 
     initializeCalibration();
   }, [route.params]);
+
+  // Effect to update visualCurrentStep
+  useEffect(() => {
+    switch (currentStep) {
+      case 'intro':
+        setVisualCurrentStep(1);
+        break;
+      case 'sliders':
+        // When sliders are shown, we assume they are starting with the first one, "Belief Assessment"
+        setVisualCurrentStep(1);
+        break;
+      case 'reflections':
+        switch (currentReflectionStep) {
+          case 'belief': setVisualCurrentStep(1); break;
+          case 'belief_logical': setVisualCurrentStep(2); break;
+          case 'openness': setVisualCurrentStep(3); break;
+          case 'openness_acceptance': setVisualCurrentStep(4); break;
+          case 'worthiness': setVisualCurrentStep(5); break;
+          case 'worthiness_receiving': setVisualCurrentStep(6); break;
+          default: setVisualCurrentStep(1);
+        }
+        break;
+      case 'results':
+        setVisualCurrentStep(6); // Or a dedicated "Results" step if it were part of labels
+        break;
+      default:
+        setVisualCurrentStep(1);
+    }
+  }, [currentStep, currentReflectionStep]);
 
   // Handle slider changes
   const handleSliderChange = (dimension: keyof SliderValues, value: number) => {
@@ -606,7 +638,11 @@ const CalibrationToolScreen: React.FC<CalibrationToolScreenProps> = ({navigation
         <Text style={styles.title}>Calibration Tool</Text>
         <View style={styles.headerSpacer} />
       </View>
-
+        <StepTracker
+          currentStep={visualCurrentStep}
+          totalSteps={FLOW_STEPS.CALIBRATION}
+          stepLabels={STEP_LABELS.CALIBRATION}
+        />
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
         {currentStep === 'intro' && renderIntroScreen()}
         {currentStep === 'sliders' && renderSlidersScreen()}

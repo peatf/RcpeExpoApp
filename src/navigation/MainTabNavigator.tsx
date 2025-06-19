@@ -12,8 +12,9 @@ import FrequencyMapperScreen from '../screens/Main/FrequencyMapperScreen';
 import OracleScreen from '../screens/Main/OracleScreen';
 import UserBaseChartScreen from '../screens/Main/UserBaseChartScreen';
 import LivingLogScreen from '../screens/Main/HumanDesignTools/LivingLogScreen';
+import DecisionMakerScreen from '../screens/Main/DecisionMakerScreen'; // Added import
 
-type ScreenName = 'welcome' | 'frequencyMapper' | 'oracle' | 'baseChart' | 'livingLog';
+type ScreenName = 'welcome' | 'frequencyMapper' | 'oracle' | 'baseChart' | 'livingLog' | 'decisionMaker'; // Added screen
 
 const MainTabNavigator: React.FC = () => {
   const [currentScreen, setCurrentScreen] = useState<ScreenName>('welcome');
@@ -49,6 +50,12 @@ const MainTabNavigator: React.FC = () => {
       icon: 'document-text',
       label: 'Log',
       component: LivingLogScreen,
+    },
+    { // Added new navigation item
+      id: 'decisionMaker',
+      icon: 'keypad-outline', // Example icon
+      label: 'Decision', // Short label for collapsed nav
+      component: DecisionMakerScreen,
     },
   ];
 
