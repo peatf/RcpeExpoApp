@@ -4,6 +4,7 @@
  */
 import React, { ReactNode } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { colors, typography, spacing } from '../../constants/theme';
 
 /**
  * @interface InfoCardProps
@@ -33,28 +34,29 @@ const InfoCard: React.FC<InfoCardProps> = ({ title, children }) => {
 
 const styles = StyleSheet.create({
   cardContainer: {
-    backgroundColor: '#ffffff',
+    position: 'relative',
+    borderWidth: 1,
+    borderColor: colors.base1,
     borderRadius: 8,
-    padding: 16,
-    marginVertical: 8,
-    marginHorizontal: 16,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3, // for Android shadow
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    padding: spacing.md,
+    marginBottom: spacing.lg,
   },
   title: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 12,
-    color: '#333333',
+    position: 'absolute',
+    top: -10,
+    left: 12,
+    backgroundColor: colors.bg,
+    paddingHorizontal: 6,
+    fontFamily: 'monospace',
+    fontSize: 11,
+    fontWeight: '500',
+    color: colors.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.1,
   },
   content: {
-    // Additional styling for content area if needed
+    paddingTop: spacing.xs,
   },
 });
 

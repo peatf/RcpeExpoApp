@@ -738,7 +738,43 @@ const OracleScreen: React.FC = () => {
   );
 };
 ```
+## 5. Progressive Disclosure Wrappers for Frequency Mapper & Calibration Sliders (Requirement ⑬)
 
+### Task Description
+Implement progressive disclosure UI wrappers for the Frequency Mapper and Calibration sliders. Advanced options and detailed controls for these features should be hidden by default and only revealed when the user explicitly expands a section (e.g., via a "Show more" button or similar control). This improves clarity for new users while still providing power-user functionality.
+
+### Technical Implementation
+- For both Frequency Mapper and Calibration screens, wrap advanced controls or sections (e.g., non-essential sliders, detailed settings, or explanations) in a collapsible/expandable view.
+- Use a standard component for collapsible sections (e.g., `Collapsible`, `Accordion`, or a custom implementation) to maintain consistency.
+- By default, show only the most essential controls. All advanced options must be accessible via expansion.
+- Ensure the expanded/collapsed state is managed per user session (does not need to persist app restarts).
+- Maintain accessibility: all controls must be operable by screen readers and keyboard navigation.
+- Follow existing code style and structure.
+
+#### Example
+```typescript
+// Pseudocode for a collapsible section
+<CollapsibleSection
+  title="Advanced Options"
+  initiallyCollapsed={true}
+>
+  {/* Advanced sliders/components go here */}
+</CollapsibleSection>
+```
+
+#### Suggested Files to Modify/Create
+- `src/screens/Main/FrequencyMapperScreen.tsx`
+- `src/screens/Main/CalibrationToolScreen.tsx`
+- `src/components/CollapsibleSection.tsx` (new, if one doesn't already exist)
+
+### Acceptance Criteria
+- [ ] By default, only core Frequency Mapper and Calibration controls are visible.
+- [ ] Users can expand to reveal advanced options/sliders on each screen.
+- [ ] Collapsible UI is consistent and accessible.
+- [ ] No loss of existing functionality.
+- [ ] All new code follows project style and is covered by tests.
+
+---
 ### Acceptance Criteria
 - [ ] "Update Progress" button opens modal
 - [ ] Modal includes textarea and emoji picker options

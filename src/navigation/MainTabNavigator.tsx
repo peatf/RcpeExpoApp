@@ -1,194 +1,172 @@
 /**
  * @file MainTabNavigator.tsx
- * @description Bottom tab navigation for the main app screens
+ * @description Main app layout with side navigation matching mockup design
  */
-import React from 'react';
-import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
-import {Ionicons} from '@expo/vector-icons';
-import DashboardScreen from '../screens/Main/DashboardScreen';
+import React, { useState } from 'react';
+import { View, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import StackedButton from '../components/StackedButton';
+import { colors, spacing } from '../constants/theme';
+import WelcomeScreen from '../screens/Main/WelcomeScreen';
 import FrequencyMapperScreen from '../screens/Main/FrequencyMapperScreen';
-import CalibrationToolScreen from '../screens/Main/CalibrationToolScreen';
 import OracleScreen from '../screens/Main/OracleScreen';
 import UserBaseChartScreen from '../screens/Main/UserBaseChartScreen';
-import ProfileCreationScreen from '../screens/Main/ProfileCreationScreen';
 import LivingLogScreen from '../screens/Main/HumanDesignTools/LivingLogScreen';
-import WaveWitnessScreen from '../screens/Main/HumanDesignTools/WaveWitnessScreen';
-import ResponseIntelligenceScreen from '../screens/Main/HumanDesignTools/ResponseIntelligenceScreen';
-import ProjectFlowDynamicsScreen from '../screens/Main/HumanDesignTools/ProjectFlowDynamicsScreen';
-import ImpulseIntegrationScreen from '../screens/Main/HumanDesignTools/ImpulseIntegrationScreen';
-import RecognitionNavigationScreen from '../screens/Main/HumanDesignTools/RecognitionNavigationScreen';
-import EnvironmentalAttunementScreen from '../screens/Main/HumanDesignTools/EnvironmentalAttunementScreen';
-import PatternRecognitionEngineScreen from '../screens/Main/HumanDesignTools/PatternRecognitionEngineScreen';
-import {MainTabParamList} from '../types';
 
-const Tab = createBottomTabNavigator<MainTabParamList>();
+type ScreenName = 'welcome' | 'frequencyMapper' | 'oracle' | 'baseChart' | 'livingLog';
 
 const MainTabNavigator: React.FC = () => {
+  const [currentScreen, setCurrentScreen] = useState<ScreenName>('welcome');
+  const [isNavCollapsed, setIsNavCollapsed] = useState<boolean>(false);
+
+  const navigationItems = [
+    {
+      id: 'welcome',
+      icon: 'home',
+      label: 'Home',
+      component: WelcomeScreen,
+    },
+    {
+      id: 'frequencyMapper',
+      icon: 'add',
+      label: 'Mapper',
+      component: FrequencyMapperScreen,
+    },
+    {
+      id: 'oracle',
+      icon: 'eye',
+      label: 'Oracle',
+      component: OracleScreen,
+    },
+    {
+      id: 'baseChart',
+      icon: 'globe',
+      label: 'Chart',
+      component: UserBaseChartScreen,
+    },
+    {
+      id: 'livingLog',
+      icon: 'document-text',
+      label: 'Log',
+      component: LivingLogScreen,
+    },
+  ];
+
+  const getCurrentComponent = () => {
+    const currentItem = navigationItems.find(item => item.id === currentScreen);
+    if (currentItem) {
+      const Component = currentItem.component;
+      if (Component === WelcomeScreen) {
+        return <Component onBeginSession={() => setCurrentScreen('frequencyMapper')} />;
+      }
+      // @ts-ignore - These components don't expect props but have different interfaces
+      return <Component />;
+    }
+    return <WelcomeScreen onBeginSession={() => setCurrentScreen('frequencyMapper')} />;
+  };
+
   return (
-    <Tab.Navigator
-      screenOptions={({route}) => ({
-        tabBarIcon: ({focused, color, size}) => {
-          let iconName: keyof typeof Ionicons.glyphMap;
+    <View style={styles.container}>
+      <View style={styles.appContainer}>
+        <View style={styles.mainContent}>
+          {/* Side Navigation */}
+          <View style={[styles.navigation, isNavCollapsed && styles.navigationCollapsed]}>
+            {/* Collapse/Expand Button */}
+            <View style={styles.collapseButtonContainer}>
+              <StackedButton
+                type="nav"
+                onPress={() => setIsNavCollapsed(!isNavCollapsed)}
+                isActive={false}
+              >
+                <Ionicons 
+                  name={isNavCollapsed ? 'chevron-forward' : 'chevron-back'} 
+                  size={16} 
+                  color={colors.base2}
+                  style={styles.navIcon}
+                />
+              </StackedButton>
+            </View>
 
-          switch (route.name) {
-            case 'Dashboard':
-              iconName = focused ? 'home' : 'home-outline';
-              break;
-            case 'FrequencyMapper':
-              iconName = focused ? 'radio' : 'radio-outline';
-              break;
-            case 'CalibrationTool':
-              iconName = focused ? 'settings' : 'settings-outline';
-              break;
-            case 'Oracle':
-              iconName = focused ? 'eye' : 'eye-outline';
-              break;
-            case 'UserBaseChart':
-              iconName = focused ? 'bar-chart' : 'bar-chart-outline';
-              break;
-            case 'ProfileCreation':
-              iconName = focused ? 'person-add' : 'person-add-outline';
-              break;
-            case 'LivingLog':
-              iconName = focused ? 'journal' : 'journal-outline';
-              break;
-            case 'WaveWitness':
-              iconName = focused ? 'pulse' : 'pulse-outline';
-              break;
-            case 'ResponseIntelligence':
-              iconName = focused ? 'flash' : 'flash-outline';
-              break;
-            case 'ProjectFlowDynamics':
-              iconName = focused ? 'git-network' : 'git-network-outline';
-              break;
-            case 'ImpulseIntegration':
-              iconName = focused ? 'bulb' : 'bulb-outline';
-              break;
-            case 'RecognitionNavigation':
-              iconName = focused ? 'magnet' : 'magnet-outline';
-              break;
-            case 'EnvironmentalAttunement':
-              iconName = focused ? 'moon' : 'moon-outline';
-              break;
-            case 'PatternRecognitionEngine':
-              iconName = focused ? 'analytics' : 'analytics-outline';
-              break;
-            default:
-              iconName = 'help-outline';
-          }
+            {!isNavCollapsed && (
+              <>
+                {navigationItems.map((item, index) => (
+                  <View key={item.id} style={[styles.navButtonContainer, index > 0 && styles.navButtonSpacing]}>
+                    <StackedButton
+                      type="nav"
+                      onPress={() => setCurrentScreen(item.id as ScreenName)}
+                      isActive={currentScreen === item.id}
+                    >
+                      <Ionicons 
+                        name={item.icon as keyof typeof Ionicons.glyphMap} 
+                        size={20} 
+                        color={currentScreen === item.id ? '#fff' : colors.base2}
+                        style={styles.navIcon}
+                      />
+                    </StackedButton>
+                  </View>
+                ))}
+              </>
+            )}
+          </View>
 
-          return <Ionicons name={iconName} size={size} color={color} />;
-        },
-        tabBarActiveTintColor: '#007AFF',
-        tabBarInactiveTintColor: 'gray',
-        tabBarStyle: {
-          paddingBottom: 5,
-          paddingTop: 5,
-          height: 60,
-        },
-        headerShown: false,
-      })}
-    >
-      <Tab.Screen 
-        name="Dashboard" 
-        component={DashboardScreen}
-        options={{
-          tabBarLabel: 'Home',
-        }}
-      />
-      <Tab.Screen 
-        name="FrequencyMapper" 
-        component={FrequencyMapperScreen}
-        options={{
-          tabBarLabel: 'Frequency',
-        }}
-      />
-      <Tab.Screen 
-        name="CalibrationTool" 
-        component={CalibrationToolScreen}
-        options={{
-          tabBarLabel: 'Calibrate',
-        }}
-      />
-      <Tab.Screen 
-        name="Oracle" 
-        component={OracleScreen}
-        options={{
-          tabBarLabel: 'Oracle',
-        }}
-      />
-      <Tab.Screen 
-        name="UserBaseChart" 
-        component={UserBaseChartScreen}
-        options={{
-          tabBarLabel: 'Chart',
-        }}
-      />
-      <Tab.Screen 
-        name="ProfileCreation" 
-        component={ProfileCreationScreen}
-        options={{
-          tabBarLabel: 'Profile',
-        }}
-      />
-      <Tab.Screen
-        name="LivingLog"
-        component={LivingLogScreen}
-        options={{
-          tabBarLabel: 'Living Log',
-        }}
-      />
-      <Tab.Screen
-        name="WaveWitness"
-        component={WaveWitnessScreen}
-        options={{
-          tabBarLabel: 'Wave Witness',
-        }}
-      />
-      <Tab.Screen
-        name="ResponseIntelligence"
-        component={ResponseIntelligenceScreen}
-        options={{
-          tabBarLabel: 'Response Intel',
-        }}
-      />
-      <Tab.Screen
-        name="ProjectFlowDynamics"
-        component={ProjectFlowDynamicsScreen}
-        options={{
-          tabBarLabel: 'Project Flow',
-        }}
-      />
-      <Tab.Screen
-        name="ImpulseIntegration"
-        component={ImpulseIntegrationScreen}
-        options={{
-          tabBarLabel: 'Impulse Intel',
-        }}
-      />
-      <Tab.Screen
-        name="RecognitionNavigation"
-        component={RecognitionNavigationScreen}
-        options={{
-          tabBarLabel: 'Recognition Nav',
-        }}
-      />
-      <Tab.Screen
-        name="EnvironmentalAttunement"
-        component={EnvironmentalAttunementScreen}
-        options={{
-          tabBarLabel: 'Env. Tune',
-        }}
-      />
-      <Tab.Screen
-        name="PatternRecognitionEngine"
-        component={PatternRecognitionEngineScreen}
-        options={{
-          tabBarLabel: 'Pattern Engine',
-        }}
-      />
-    </Tab.Navigator>
+          {/* Content Area */}
+          <View style={styles.contentArea}>
+            {getCurrentComponent()}
+          </View>
+        </View>
+      </View>
+    </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: 'transparent',
+  },
+  appContainer: {
+    flex: 1,
+    backgroundColor: 'transparent',
+  },
+  mainContent: {
+    flex: 1,
+    flexDirection: 'row',
+    backgroundColor: 'transparent',
+  },
+  navigation: {
+    width: 72,
+    backgroundColor: 'rgba(250, 250, 242, 0.9)',
+    borderRightWidth: 1,
+    borderRightColor: colors.base1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.md,
+    paddingTop: spacing.xl, // Add padding for status bar
+  },
+  navigationCollapsed: {
+    width: 24,
+  },
+  collapseButtonContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.lg,
+  },
+  navButtonContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  navButtonSpacing: {
+    marginTop: spacing.md,
+  },
+  navIcon: {
+    textShadowColor: 'rgba(50, 50, 48, 0.4)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  contentArea: {
+    flex: 1,
+    backgroundColor: 'transparent',
+  },
+});
 
 export default MainTabNavigator;

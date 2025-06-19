@@ -7,7 +7,6 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   TouchableOpacity,
   TextInput,
@@ -16,8 +15,10 @@ import {
   Animated,
   Modal,
 } from 'react-native';
-import {useNavigation, useRoute} from '@react-navigation/native';
+// Navigation hooks not needed in this implementation
 import {Ionicons} from '@expo/vector-icons';
+import StackedButton from '../../components/StackedButton';
+import { colors, typography, spacing } from '../../constants/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import aiOracleService, {
   OracleInputSynthesis,
@@ -28,8 +29,8 @@ import aiOracleService, {
 } from '../../services/aiOracleService';
 
 interface OracleScreenProps {
-  navigation: any;
-  route: any;
+  navigation?: any;
+  route?: any;
 }
 
 const OracleScreen: React.FC<OracleScreenProps> = ({navigation, route}) => {
@@ -59,7 +60,7 @@ const OracleScreen: React.FC<OracleScreenProps> = ({navigation, route}) => {
   // Completion system
   const [showCompletionModal, setShowCompletionModal] = useState<boolean>(false);
   const [completionReflection, setCompletionReflection] = useState<string>('');
-  const [completionRating, setCompletionRating] = useState<number>(5);
+  const [completionRating, setCompletionRating] = useState<1 | 2 | 3 | 4 | 5>(5);
 
   // Oracle wisdom (legacy Q&A for non-quest users)
   const [oracleQuestion, setOracleQuestion] = useState<string>('');
@@ -72,8 +73,10 @@ const OracleScreen: React.FC<OracleScreenProps> = ({navigation, route}) => {
       try {
         setLoadingMessage('Synthesizing your three-tool journey...');
         
+        console.log('Oracle: Initializing with route:', !!route, 'params:', !!route?.params);
+        
         // Check for direct handoff from Calibration Tool
-        if (route.params?.handoffData) {
+        if (route?.params?.handoffData) {
           console.log('Oracle: Received handoff data:', route.params.handoffData);
           const handoffData = route.params.handoffData;
           
@@ -97,10 +100,13 @@ const OracleScreen: React.FC<OracleScreenProps> = ({navigation, route}) => {
           }
         } else {
           // Try to load from storage for manual navigation
+          console.log('Oracle: No route params, checking storage...');
           const [frequencyMapperData, calibrationData] = await Promise.all([
             AsyncStorage.getItem('frequencyMapperOutput'),
             AsyncStorage.getItem('calibrationResults')
           ]);
+          
+          console.log('Oracle: Storage data - FM:', !!frequencyMapperData, 'Cal:', !!calibrationData);
           
           if (frequencyMapperData && calibrationData) {
             const fmOutput = JSON.parse(frequencyMapperData);
@@ -154,6 +160,7 @@ const OracleScreen: React.FC<OracleScreenProps> = ({navigation, route}) => {
             await generateInitialQuests(mockSynthesis);
           } else {
             // No complete journey data - show Oracle wisdom mode
+            console.log('Oracle: No complete journey data, defaulting to wisdom mode');
             setHasCompleteJourney(false);
             setCurrentView('oracle_wisdom');
           }
@@ -176,7 +183,12 @@ const OracleScreen: React.FC<OracleScreenProps> = ({navigation, route}) => {
         
       } catch (error) {
         console.error('Failed to initialize Oracle:', error);
-        Alert.alert('Error', 'Failed to load your Oracle experience. Please try again.');
+        // Don't show alert for navigation issues - just default to wisdom mode
+        if (error instanceof Error && error.message?.includes('Cannot read properties of undefined')) {
+          console.log('Oracle: Navigation props missing, defaulting to wisdom mode');
+        } else {
+          Alert.alert('Error', 'Failed to load your Oracle experience. Please try again.');
+        }
         setHasCompleteJourney(false);
         setCurrentView('oracle_wisdom');
       } finally {
@@ -185,7 +197,7 @@ const OracleScreen: React.FC<OracleScreenProps> = ({navigation, route}) => {
     };
 
     initializeOracle();
-  }, [route.params]);
+  }, [route?.params]);
 
   // Generate initial quest options
   const generateInitialQuests = async (synthesis: OracleInputSynthesis) => {
@@ -524,7 +536,7 @@ const OracleScreen: React.FC<OracleScreenProps> = ({navigation, route}) => {
                 style={styles.hintCard}
                 onPress={() => handleShowHint(hint)}
               >
-                <Ionicons name="lightbulb-outline" size={20} color="#6c5ce7" />
+                <Ionicons name="bulb-outline" size={20} color="#6c5ce7" />
                 <Text style={styles.hintPreview}>{hint.hint_text.substring(0, 60)}...</Text>
               </TouchableOpacity>
             ))}
@@ -537,72 +549,65 @@ const OracleScreen: React.FC<OracleScreenProps> = ({navigation, route}) => {
   // Render Oracle wisdom (legacy mode)
   const renderOracleWisdom = () => (
     <View style={styles.wisdomContainer}>
-      <View style={styles.wisdomHeader}>
-        <Text style={styles.wisdomTitle}>Oracle Wisdom</Text>
-        <Text style={styles.wisdomSubtitle}>
-          Complete the Frequency Mapper and Calibration Tool for personalized quests
-        </Text>
-      </View>
+      <View style={styles.contentWrapper}>
+        <View style={styles.titleSection}>
+          <Text style={styles.pageTitle}>ORACLE</Text>
+          <Text style={styles.pageSubtitle}>Ask & Receive</Text>
+        </View>
 
-      <ScrollView style={styles.messagesContainer}>
-        {oracleMessages.length === 0 && !isThinking && (
-          <View style={styles.welcomeCard}>
-            <Ionicons name="eye-outline" size={48} color="#6c5ce7" style={{marginBottom: 16}} />
-            <Text style={styles.welcomeTitle}>Welcome to the Oracle</Text>
-            <Text style={styles.welcomeText}>
-              Ask any question about your energy, path, or spiritual journey. 
-              For personalized quests, complete your Frequency Mapper and Calibration Tool first.
+        <View style={styles.oracleContent}>
+          {isThinking && (
+            <View style={styles.pulseLoaderContainer}>
+              <View style={styles.pulseLoader}>
+                <View style={styles.pulseBlip} />
+                <View style={[styles.pulseBlip, { animationDelay: '0.5s' }]} />
+                <View style={[styles.pulseBlip, { animationDelay: '1.0s' }]} />
+              </View>
+            </View>
+          )}
+
+          {oracleMessages.length === 0 && !isThinking && (
+            <Text style={styles.oracleDescription}>
+              The Oracle awaits. Focus your intent, then ask your question.
             </Text>
-          </View>
-        )}
+          )}
 
-        {isThinking && (
-          <View style={styles.thinkingCard}>
-            <Text style={styles.thinkingText}>The Oracle is contemplating your question...</Text>
-            <View style={styles.thinkingDots}>
-              <Text style={styles.dot}>●</Text>
-              <Text style={styles.dot}>●</Text>
-              <Text style={styles.dot}>●</Text>
+          {oracleMessages.map((message) => (
+            <View key={message.id} style={styles.inputPanel}>
+              <View style={styles.questionSection}>
+                <Text style={styles.inputPanelLabel}>YOUR QUESTION</Text>
+                <Text style={styles.questionText}>{message.question}</Text>
+              </View>
+              <View style={styles.answerSection}>
+                <Text style={styles.inputPanelLabel}>ORACLE'S GUIDANCE</Text>
+                <Text style={styles.answerText}>{message.answer}</Text>
+                <Text style={styles.timestamp}>
+                  {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </Text>
+              </View>
             </View>
-          </View>
-        )}
+          ))}
 
-        {oracleMessages.map((message) => (
-          <View key={message.id} style={styles.messageCard}>
-            <View style={styles.questionSection}>
-              <Text style={styles.questionLabel}>Your Question:</Text>
-              <Text style={styles.questionText}>{message.question}</Text>
-            </View>
-            <View style={styles.answerSection}>
-              <Text style={styles.answerLabel}>Oracle's Guidance:</Text>
-              <Text style={styles.answerText}>{message.answer}</Text>
-              <Text style={styles.timestamp}>
-                {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-              </Text>
-            </View>
+          <View style={styles.inputPanel}>
+            <Text style={styles.inputPanelLabel}>ORACLE QUERY</Text>
+            <TextInput
+              style={styles.formElement}
+              value={oracleQuestion}
+              onChangeText={setOracleQuestion}
+              placeholder="Ask your question..."
+              multiline
+              maxLength={200}
+              editable={!isThinking}
+              placeholderTextColor={colors.textSecondary}
+            />
           </View>
-        ))}
-      </ScrollView>
-
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.questionInput}
-          value={oracleQuestion}
-          onChangeText={setOracleQuestion}
-          placeholder="Ask the Oracle a question..."
-          multiline
-          maxLength={200}
-          editable={!isThinking}
-        />
-        <TouchableOpacity
-          style={[styles.askButton, (isThinking || !oracleQuestion.trim()) && styles.buttonDisabled]}
-          onPress={handleAskOracle}
-          disabled={isThinking || !oracleQuestion.trim()}
-        >
-          <Text style={styles.buttonText}>
-            {isThinking ? 'Thinking...' : 'Ask Oracle'}
-          </Text>
-        </TouchableOpacity>
+          
+          <StackedButton
+            type="rect"
+            text={isThinking ? 'CONTEMPLATING...' : 'SUBMIT QUERY'}
+            onPress={handleAskOracle}
+          />
+        </View>
       </View>
     </View>
   );
@@ -640,25 +645,14 @@ const OracleScreen: React.FC<OracleScreenProps> = ({navigation, route}) => {
   // Main render
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
         {renderLoadingScreen()}
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Ionicons name="arrow-back" size={24} color="#333" />
-        </TouchableOpacity>
-        <Text style={styles.title}>Oracle</Text>
-        <View style={styles.headerSpacer} />
-      </View>
-
+    <View style={styles.container}>
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
         {!hasCompleteJourney && renderOracleWisdom()}
         {hasCompleteJourney && currentView === 'awakening' && renderAwakeningScreen()}
@@ -667,41 +661,140 @@ const OracleScreen: React.FC<OracleScreenProps> = ({navigation, route}) => {
       </ScrollView>
 
       {renderHintModal()}
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  backButton: {
-    padding: 8,
-  },
-  title: {
-    flex: 1,
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#333',
-    textAlign: 'center',
-  },
-  headerSpacer: {
-    width: 40,
+    backgroundColor: 'transparent',
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    padding: 16,
+    flexGrow: 1,
+    padding: spacing.lg,
+  },
+  contentWrapper: {
+    flex: 1,
+    flexDirection: 'column',
+  },
+  titleSection: {
+    alignItems: 'center',
+    marginBottom: spacing.xl,
+    flexShrink: 0,
+  },
+  pageTitle: {
+    ...typography.displayMedium,
+    fontFamily: 'System',
+    fontWeight: '700',
+    color: colors.textPrimary,
+    textAlign: 'center',
+    letterSpacing: 2,
+  },
+  pageSubtitle: {
+    ...typography.labelSmall,
+    fontFamily: 'monospace',
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginTop: spacing.xs,
+  },
+  oracleContent: {
+    flex: 1,
+    flexDirection: 'column',
+    justifyContent: 'center',
+    gap: spacing.lg,
+  },
+  oracleDescription: {
+    textAlign: 'center',
+    fontSize: 16,
+    lineHeight: 24,
+    color: colors.textSecondary,
+    maxWidth: 320,
+    alignSelf: 'center',
+  },
+  pulseLoaderContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pulseLoader: {
+    width: 80,
+    height: 80,
+    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pulseBlip: {
+    position: 'absolute',
+    width: 8,
+    height: 8,
+    backgroundColor: colors.accent,
+    borderRadius: 4,
+    opacity: 0,
+  },
+  inputPanel: {
+    position: 'relative',
+    borderWidth: 1,
+    borderColor: colors.base1,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    padding: spacing.md,
+    marginBottom: spacing.md,
+  },
+  inputPanelLabel: {
+    position: 'absolute',
+    top: -10,
+    left: 12,
+    backgroundColor: colors.bg,
+    paddingHorizontal: 6,
+    fontFamily: 'monospace',
+    fontSize: 11,
+    fontWeight: '500',
+    color: colors.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.1,
+  },
+  formElement: {
+    width: '100%',
+    backgroundColor: 'transparent',
+    color: colors.textPrimary,
+    fontSize: 15,
+    lineHeight: 22,
+    minHeight: 48,
+    textAlignVertical: 'top',
+  },
+  questionSection: {
+    marginBottom: spacing.md,
+    paddingBottom: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.base1,
+  },
+  answerSection: {
+    position: 'relative',
+  },
+  questionText: {
+    fontSize: 15,
+    color: colors.textPrimary,
+    fontStyle: 'italic',
+    marginTop: spacing.sm,
+  },
+  answerText: {
+    fontSize: 15,
+    color: colors.textPrimary,
+    lineHeight: 22,
+    marginTop: spacing.sm,
+    marginBottom: spacing.sm,
+  },
+  timestamp: {
+    fontSize: 11,
+    color: colors.textSecondary,
+    textAlign: 'right',
+    fontFamily: 'monospace',
+  },
+  wisdomContainer: {
+    flex: 1,
   },
   loadingContainer: {
     flex: 1,

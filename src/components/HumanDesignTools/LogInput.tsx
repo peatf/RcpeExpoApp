@@ -3,7 +3,9 @@
  * @description A text input component specifically for logging experiences.
  */
 import React, { useState } from 'react';
-import { View, TextInput, TouchableOpacity, Text, StyleSheet, Keyboard } from 'react-native';
+import { View, TextInput, StyleSheet, Keyboard } from 'react-native';
+import StackedButton from '../StackedButton';
+import { colors, typography, spacing } from '../../constants/theme';
 
 /**
  * @interface LogInputProps
@@ -35,52 +37,48 @@ const LogInput: React.FC<LogInputProps> = ({ onSubmit, placeholder = "What's on 
 
   return (
     <View style={styles.container}>
-      <TextInput
-        style={styles.input}
-        value={text}
-        onChangeText={setText}
-        placeholder={placeholder}
-        placeholderTextColor="#888"
-        multiline
+      <View style={styles.inputPanel}>
+        <TextInput
+          style={styles.formElement}
+          value={text}
+          onChangeText={setText}
+          placeholder={placeholder}
+          placeholderTextColor={colors.textSecondary}
+          multiline
+          numberOfLines={3}
+          textAlignVertical="top"
+        />
+      </View>
+      <StackedButton
+        type="rect"
+        text="LOG ENTRY"
+        onPress={handleSubmit}
       />
-      <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-        <Text style={styles.submitButtonText}>Log</Text>
-      </TouchableOpacity>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
-    backgroundColor: '#f9f9f9',
-    borderRadius: 8,
-    margin: 16,
+    gap: spacing.md,
   },
-  input: {
-    backgroundColor: '#ffffff',
-    borderColor: '#ddd',
+  inputPanel: {
+    position: 'relative',
     borderWidth: 1,
-    borderRadius: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 16,
-    minHeight: 60, // For multiline input
-    textAlignVertical: 'top', // Align text to top for multiline
-    marginBottom: 12,
-    color: '#333',
+    borderColor: colors.base1,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    padding: spacing.md,
+    minHeight: 80,
   },
-  submitButton: {
-    backgroundColor: '#007bff', // A common primary blue
-    paddingVertical: 12,
-    paddingHorizontal: 18,
-    borderRadius: 6,
-    alignItems: 'center',
-  },
-  submitButtonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: 'bold',
+  formElement: {
+    width: '100%',
+    backgroundColor: 'transparent',
+    color: colors.textPrimary,
+    fontSize: 15,
+    lineHeight: 22,
+    minHeight: 60,
+    textAlignVertical: 'top',
   },
 });
 

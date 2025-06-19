@@ -7,7 +7,6 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   TouchableOpacity,
   TextInput,
@@ -16,6 +15,8 @@ import {
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {Ionicons} from '@expo/vector-icons';
+import StackedButton from '../../components/StackedButton';
+import { colors, typography, spacing } from '../../constants/theme';
 import baseChartService, {BaseChartData} from '../../services/baseChartService';
 import aiFrequencyMapperService from '../../services/aiFrequencyMapperService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -863,93 +864,30 @@ const FrequencyMapperScreen: React.FC = () => {
     const quickPrompts = getQuickStartPrompts();
     
     return (
-      <View style={styles.contentCard}>
-        <Text style={styles.cardTitle}>
-          {userDriveProfile.motivation_color ? `Your ${userDriveProfile.motivation_color} Energy` : 'Your Energy'}
+      <View style={styles.frequencyContent}>
+        <Text style={styles.contentDescription}>
+          Input your emerging desire, intention, or situation. Be as descriptive as you wish.
         </Text>
         
-        {userDriveProfile.venus_sign && (
-          <View style={styles.driveProfileCard}>
-            <Text style={styles.driveMechanicsDetail}>
-              Venus in {userDriveProfile.venus_sign} • {userDriveProfile.heart_state} Heart • {userDriveProfile.root_state} Root
-            </Text>
-            <Text style={styles.venusIntroduction}>{getVenusIntroduction()}</Text>
-          </View>
-        )}
-        
-        <Text style={styles.promptText}>{getMotivationPrompt()}</Text>
-        
-        {/* Quick-start prompts */}
-        <View style={styles.quickPromptsContainer}>
-          <Text style={styles.quickPromptsLabel}>Quick starts:</Text>
-          <View style={styles.quickPromptButtons}>
-            {quickPrompts.map((prompt, index) => (
-              <TouchableOpacity
-                key={index}
-                style={styles.quickPromptButton}
-                onPress={() => handleQuickPrompt(prompt)}
-              >
-                <Text style={styles.quickPromptText}>{prompt}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-        
-        {/* Input method toggle */}
-        <View style={styles.inputMethodToggle}>
-          <TouchableOpacity
-            style={[styles.methodButton, inputMethod === 'text' && styles.methodButtonActive]}
-            onPress={() => setInputMethod('text')}
-          >
-            <Ionicons name="create-outline" size={18} color={inputMethod === 'text' ? '#fff' : '#666'} />
-            <Text style={[styles.methodButtonText, inputMethod === 'text' && styles.methodButtonTextActive]}>Write</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.methodButton, inputMethod === 'voice' && styles.methodButtonActive]}
-            onPress={() => setInputMethod('voice')}
-          >
-            <Ionicons name="mic-outline" size={18} color={inputMethod === 'voice' ? '#fff' : '#666'} />
-            <Text style={[styles.methodButtonText, inputMethod === 'voice' && styles.methodButtonTextActive]}>Speak</Text>
-          </TouchableOpacity>
-        </View>
-        
-        {inputMethod === 'text' ? (
+        <View style={styles.inputPanel}>
+          <Text style={styles.inputPanelLabel}>INPUT SIGNAL</Text>
           <TextInput
-            style={styles.textInput}
-            placeholder="Enter your emerging desire, intention, or situation..."
+            style={styles.formElement}
+            placeholder="Enter emerging desire, intention, or situation..."
             value={userInput}
             onChangeText={setUserInput}
             multiline
             numberOfLines={4}
             textAlignVertical="top"
+            placeholderTextColor={colors.textSecondary}
           />
-        ) : (
-          <View style={styles.voiceInputContainer}>
-            <Text style={styles.voiceInputPlaceholder}>
-              {userDriveProfile.heart_state === 'Undefined' 
-                ? "Voice input can help you process through speaking - tap to start recording"
-                : "Speak your emerging desire clearly - tap to start recording"}
-            </Text>
-            <TouchableOpacity style={styles.voiceButton}>
-              <Ionicons name="mic" size={32} color="#007AFF" />
-            </TouchableOpacity>
-            {userInput && (
-              <Text style={styles.voiceTranscript}>{userInput}</Text>
-            )}
-          </View>
-        )}
+        </View>
         
-        <TouchableOpacity
-          style={[styles.actionButton, !userInput.trim() && styles.buttonDisabled]}
+        <StackedButton
+          type="rect"
+          text={isLoading ? 'PROCESSING...' : 'PROCESS & MAP'}
           onPress={handleInputSubmit}
-          disabled={!userInput.trim() || isLoading}
-        >
-          {isLoading ? (
-            <ActivityIndicator size="small" color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>Continue</Text>
-          )}
-        </TouchableOpacity>
+        />
       </View>
     );
   };
@@ -984,17 +922,11 @@ const FrequencyMapperScreen: React.FC = () => {
           ))}
         </View>
         
-        <TouchableOpacity
-          style={styles.actionButton}
+        <StackedButton
+          type="rect"
+          text={isLoading ? 'PROCESSING...' : 'CONTINUE'}
           onPress={handleReflectionComplete}
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <ActivityIndicator size="small" color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>Continue</Text>
-          )}
-        </TouchableOpacity>
+        />
       </View>
     );
   };
@@ -1227,41 +1159,94 @@ const FrequencyMapperScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Frequency Mapper</Text>
-        <Text style={styles.subtitle}>Refine your desire into crystal clarity</Text>
+    <View style={styles.container}>
+      <View style={styles.contentWrapper}>
+        <View style={styles.titleSection}>
+          <Text style={styles.pageTitle}>FREQUENCY MAPPER</Text>
+          <Text style={styles.pageSubtitle}>Phase 1: Articulation</Text>
+        </View>
+        
+        <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+          {renderContent()}
+        </ScrollView>
       </View>
-      
-      {renderProgressIndicator()}
-      
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        {renderContent()}
-      </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: 'transparent',
   },
-  header: {
-    padding: 24,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+  contentWrapper: {
+    flex: 1,
+    padding: spacing.lg,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 8,
+  titleSection: {
+    alignItems: 'center',
+    marginBottom: spacing.xl,
+    flexShrink: 0,
   },
-  subtitle: {
+  pageTitle: {
+    ...typography.displayMedium,
+    fontFamily: 'System',
+    fontWeight: '700',
+    color: colors.textPrimary,
+    textAlign: 'center',
+    letterSpacing: 2,
+  },
+  pageSubtitle: {
+    ...typography.labelSmall,
+    fontFamily: 'monospace',
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginTop: spacing.xs,
+  },
+  inputPanel: {
+    position: 'relative',
+    borderWidth: 1,
+    borderColor: colors.base1,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    padding: spacing.md,
+    marginBottom: spacing.lg,
+    minHeight: 120,
+  },
+  inputPanelLabel: {
+    position: 'absolute',
+    top: -10,
+    left: 12,
+    backgroundColor: colors.bg,
+    paddingHorizontal: 6,
+    fontFamily: 'monospace',
+    fontSize: 11,
+    fontWeight: '500',
+    color: colors.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.1,
+  },
+  formElement: {
+    width: '100%',
+    backgroundColor: 'transparent',
+    color: colors.textPrimary,
+    fontSize: 15,
+    lineHeight: 22,
+    minHeight: 80,
+    textAlignVertical: 'top',
+  },
+  frequencyContent: {
+    flex: 1,
+    gap: spacing.lg,
+    justifyContent: 'center',
+  },
+  contentDescription: {
+    textAlign: 'center',
     fontSize: 16,
-    color: '#666',
+    lineHeight: 24,
+    color: colors.textSecondary,
+    maxWidth: 320,
+    alignSelf: 'center',
   },
   progressContainer: {
     flexDirection: 'row',

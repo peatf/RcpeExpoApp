@@ -4,6 +4,8 @@
  */
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, FlatList, ActivityIndicator, RefreshControl, TouchableOpacity } from 'react-native';
+import StackedButton from '../../../components/StackedButton';
+import { colors, typography, spacing } from '../../../constants/theme';
 import { InfoCard, LogInput, InsightDisplay } from '../../../components/HumanDesignTools'; // Adjusted path
 import * as livingLogService from '../../../services/livingLogService'; // Adjusted path
 import { LogEntry, LivingLogPattern, AuthorityType } from '../../../types/humanDesignTools'; // Adjusted path
@@ -117,43 +119,125 @@ const LivingLogScreen: React.FC = () => {
 
 
   if (isLoading && !isRefreshing && logEntries.length === 0) {
-    return <ActivityIndicator size="large" style={styles.loader} />;
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={colors.accent} />
+        <Text style={styles.loadingText}>Loading your living log...</Text>
+      </View>
+    );
   }
 
   return (
-    <ScrollView
-      style={styles.container}
-      refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />}
-    >
-      <Text style={styles.header}>Living Log</Text>
+    <View style={styles.container}>
+      <View style={styles.contentWrapper}>
+        <View style={styles.titleSection}>
+          <Text style={styles.pageTitle}>LIVING LOG</Text>
+          <Text style={styles.pageSubtitle}>A chronicle of experiences</Text>
+        </View>
 
-      <InfoCard title="New Log Entry">
-        <LogInput onSubmit={handleCreateLogEntry} placeholder="Log your current experience..." />
-      </InfoCard>
+        <ScrollView 
+          style={styles.scrollView} 
+          contentContainerStyle={styles.scrollContent}
+          refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />}
+        >
+          <View style={styles.logContent}>
+            <InfoCard title="New Log Entry">
+              <LogInput onSubmit={handleCreateLogEntry} placeholder="Log your current experience..." />
+            </InfoCard>
 
-      <InfoCard title="Patterns & Insights">
-        {patterns.length === 0 && insights.length === 0 && <Text>No patterns or insights detected yet.</Text>}
-        {patterns.map(renderPattern)}
-        {insights.map(renderInsight)}
-      </InfoCard>
+            <InfoCard title="Patterns & Insights">
+              {patterns.length === 0 && insights.length === 0 && (
+                <Text style={styles.emptyText}>No patterns or insights detected yet.</Text>
+              )}
+              {patterns.map(renderPattern)}
+              {insights.map(renderInsight)}
+            </InfoCard>
 
-      <InfoCard title="Recent Log Entries">
-        {logEntries.length === 0 && !isLoading && <Text>No log entries yet. Add one above!</Text>}
-        <FlatList
-          data={logEntries}
-          renderItem={renderLogEntry}
-          keyExtractor={(item) => item.id}
-          scrollEnabled={false} // Disable FlatList scrolling, ScrollView handles it
-        />
-      </InfoCard>
-    </ScrollView>
+            <InfoCard title="Recent Log Entries">
+              {logEntries.length === 0 && !isLoading && (
+                <Text style={styles.emptyText}>No log entries yet. Add one above!</Text>
+              )}
+              <FlatList
+                data={logEntries}
+                renderItem={renderLogEntry}
+                keyExtractor={(item) => item.id}
+                scrollEnabled={false} // Disable FlatList scrolling, ScrollView handles it
+              />
+            </InfoCard>
+
+            <View style={styles.logActions}>
+              <StackedButton
+                type="rect"
+                text="ADD NEW ENTRY"
+                onPress={() => {/* Could focus input or show modal */}}
+              />
+            </View>
+          </View>
+        </ScrollView>
+      </View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f0f2f5', // A light background color
+    backgroundColor: 'transparent',
+  },
+  contentWrapper: {
+    flex: 1,
+    padding: spacing.lg,
+  },
+  titleSection: {
+    alignItems: 'center',
+    marginBottom: spacing.xl,
+    flexShrink: 0,
+  },
+  pageTitle: {
+    ...typography.displayMedium,
+    fontFamily: 'System',
+    fontWeight: '700',
+    color: colors.textPrimary,
+    textAlign: 'center',
+    letterSpacing: 2,
+  },
+  pageSubtitle: {
+    ...typography.labelSmall,
+    fontFamily: 'monospace',
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginTop: spacing.xs,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+  },
+  logContent: {
+    flex: 1,
+    gap: spacing.lg,
+  },
+  logActions: {
+    marginTop: spacing.lg,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.xl,
+  },
+  loadingText: {
+    ...typography.bodyMedium,
+    color: colors.textSecondary,
+    marginTop: spacing.md,
+    textAlign: 'center',
+  },
+  emptyText: {
+    ...typography.bodyMedium,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    fontStyle: 'italic',
   },
   header: {
     fontSize: 26,
