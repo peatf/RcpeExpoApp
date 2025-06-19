@@ -13,6 +13,10 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import StepTracker from '../../components/StepTracker'; // Import StepTracker
+import { FLOW_STEPS, STEP_LABELS } from '../../constants/flowSteps'; // Import constants
+import ScreenExplainer from '../../components/ScreenExplainer'; // Import ScreenExplainer
+import { SCREEN_EXPLAINERS } from '../../constants/screenExplainers'; // Import SCREEN_EXPLAINERS
 import {useNavigation} from '@react-navigation/native';
 import {Ionicons} from '@expo/vector-icons';
 import StackedButton from '../../components/StackedButton';
@@ -506,6 +510,7 @@ const FrequencyMapperScreen: React.FC = () => {
   
   // Flow state
   const [currentStep, setCurrentStep] = useState<'entry' | 'reflection' | 'directional' | 'experiential' | 'essence' | 'crystallization'>('entry');
+  const [visualCurrentStep, setVisualCurrentStep] = useState<number>(1); // State for visual tracker
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [sessionId, setSessionId] = useState<string>('');
   
@@ -598,6 +603,26 @@ const FrequencyMapperScreen: React.FC = () => {
     
     loadUserData();
   }, []);
+
+  // Effect to update visualCurrentStep based on internal currentStep
+  useEffect(() => {
+    switch (currentStep) {
+      case 'entry':
+      case 'reflection':
+        setVisualCurrentStep(1);
+        break;
+      case 'directional':
+      case 'experiential':
+      case 'essence':
+        setVisualCurrentStep(2);
+        break;
+      case 'crystallization':
+        setVisualCurrentStep(3);
+        break;
+      default:
+        setVisualCurrentStep(1);
+    }
+  }, [currentStep]);
 
   // Get motivation-specific prompt
   const getMotivationPrompt = (): string => {
@@ -897,10 +922,12 @@ const FrequencyMapperScreen: React.FC = () => {
     if (!reflectionOutput) return null;
     
     return (
-      <View style={styles.contentCard}>
-        <Text style={styles.cardTitle}>Reflection</Text>
-        
-        <Text style={styles.reflectionText}>{reflectionOutput.reflection_insight}</Text>
+      <>
+        <ScreenExplainer text={SCREEN_EXPLAINERS.REFLECTION} />
+        <View style={styles.contentCard}>
+          <Text style={styles.cardTitle}>Reflection</Text>
+
+          <Text style={styles.reflectionText}>{reflectionOutput.reflection_insight}</Text>
         <Text style={styles.energeticObservation}>{reflectionOutput.energetic_observation}</Text>
         
         <View style={styles.questionContainer}>
@@ -936,11 +963,13 @@ const FrequencyMapperScreen: React.FC = () => {
     if (!directionalChoices) return null;
     
     return (
-      <View style={styles.contentCard}>
-        <Text style={styles.cardTitle}>Direction</Text>
-        <Text style={styles.choiceContext}>{directionalChoices.choice_context}</Text>
-        
-        <View style={styles.choiceCardsContainer}>
+      <>
+        <ScreenExplainer text={SCREEN_EXPLAINERS.DIRECTION} />
+        <View style={styles.contentCard}>
+          <Text style={styles.cardTitle}>Direction</Text>
+          <Text style={styles.choiceContext}>{directionalChoices.choice_context}</Text>
+
+          <View style={styles.choiceCardsContainer}>
           <TouchableOpacity 
             style={[
               styles.choiceCard, 
@@ -984,11 +1013,13 @@ const FrequencyMapperScreen: React.FC = () => {
     if (!experientialChoices) return null;
     
     return (
-      <View style={styles.contentCard}>
-        <Text style={styles.cardTitle}>Experience</Text>
-        <Text style={styles.choiceContext}>{experientialChoices.choice_context}</Text>
-        
-        <View style={styles.choiceCardsContainer}>
+      <>
+        <ScreenExplainer text={SCREEN_EXPLAINERS.EXPERIENCE} />
+        <View style={styles.contentCard}>
+          <Text style={styles.cardTitle}>Experience</Text>
+          <Text style={styles.choiceContext}>{experientialChoices.choice_context}</Text>
+
+          <View style={styles.choiceCardsContainer}>
           <TouchableOpacity 
             style={[
               styles.choiceCard, 
@@ -1032,11 +1063,13 @@ const FrequencyMapperScreen: React.FC = () => {
     if (!essenceChoices) return null;
     
     return (
-      <View style={styles.contentCard}>
-        <Text style={styles.cardTitle}>Essence</Text>
-        <Text style={styles.choiceContext}>{essenceChoices.choice_context}</Text>
-        
-        <View style={styles.choiceCardsContainer}>
+      <>
+        <ScreenExplainer text={SCREEN_EXPLAINERS.ESSENCE} />
+        <View style={styles.contentCard}>
+          <Text style={styles.cardTitle}>Essence</Text>
+          <Text style={styles.choiceContext}>{essenceChoices.choice_context}</Text>
+
+          <View style={styles.choiceCardsContainer}>
           <TouchableOpacity 
             style={[
               styles.choiceCard, 
@@ -1160,6 +1193,11 @@ const FrequencyMapperScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
+      <StepTracker
+        currentStep={visualCurrentStep}
+        totalSteps={FLOW_STEPS.FREQUENCY_MAPPER}
+        stepLabels={STEP_LABELS.FREQUENCY_MAPPER}
+      />
       <View style={styles.contentWrapper}>
         <View style={styles.titleSection}>
           <Text style={styles.pageTitle}>FREQUENCY MAPPER</Text>

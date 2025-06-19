@@ -4,6 +4,8 @@
  */
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, Button, ActivityIndicator, Alert, FlatList } from 'react-native'; // Removed TextInput, Added FlatList
+import OnboardingBanner from '../../../components/OnboardingBanner'; // Import Banner
+import useOnboardingBanner from '../../../hooks/useOnboardingBanner'; // Import Hook
 import { InfoCard, InsightDisplay, LogInput } from '../../../components/HumanDesignTools';
 import * as recognitionNavigationService from '../../../services/recognitionNavigationService';
 import * as authorityService from '../../../services/authorityService';
@@ -11,6 +13,7 @@ import { AuthorityType, Invitation, InvitationPattern, EnvironmentAssessment, Re
 import InvitationListItem from './RecognitionNavigationComponents/InvitationListItem'; // Import InvitationListItem
 
 const RecognitionNavigationScreen: React.FC = () => {
+  const { showBanner, dismissBanner, isLoadingBanner } = useOnboardingBanner('Invitation Tracker'); // Use Hook
   const [userAuthority, setUserAuthority] = useState<AuthorityType | null>(null);
   const [isLoadingAuthority, setIsLoadingAuthority] = useState(true);
 
@@ -135,6 +138,13 @@ const RecognitionNavigationScreen: React.FC = () => {
 
   return (
     <ScrollView style={styles.container}>
+      {!isLoadingBanner && showBanner && (
+        <OnboardingBanner
+          toolName="Invitation Tracker"
+          description="Welcome, Projector! Track and evaluate invitations to navigate with clarity."
+          onDismiss={dismissBanner}
+        />
+      )}
       <Text style={styles.header}>Recognition Navigation</Text>
       <Text style={styles.subHeader}>Authority: {userAuthority}</Text>
 

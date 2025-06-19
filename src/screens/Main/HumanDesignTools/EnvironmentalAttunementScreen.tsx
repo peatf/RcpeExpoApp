@@ -4,6 +4,8 @@
  */
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, Button, ActivityIndicator, Alert } from 'react-native'; // Removed TextInput
+import OnboardingBanner from '../../../components/OnboardingBanner'; // Import Banner
+import useOnboardingBanner from '../../../hooks/useOnboardingBanner'; // Import Hook
 import { InfoCard, InsightDisplay } from '../../../components/HumanDesignTools';
 import * as environmentalAttunementService from '../../../services/environmentalAttunementService';
 import * as authorityService from '../../../services/authorityService';
@@ -18,6 +20,7 @@ const getMockLunarDay = () => {
 };
 
 const EnvironmentalAttunementScreen: React.FC = () => {
+  const { showBanner, dismissBanner, isLoadingBanner } = useOnboardingBanner('Lunar Cycle Log'); // Use Hook
   const [userAuthority, setUserAuthority] = useState<AuthorityType | null>(null);
   const [isLoadingAuthority, setIsLoadingAuthority] = useState(true);
 
@@ -115,6 +118,13 @@ const EnvironmentalAttunementScreen: React.FC = () => {
 
   return (
     <ScrollView style={styles.container}>
+      {!isLoadingBanner && showBanner && (
+        <OnboardingBanner
+          toolName="Lunar Cycle Log"
+          description="Welcome, Reflector! Attune to the lunar cycle and understand your environmental influences."
+          onDismiss={dismissBanner}
+        />
+      )}
       <Text style={styles.header}>Environmental Attunement</Text>
       <Text style={styles.subHeader}>Lunar Day: {getMockLunarDay()} (Mock)</Text>
 

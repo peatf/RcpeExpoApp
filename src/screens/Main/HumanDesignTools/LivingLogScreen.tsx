@@ -4,6 +4,8 @@
  */
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, FlatList, ActivityIndicator, RefreshControl, TouchableOpacity } from 'react-native';
+import OnboardingBanner from '../../../components/OnboardingBanner'; // Import Banner
+import useOnboardingBanner from '../../../hooks/useOnboardingBanner'; // Import Hook
 import StackedButton from '../../../components/StackedButton';
 import { colors, typography, spacing } from '../../../constants/theme';
 import { InfoCard, LogInput, InsightDisplay } from '../../../components/HumanDesignTools'; // Adjusted path
@@ -16,6 +18,7 @@ import LogListItem from './LivingLogComponents/LogListItem'; // Import the new L
 const MOCK_USER_AUTHORITY = AuthorityType.Sacral; // Example, replace with actual source
 
 const LivingLogScreen: React.FC = () => {
+  const { showBanner, dismissBanner, isLoadingBanner } = useOnboardingBanner('Living Log'); // Use Hook
   const [newEntryText, setNewEntryText] = useState(''); // Not used directly by LogInput but for other potential inputs
   const [logEntries, setLogEntries] = useState<LogEntry[]>([]);
   const [patterns, setPatterns] = useState<LivingLogPattern[]>([]);
@@ -118,7 +121,7 @@ const LivingLogScreen: React.FC = () => {
   );
 
 
-  if (isLoading && !isRefreshing && logEntries.length === 0) {
+  if (isLoading && !isRefreshing && logEntries.length === 0 && !showBanner) { // Consider banner loading state
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={colors.accent} />
@@ -129,6 +132,13 @@ const LivingLogScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
+      {!isLoadingBanner && showBanner && ( // Render Banner if not loading and showBanner is true
+        <OnboardingBanner
+          toolName="Living Log"
+          description="Welcome to your Living Log! Track experiences and discover patterns related to your Human Design."
+          onDismiss={dismissBanner}
+        />
+      )}
       <View style={styles.contentWrapper}>
         <View style={styles.titleSection}>
           <Text style={styles.pageTitle}>LIVING LOG</Text>
