@@ -63,86 +63,31 @@ const StackedButton: React.FC<StackedButtonProps> = ({
     ]).start();
   };
 
+  const getLayerColors = () => [colors.base1, colors.base2, colors.base3, colors.base4, colors.base5, colors.base6];
+
   const getLayerStyle = (layerIndex: number) => {
-    switch (type) {
-      case 'nav':
-        return {
-          ...styles.layer,
-          ...styles[`navL${layerIndex + 1}` as keyof typeof styles],
-          backgroundColor: layerIndex === 3 && isActive ? colors.accent : 
-            layerIndex === 0 ? colors.base1 :
-            layerIndex === 1 ? colors.base2 :
-            layerIndex === 2 ? colors.base3 :
-            layerIndex === 3 ? colors.base4 :
-            layerIndex === 4 ? colors.base5 : colors.base6,
-          transform: [
-            { 
-              translateY: layerAnims[layerIndex].interpolate({
-                inputRange: [0, 10],
-                outputRange: [0, -layerIndex * 2],
-              })
-            }
-          ],
-          shadowColor: layerIndex < 3 ? colors.base3 : colors.base5,
-          shadowOffset: { width: 0, height: layerIndex + 1 },
-          shadowOpacity: 0.3 + (layerIndex * 0.1),
-          shadowRadius: (layerIndex + 1) * 2,
-          elevation: layerIndex + 2,
-          zIndex: 6 - layerIndex,
-        };
-      case 'circle':
-        return {
-          ...styles.layer,
-          ...styles[`circleL${layerIndex + 1}` as keyof typeof styles],
-          backgroundColor: 
-            layerIndex === 0 ? colors.base1 :
-            layerIndex === 1 ? colors.base2 :
-            layerIndex === 2 ? colors.base3 :
-            layerIndex === 3 ? colors.base4 :
-            layerIndex === 4 ? colors.base5 : colors.base6,
-          transform: [
-            { 
-              translateY: layerAnims[layerIndex].interpolate({
-                inputRange: [0, 10],
-                outputRange: [0, -layerIndex * 3],
-              })
-            }
-          ],
-          shadowColor: layerIndex < 3 ? colors.base3 : colors.base5,
-          shadowOffset: { width: 0, height: layerIndex + 2 },
-          shadowOpacity: 0.4 + (layerIndex * 0.1),
-          shadowRadius: (layerIndex + 2) * 3,
-          elevation: layerIndex + 3,
-          zIndex: 6 - layerIndex,
-        };
-      case 'rect':
-        return {
-          ...styles.layer,
-          ...styles[`rectL${layerIndex + 1}` as keyof typeof styles],
-          backgroundColor: 
-            layerIndex === 0 ? colors.base1 :
-            layerIndex === 1 ? colors.base2 :
-            layerIndex === 2 ? colors.base3 :
-            layerIndex === 3 ? colors.base4 :
-            layerIndex === 4 ? colors.base5 : colors.base6,
-          transform: [
-            { 
-              translateY: layerAnims[layerIndex].interpolate({
-                inputRange: [0, 10],
-                outputRange: [0, -layerIndex * 2],
-              })
-            }
-          ],
-          shadowColor: layerIndex < 3 ? colors.base3 : colors.base5,
-          shadowOffset: { width: 0, height: layerIndex + 1 },
-          shadowOpacity: 0.3 + (layerIndex * 0.1),
-          shadowRadius: (layerIndex + 1) * 2,
-          elevation: layerIndex + 2,
-          zIndex: 6 - layerIndex,
-        };
-      default:
-        return {};
-    }
+    const layerColors = getLayerColors();
+    const baseLayerStyle = styles[`${type}L${layerIndex + 1}` as keyof typeof styles];
+    
+    return {
+      position: 'absolute' as const,
+      backgroundColor: layerIndex === 3 && type === 'nav' && isActive ? colors.accent : layerColors[layerIndex],
+      ...baseLayerStyle,
+      transform: [
+        { 
+          translateY: layerAnims[layerIndex].interpolate({
+            inputRange: [0, 10],
+            outputRange: [0, -layerIndex * (type === 'circle' ? 3 : 2)],
+          })
+        }
+      ],
+      shadowColor: layerIndex < 3 ? colors.base3 : colors.base5,
+      shadowOffset: { width: 0, height: layerIndex + 1 },
+      shadowOpacity: 0.3 + (layerIndex * 0.1),
+      shadowRadius: (layerIndex + 1) * 2,
+      elevation: layerIndex + 2,
+      zIndex: 6 - layerIndex,
+    };
   };
 
   const containerStyle = type === 'nav' ? styles.navContainer : 
@@ -196,8 +141,6 @@ const styles = StyleSheet.create({
   },
   layer: {
     position: 'absolute',
-    top: '50%',
-    left: '50%',
   },
   content: {
     position: 'relative',
@@ -231,43 +174,43 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 26,
-    marginLeft: -26,
-    marginTop: -26,
+    left: 0,
+    top: 0,
   },
   navL2: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    marginLeft: -22,
-    marginTop: -22,
+    left: 4,
+    top: 2,
   },
   navL3: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    marginLeft: -18,
-    marginTop: -18,
+    left: 8,
+    top: 4,
   },
   navL4: {
     width: 28,
     height: 28,
     borderRadius: 14,
-    marginLeft: -14,
-    marginTop: -14,
+    left: 12,
+    top: 6,
   },
   navL5: {
     width: 20,
     height: 20,
     borderRadius: 10,
-    marginLeft: -10,
-    marginTop: -10,
+    left: 16,
+    top: 8,
   },
   navL6: {
     width: 12,
     height: 12,
     borderRadius: 6,
-    marginLeft: -6,
-    marginTop: -6,
+    left: 20,
+    top: 10,
   },
 
   // Circle button styles (large action button)
@@ -279,43 +222,43 @@ const styles = StyleSheet.create({
     width: 160,
     height: 160,
     borderRadius: 80,
-    marginLeft: -80,
-    marginTop: -80,
+    left: 0,
+    top: 0,
   },
   circleL2: {
     width: 136,
     height: 136,
     borderRadius: 68,
-    marginLeft: -68,
-    marginTop: -68,
+    left: 12,
+    top: 4,
   },
   circleL3: {
     width: 112,
     height: 112,
     borderRadius: 56,
-    marginLeft: -56,
-    marginTop: -56,
+    left: 24,
+    top: 8,
   },
   circleL4: {
     width: 88,
     height: 88,
     borderRadius: 44,
-    marginLeft: -44,
-    marginTop: -44,
+    left: 36,
+    top: 12,
   },
   circleL5: {
     width: 64,
     height: 64,
     borderRadius: 32,
-    marginLeft: -32,
-    marginTop: -32,
+    left: 48,
+    top: 16,
   },
   circleL6: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    marginLeft: -20,
-    marginTop: -20,
+    left: 60,
+    top: 20,
   },
 
   // Rectangular button styles
@@ -327,43 +270,43 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 90,
     borderRadius: 12,
-    marginLeft: '-50%',
-    marginTop: -45,
+    left: 0,
+    top: 0,
   },
   rectL2: {
-    width: '85%',
+    width: '90%',
     height: 75,
     borderRadius: 12,
-    marginLeft: '-42.5%',
-    marginTop: -37.5,
+    left: '5%',
+    top: 3,
   },
   rectL3: {
-    width: '70%',
-    height: 59,
+    width: '80%',
+    height: 60,
     borderRadius: 12,
-    marginLeft: '-35%',
-    marginTop: -29.5,
+    left: '10%',
+    top: 6,
   },
   rectL4: {
-    width: '55%',
-    height: 41,
+    width: '70%',
+    height: 45,
     borderRadius: 12,
-    marginLeft: '-27.5%',
-    marginTop: -20.5,
+    left: '15%',
+    top: 9,
   },
   rectL5: {
-    width: '41%',
-    height: 27,
+    width: '60%',
+    height: 30,
     borderRadius: 12,
-    marginLeft: '-20.5%',
-    marginTop: -13.5,
+    left: '20%',
+    top: 12,
   },
   rectL6: {
-    width: '27%',
-    height: 14,
+    width: '50%',
+    height: 15,
     borderRadius: 12,
-    marginLeft: '-13.5%',
-    marginTop: -7,
+    left: '25%',
+    top: 15,
   },
 });
 

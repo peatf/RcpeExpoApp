@@ -21,8 +21,8 @@ const AppNavigator: React.FC = () => {
   }
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator screenOptions={{headerShown: false}}>
+    <NavigationContainer theme={{colors: {background: 'transparent'}}}>
+      <Stack.Navigator screenOptions={{headerShown: false, cardStyle: {backgroundColor: 'transparent'}}}>
         {isAuthenticated ? (
           <Stack.Screen name="Main" component={MainTabNavigator} />
         ) : (

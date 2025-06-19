@@ -83,6 +83,7 @@ const AppBackground: React.FC<AppBackgroundProps> = ({ children }) => {
         source={require('../../assets/InOSBkimg72x.png')}
         style={styles.backgroundImage}
         resizeMode="cover"
+        imageStyle={{ opacity: 1 }}
         onError={(error) => console.log('Background image failed to load:', error.nativeEvent)}
         onLoad={() => console.log('Background image loaded successfully')}
       >

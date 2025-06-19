@@ -19,6 +19,7 @@ export const AuthNavigator: React.FC = () => {
     <Stack.Navigator
       screenOptions={{
         headerShown: false,
+        cardStyle: {backgroundColor: 'transparent'},
       }}
     >
       <Stack.Screen name="SignUp" component={SignUpScreen} />
