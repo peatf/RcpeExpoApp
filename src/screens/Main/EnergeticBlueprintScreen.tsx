@@ -48,17 +48,14 @@ const EnergeticBlueprintScreen: React.FC<{navigation: any}> = ({ navigation }) =
       );
       
       if (result.success && result.data) {
-        // Convert visualization data back to base chart format for compatibility
-        const baseChartResult = await baseChartService.getUserBaseChart(user?.id || '', forceRefresh);
-        if (baseChartResult.success && baseChartResult.data) {
-          setChartData(baseChartResult.data);
-        } else {
-          setError('Failed to load chart data');
-        }
+        setChartData(result.data);
       } else {
         // Fallback to base chart service
         console.log('Visualization endpoint failed, falling back to base chart service:', result.error);
-        const fallbackResult = await baseChartService.getUserBaseChart(user?.id || '', forceRefresh);
+        const fallbackResult = await blueprintVisualizerService.getOptimizedVisualizationData(
+          user?.id || '', 
+          false // Use base chart fallback
+        );
         if (fallbackResult.success && fallbackResult.data) {
           setChartData(fallbackResult.data);
         } else {
@@ -80,40 +77,21 @@ const EnergeticBlueprintScreen: React.FC<{navigation: any}> = ({ navigation }) =
   const getDescriptions = useCallback(() => {
     if (!chartData) return [];
     
-    return [
-      {
-        category: "Energy Family",
-        description: `Core identity shaped by a ${chartData.energy_family?.profile_lines} profile, radiating from the ${chartData.energy_family?.astro_sun_sign} frequency in the ${chartData.energy_family?.astro_sun_house} house.`
-      },
-      {
-        category: "Energy Class",
-        description: `Interface with the world, projecting a ${chartData.energy_class?.ascendant_sign} aura, guided by the ${chartData.energy_class?.incarnation_cross_quarter} quarter.`
-      },
-      {
-        category: "Processing Core",
-        description: `Information processed via ${chartData.processing_core?.cognition_variable || 'standard'} cognition, with ${chartData.processing_core?.head_state}, ${chartData.processing_core?.ajna_state}, and ${chartData.processing_core?.emotional_state} centers.`
-      },
-      {
-        category: "Decision & Growth Vector",
-        description: `Navigates via ${chartData.decision_growth_vector?.strategy} & ${chartData.decision_growth_vector?.authority}, with a ${chartData.decision_growth_vector?.choice_navigation_spectrum} flow.`
-      },
-      {
-        category: "Drive Mechanics",
-        description: `Fueled by ${chartData.drive_mechanics?.motivation_color || 'primary'} motivation. The field has a ${chartData.drive_mechanics?.kinetic_drive_spectrum} kinetic quality and a ${chartData.drive_mechanics?.resonance_field_spectrum} resonance.`
-      },
-      {
-        category: "Manifestation Interface + Rhythm",
-        description: `Expression from a ${chartData.manifestation_interface_rhythm?.throat_definition} Throat, creating a ${chartData.manifestation_interface_rhythm?.manifestation_rhythm_spectrum} rhythm.`
-      },
-      {
-        category: "Energy Architecture",
-        description: `A ${chartData.energy_architecture?.definition_type} system. Core integrity based on ${chartData.energy_architecture?.channel_list?.join(', ') || 'standard'} channels.`
-      },
-      {
-        category: "Evolutionary Path",
-        description: `Guided by a ${chartData.evolutionary_path?.conscious_line}/${chartData.evolutionary_path?.unconscious_line} path within the ${chartData.evolutionary_path?.incarnation_cross} framework.`
-      },
-    ];
+    const descriptionsMap = {
+      "Energy Family": (d: any) => `Core identity shaped by a ${d.profile_lines} profile, radiating from the ${d.astro_sun_sign} frequency in the ${d.astro_sun_house} house.`,
+      "Energy Class": (d: any) => `Interface with the world, projecting a ${d.ascendant_sign} aura, guided by the ${d.incarnation_cross_quarter} quarter.`,
+      "Processing Core": (d: any) => `Information processed via ${d.cognition_variable} cognition, with ${d.head_state}, ${d.ajna_state}, and ${d.emotional_state} centers.`,
+      "Decision & Growth Vector": (d: any) => `Navigates via ${d.strategy} & ${d.authority}, with a ${d.choice_navigation_spectrum} flow, driven by ${d.astro_mars_sign}.`,
+      "Drive Mechanics": (d: any) => `Fueled by ${d.motivation_color} motivation. The field has a ${d.kinetic_drive_spectrum} kinetic quality and a ${d.resonance_field_spectrum} resonance.`,
+      "Manifestation Interface + Rhythm": (d: any) => `Expression from a ${d.throat_definition} Throat, with ${d.throat_gates} gates creating a ${d.manifestation_rhythm_spectrum} rhythm.`,
+      "Energy Architecture": (d: any) => `A ${d.definition_type} system. Core integrity based on channels like ${d.channel_list === 'None' ? 'none' : d.channel_list}.`,
+      "Evolutionary Path": (d: any) => `Guided by a ${d.conscious_line}/${d.unconscious_line} path within the ${d.incarnation_cross} framework.`
+    };
+    
+    return Object.keys(descriptionsMap).map(category => ({
+      category,
+      description: descriptionsMap[category as keyof typeof descriptionsMap](chartData)
+    }));
   }, [chartData]);
 
   const renderContent = () => {

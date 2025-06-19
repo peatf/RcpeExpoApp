@@ -197,6 +197,12 @@ const UserBaseChartScreen: React.FC<{navigation: any}> = ({navigation}) => {
           <Text style={styles.cacheIndicator}>Data from cache</Text>
         )}
         <View style={styles.headerControls}>
+          <TouchableOpacity 
+            style={styles.blueprintButton} 
+            onPress={() => navigation.navigate('EnergeticBlueprint')}
+          >
+            <Text style={styles.blueprintButtonText}>Blueprint View</Text>
+          </TouchableOpacity>
           <TouchableOpacity style={styles.viewToggle} onPress={toggleViewMode}>
             <Text style={styles.viewToggleText}>
               {viewMode === 'text' ? 'Show Visualization' : 'Show Text View'}
@@ -278,6 +284,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 16,
+    gap: 8,
+  },
+  blueprintButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: '#212121',
+    borderRadius: 4,
+  },
+  blueprintButtonText: {
+    color: '#F8F4E9',
+    fontWeight: '600',
+    fontFamily: 'monospace',
   },
   refreshButton: {
     paddingVertical: 8,
