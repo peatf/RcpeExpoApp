@@ -70,44 +70,53 @@ export const shadows = {
 
 export const typography = {
   displayLarge: {
-    fontSize: 56,
+    fontFamily: fonts.display,
+    fontSize: 72,
     fontWeight: '800' as const,
-    lineHeight: 64,
+    lineHeight: 80,
     letterSpacing: -0.02,
   },
   displayMedium: {
-    fontSize: 32,
+    fontFamily: fonts.display,
+    fontSize: 24,
     fontWeight: '700' as const,
-    lineHeight: 40,
+    lineHeight: 32,
     letterSpacing: -0.01,
   },
   headingLarge: {
-    fontSize: 24,
-    fontWeight: '600' as const,
-    lineHeight: 32,
-  },
-  headingMedium: {
-    fontSize: 20,
+    fontFamily: fonts.display,
+    fontSize: 20, // Adjusted from 24px to better reflect h2 usage
     fontWeight: '600' as const,
     lineHeight: 28,
   },
+  headingMedium: {
+    fontFamily: fonts.display,
+    fontSize: 18, // Adjusted from 20px
+    fontWeight: '600' as const,
+    lineHeight: 24,
+  },
   bodyLarge: {
+    fontFamily: fonts.body,
     fontSize: 16,
     fontWeight: '400' as const,
     lineHeight: 24,
   },
   bodyMedium: {
+    fontFamily: fonts.body,
     fontSize: 14,
     fontWeight: '400' as const,
     lineHeight: 20,
   },
   labelLarge: {
+    fontFamily: fonts.mono, // Changed to mono
     fontSize: 14,
     fontWeight: '500' as const,
     lineHeight: 20,
     letterSpacing: 0.1,
+    textTransform: 'uppercase' as const, // Added textTransform
   },
   labelSmall: {
+    fontFamily: fonts.mono, // Changed to mono
     fontSize: 11,
     fontWeight: '500' as const,
     lineHeight: 16,

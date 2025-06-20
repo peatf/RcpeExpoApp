@@ -3,8 +3,10 @@
  * @description Screen for the Pattern Recognition Engine tool, showing discovered patterns and insights.
  */
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, Button, ActivityIndicator, Alert, FlatList, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert, FlatList, TouchableOpacity, RefreshControl } from 'react-native'; // Added RefreshControl, removed Button
 import { InfoCard, InsightDisplay } from '../../../components/HumanDesignTools';
+import StackedButton from '../../../components/StackedButton'; // Import StackedButton
+import { theme } from '../../../constants/theme'; // Import theme
 import * as patternRecognitionService from '../../../services/patternRecognitionService';
 import * as authorityService from '../../../services/authorityService';
 import { AuthorityType, PatternRecognitionPattern, PatternDetail, AuthorityPattern } from '../../../types/humanDesignTools';
@@ -23,6 +25,13 @@ const PatternRecognitionEngineScreen: React.FC = () => {
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [selectedTimeframe, setSelectedTimeframe] = useState<"week" | "month" | "all">("month");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [isRefreshing, setIsRefreshing] = useState(false); // For pull-to-refresh
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await loadPatterns();
+    setIsRefreshing(false);
+  }, [loadPatterns]);
 
   useEffect(() => {
     const fetchAuthority = async () => {
@@ -141,323 +150,381 @@ const PatternRecognitionEngineScreen: React.FC = () => {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.header}>Pattern Recognition Engine</Text>
-      <Text style={styles.subHeader}>Authority: {userAuthority}</Text>
-
-      {/* Filters */}
-      <InfoCard title="Pattern Filters">
-        <Text style={styles.filterLabel}>Timeframe:</Text>
-        <View style={styles.filterRow}>
-          {timeframeOptions.map(option => (
-            <TouchableOpacity
-              key={option}
-              style={[
-                styles.filterButton,
-                selectedTimeframe === option && styles.filterButtonActive
-              ]}
-              onPress={() => setSelectedTimeframe(option)}
-            >
-              <Text style={[
-                styles.filterButtonText,
-                selectedTimeframe === option && styles.filterButtonTextActive
-              ]}>
-                {option.charAt(0).toUpperCase() + option.slice(1)}
-              </Text>
-            </TouchableOpacity>
-          ))}
+    <View style={styles.container}>
+      <View style={styles.contentWrapper}>
+        <View style={styles.titleSection}>
+          <Text style={styles.pageTitle}>PATTERN RECOGNITION</Text>
+          <Text style={styles.pageSubtitle}>Authority: {userAuthority || 'N/A'}</Text>
         </View>
 
-        <Text style={styles.filterLabel}>Category:</Text>
-        <View style={styles.filterRow}>
-          {categoryOptions.map(option => (
-            <TouchableOpacity
-              key={option}
-              style={[
-                styles.filterButton,
-                selectedCategory === option && styles.filterButtonActive
-              ]}
-              onPress={() => setSelectedCategory(option)}
-            >
-              <Text style={[
-                styles.filterButtonText,
-                selectedCategory === option && styles.filterButtonTextActive
-              ]}>
-                {option || "All"}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </InfoCard>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={theme.colors.accent} />}
+        >
+          <View style={styles.mainContent}>
+            {/* Filters */}
+            <InfoCard title="Pattern Filters">
+              <Text style={styles.filterLabel}>Timeframe:</Text>
+              <View style={styles.filterRow}>
+                {timeframeOptions.map(option => (
+                  <TouchableOpacity
+                    key={option}
+                    style={[
+                      styles.filterButton,
+                      selectedTimeframe === option && styles.filterButtonActive
+                    ]}
+                    onPress={() => setSelectedTimeframe(option)}
+                  >
+                    <Text style={[
+                      styles.filterButtonText,
+                      selectedTimeframe === option && styles.filterButtonTextActive
+                    ]}>
+                      {option.charAt(0).toUpperCase() + option.slice(1)}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
 
-      {/* Overall Insights */}
-      <InfoCard title={`Pattern Insights (${(overallConfidence * 100).toFixed(0)}% confidence)`}>
-        {insights.map((insight, index) => (
-          <InsightDisplay
-            key={`insight-${index}`}
-            insightText={insight}
-            source="Pattern Recognition Engine"
-          />
-        ))}
-        {insights.length === 0 && <Text>No general insights yet.</Text>}
-      </InfoCard>
+              <Text style={styles.filterLabel}>Category:</Text>
+              <View style={styles.filterRow}>
+                {categoryOptions.map(option => (
+                  <TouchableOpacity
+                    key={option}
+                    style={[
+                      styles.filterButton,
+                      selectedCategory === option && styles.filterButtonActive
+                    ]}
+                    onPress={() => setSelectedCategory(option)}
+                  >
+                    <Text style={[
+                      styles.filterButtonText,
+                      selectedCategory === option && styles.filterButtonTextActive
+                    ]}>
+                      {option || "All"}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </InfoCard>
 
-      {/* Authority-Specific Patterns */}
-      {userAuthority && (
-        <InfoCard title={`${userAuthority} Authority Patterns`}>
-          {priorityInsights.map((insight, index) => (
-            <InsightDisplay
-              key={`priority-${index}`}
-              insightText={insight}
-              source={`${userAuthority} Authority`}
-            />
-          ))}
-          {authorityPatterns.map(pattern => (
-            <View key={pattern.id} style={styles.authorityPatternItem}>
-              <Text style={styles.authorityPatternTitle}>{pattern.patternName}</Text>
-              <Text style={styles.authorityPatternDescription}>{pattern.description}</Text>
-              <Text style={styles.authorityPatternMeta}>
-                Impact Score: {pattern.impactScore}/10 • Confidence: {(pattern.confidence * 100).toFixed(0)}%
-              </Text>
-              {pattern.recommendedActions.length > 0 && (
-                <View style={styles.recommendationsContainer}>
-                  <Text style={styles.recommendationsTitle}>Recommended Actions:</Text>
-                  {pattern.recommendedActions.map((action, index) => (
-                    <Text key={index} style={styles.recommendationText}>• {action}</Text>
-                  ))}
-                </View>
+            {/* Overall Insights */}
+            <InfoCard title={`Pattern Insights (${(overallConfidence * 100).toFixed(0)}% confidence)`}>
+              {isLoadingData && !isRefreshing && <ActivityIndicator color={theme.colors.accent} style={styles.loaderWithinCard} />}
+              {!isLoadingData && insights.length === 0 && <Text style={styles.emptyStateText}>No general insights yet.</Text>}
+              {insights.map((insight, index) => (
+                <InsightDisplay
+                  key={`insight-${index}`}
+                  insightText={insight}
+                  source="Pattern Recognition Engine"
+                />
+              ))}
+            </InfoCard>
+
+            {/* Authority-Specific Patterns */}
+            {userAuthority && (
+              <InfoCard title={`${userAuthority} Authority Patterns`}>
+                {isLoadingData && !isRefreshing && <ActivityIndicator color={theme.colors.accent} style={styles.loaderWithinCard} />}
+                {!isLoadingData && authorityPatterns.length === 0 && priorityInsights.length === 0 && (
+                  <Text style={styles.emptyStateText}>No authority-specific patterns detected yet.</Text>
+                )}
+                {priorityInsights.map((insight, index) => (
+                  <InsightDisplay
+                    key={`priority-${index}`}
+                    insightText={insight}
+                    source={`${userAuthority} Authority`}
+                  />
+                ))}
+                {authorityPatterns.map(pattern => (
+                  <View key={pattern.id} style={styles.authorityPatternItem}>
+                    <Text style={styles.authorityPatternTitle}>{pattern.patternName}</Text>
+                    <Text style={styles.authorityPatternDescription}>{pattern.description}</Text>
+                    <Text style={styles.authorityPatternMeta}>
+                      Impact Score: {pattern.impactScore}/10 • Confidence: {(pattern.confidence * 100).toFixed(0)}%
+                    </Text>
+                    {pattern.recommendedActions.length > 0 && (
+                      <View style={styles.recommendationsContainer}>
+                        <Text style={styles.recommendationsTitle}>Recommended Actions:</Text>
+                        {pattern.recommendedActions.map((action, index) => (
+                          <Text key={index} style={styles.recommendationText}>• {action}</Text>
+                        ))}
+                      </View>
+                    )}
+                  </View>
+                ))}
+              </InfoCard>
+            )}
+
+            {/* Detected Patterns List */}
+            <InfoCard title={`Detected Patterns (${patterns.length})`}>
+              {isLoadingData && !isRefreshing && <ActivityIndicator style={styles.loader} color={theme.colors.accent} />}
+              {!isLoadingData && patterns.length === 0 ? (
+                <Text style={styles.emptyStateText}>
+                  No patterns detected yet. Continue using the app to build pattern data.
+                </Text>
+              ) : (
+                <FlatList
+                  data={patterns}
+                  renderItem={renderPatternItem}
+                  keyExtractor={item => item.id}
+                  scrollEnabled={false}
+                  // style={styles.patternsList} // FlatList doesn't need marginHorizontal if items have it
+                />
               )}
+            </InfoCard>
+
+            {/* Refresh Button */}
+            <View style={styles.refreshContainer}>
+              <StackedButton
+                text="Refresh Patterns"
+                onPress={loadPatterns}
+                type="rect"
+                // isLoading prop can be added to StackedButton if available for loading state
+              />
             </View>
-          ))}
-          {authorityPatterns.length === 0 && priorityInsights.length === 0 && (
-            <Text>No authority-specific patterns detected yet.</Text>
-          )}
-        </InfoCard>
-      )}
-
-      {/* Detected Patterns List */}
-      <InfoCard title={`Detected Patterns (${patterns.length})`}>
-        {isLoadingData && <ActivityIndicator style={styles.loader} />}
-        {patterns.length > 0 ? (
-          <FlatList
-            data={patterns}
-            renderItem={renderPatternItem}
-            keyExtractor={item => item.id}
-            scrollEnabled={false}
-            style={styles.patternsList}
-          />
-        ) : (
-          <Text style={styles.emptyStateText}>
-            No patterns detected yet. Continue using the app to build pattern data.
-          </Text>
-        )}
-      </InfoCard>
-
-      {/* Refresh Button */}
-      <View style={styles.refreshContainer}>
-        <Button
-          title="Refresh Patterns"
-          onPress={loadPatterns}
-          disabled={isLoadingData}
-        />
+          </View>
+        </ScrollView>
       </View>
-    </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  centered: {
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.bg,
+  },
+  contentWrapper: {
+    flex: 1,
+    padding: theme.spacing.lg,
+  },
+  titleSection: {
+    alignItems: 'center',
+    marginBottom: theme.spacing.xl,
+    flexShrink: 0,
+  },
+  pageTitle: {
+    fontFamily: theme.fonts.display,
+    fontSize: theme.typography.displayMedium.fontSize,
+    fontWeight: theme.typography.displayMedium.fontWeight,
+    color: theme.colors.textPrimary,
+    textAlign: 'center',
+    letterSpacing: 2,
+  },
+  pageSubtitle: {
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.labelSmall.fontSize,
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
+    marginTop: theme.spacing.xs,
+  },
+  scrollView: { flex: 1 },
+  scrollContent: { flexGrow: 1, paddingBottom: theme.spacing.lg },
+  mainContent: { gap: theme.spacing.xl },
+
+  loader: { // General loader for sections
+    marginVertical: theme.spacing.md,
+  },
+  loaderWithinCard: { // Loader specifically for inside a card
+    marginVertical: theme.spacing.sm,
+  },
+  loadingContainer: { // Full screen loading
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
-    backgroundColor: '#f8f9fa',
+    padding: theme.spacing.xl,
+    backgroundColor: theme.colors.bg,
   },
-  container: {
-    flex: 1,
-    backgroundColor: '#f8f9fa',
+  loadingText: { // Text for full screen loading
+    fontFamily: theme.fonts.body,
+    fontSize: theme.typography.bodyMedium.fontSize,
+    color: theme.colors.textSecondary,
+    marginTop: theme.spacing.md,
   },
-  header: {
-    fontSize: 26,
-    fontWeight: 'bold',
-    paddingHorizontal: 16,
-    paddingTop: 20,
-    paddingBottom: 5,
-    color: '#333',
-  },
-  subHeader: {
-    fontSize: 18,
-    fontWeight: '600',
-    paddingHorizontal: 16,
-    paddingBottom: 15,
-    color: '#666',
-  },
-  loader: {
-    marginVertical: 20,
+  messageText: { // For "This tool is designed for..."
+    fontFamily: theme.fonts.body,
+    fontSize: theme.typography.bodyMedium.fontSize,
+    lineHeight: theme.typography.bodyMedium.lineHeight,
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: theme.spacing.sm,
   },
   filterLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.labelSmall.fontSize,
+    fontWeight: 'bold', // Make labels bolder
+    color: theme.colors.textSecondary,
+    marginBottom: theme.spacing.sm, // Increased space
+    marginTop: theme.spacing.sm, // Add some top margin if it's not the first element
   },
   filterRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginBottom: 16,
-    gap: 8,
+    marginBottom: theme.spacing.md, // Consistent margin
+    gap: theme.spacing.sm, // Use gap for spacing between buttons
   },
   filterButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    backgroundColor: '#e9ecef',
+    paddingHorizontal: theme.spacing.md, // More padding
+    paddingVertical: theme.spacing.xs,  // Adjust vertical padding
+    borderRadius: theme.borderRadius.full, // Pill shape
+    backgroundColor: theme.colors.base2,
     borderWidth: 1,
-    borderColor: '#dee2e6',
+    borderColor: theme.colors.base3,
   },
   filterButtonActive: {
-    backgroundColor: '#007AFF',
-    borderColor: '#007AFF',
+    backgroundColor: theme.colors.accent,
+    borderColor: theme.colors.accent,
   },
   filterButtonText: {
-    fontSize: 12,
-    color: '#495057',
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.labelSmall.fontSize,
+    color: theme.colors.textPrimary, // Darker text on light button
   },
   filterButtonTextActive: {
-    color: '#fff',
+    color: theme.colors.bg, // White text on accent button
   },
-  patternsList: {
-    marginHorizontal: -16,
-  },
+  // patternsList: { // Removed as FlatList doesn't need margin if items handle it
+  //   marginHorizontal: -theme.spacing.md, // To counteract InfoCard padding if items have their own
+  // },
   patternItem: {
-    backgroundColor: '#fff',
-    marginHorizontal: 16,
-    marginVertical: 8,
-    padding: 16,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
+    padding: theme.spacing.md,
+    borderWidth: 1,
+    borderColor: theme.colors.base1,
+    borderRadius: theme.borderRadius.sm,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    marginBottom: theme.spacing.md,
   },
   patternHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: theme.spacing.sm,
   },
   patternTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-    flex: 1,
+    fontFamily: theme.fonts.body, // Changed from display to body for list items
+    fontSize: theme.typography.bodyLarge.fontSize, // Use a more standard text size
+    fontWeight: 'bold',
+    color: theme.colors.textPrimary,
+    flex: 1, // Allow title to take space
+    marginRight: theme.spacing.sm, // Space before confidence
   },
   confidenceText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#007AFF',
-    backgroundColor: '#f0f7ff',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.labelSmall.fontSize,
+    fontWeight: 'bold',
+    color: theme.colors.accent,
+    backgroundColor: theme.colors.accentGlow, // Use accentGlow or a very light accent
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
+    borderRadius: theme.borderRadius.xs,
   },
   patternDescription: {
-    fontSize: 15,
-    color: '#555',
-    lineHeight: 20,
-    marginBottom: 8,
+    fontFamily: theme.fonts.body,
+    fontSize: theme.typography.bodyMedium.fontSize,
+    color: theme.colors.textSecondary,
+    lineHeight: theme.typography.bodyMedium.lineHeight,
+    marginBottom: theme.spacing.sm,
   },
   patternMeta: {
-    fontSize: 12,
-    color: '#6c757d',
-    marginBottom: 8,
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.labelXSmall.fontSize, // Even smaller for meta
+    color: theme.colors.textSecondary,
+    marginBottom: theme.spacing.sm,
   },
   authorityRelevance: {
-    fontSize: 13,
-    color: '#007AFF',
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.labelSmall.fontSize,
+    color: theme.colors.accent, // Make it stand out
     fontStyle: 'italic',
-    marginBottom: 12,
+    marginBottom: theme.spacing.md,
   },
   feedbackButtons: {
     flexDirection: 'row',
-    gap: 8,
+    gap: theme.spacing.md, // Use gap for spacing
+    justifyContent: 'flex-end', // Align to the right
+    marginTop: theme.spacing.sm,
   },
   feedbackButton: {
-    flex: 1,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    alignItems: 'center',
+    paddingVertical: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.sm,
+    borderRadius: theme.borderRadius.sm, // Consistent radius
+    borderWidth: 1,
+    // alignItems: 'center',
   },
   accurateButton: {
-    backgroundColor: '#d4edda',
-    borderWidth: 1,
-    borderColor: '#c3e6cb',
+    borderColor: theme.colors.accent,
+    backgroundColor: 'transparent',
   },
   inaccurateButton: {
-    backgroundColor: '#f8d7da',
-    borderWidth: 1,
-    borderColor: '#f5c6cb',
+    borderColor: theme.colors.base3,
+    backgroundColor: 'transparent',
   },
   feedbackButtonText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#333',
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.labelSmall.fontSize,
+    fontWeight: 'bold',
+    // Color will be set dynamically based on accurate/inaccurate if needed, or keep neutral
   },
   authorityPatternItem: {
-    backgroundColor: '#f8f9fa',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 12,
-    borderLeftWidth: 4,
-    borderLeftColor: '#007AFF',
+    padding: theme.spacing.md,
+    borderWidth: 1,
+    borderColor: theme.colors.base1,
+    borderRadius: theme.borderRadius.sm,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    marginBottom: theme.spacing.md,
   },
   authorityPatternTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 6,
+    fontFamily: theme.fonts.body,
+    fontSize: theme.typography.bodyLarge.fontSize,
+    fontWeight: 'bold',
+    color: theme.colors.textPrimary,
+    marginBottom: theme.spacing.xs,
   },
   authorityPatternDescription: {
-    fontSize: 14,
-    color: '#555',
-    lineHeight: 18,
-    marginBottom: 6,
+    fontFamily: theme.fonts.body,
+    fontSize: theme.typography.bodyMedium.fontSize,
+    color: theme.colors.textSecondary,
+    lineHeight: theme.typography.bodyMedium.lineHeight,
+    marginBottom: theme.spacing.xs,
   },
   authorityPatternMeta: {
-    fontSize: 12,
-    color: '#6c757d',
-    marginBottom: 8,
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.labelSmall.fontSize,
+    color: theme.colors.textSecondary,
+    marginBottom: theme.spacing.sm,
   },
   recommendationsContainer: {
-    backgroundColor: '#fff',
-    padding: 10,
-    borderRadius: 6,
+    backgroundColor: theme.colors.base1, // Subtle background for this section
+    padding: theme.spacing.sm,
+    borderRadius: theme.borderRadius.xs,
+    marginTop: theme.spacing.sm,
   },
   recommendationsTitle: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 6,
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.labelSmall.fontSize,
+    fontWeight: 'bold',
+    color: theme.colors.textPrimary,
+    marginBottom: theme.spacing.xs,
   },
   recommendationText: {
-    fontSize: 12,
-    color: '#555',
-    lineHeight: 16,
-    marginBottom: 2,
+    fontFamily: theme.fonts.body,
+    fontSize: theme.typography.bodySmall.fontSize,
+    color: theme.colors.textSecondary,
+    lineHeight: theme.typography.bodySmall.lineHeight,
   },
   emptyStateText: {
+    fontFamily: theme.fonts.body,
+    fontSize: theme.typography.bodyMedium.fontSize,
+    color: theme.colors.textSecondary,
     textAlign: 'center',
-    color: '#6c757d',
-    fontSize: 14,
     fontStyle: 'italic',
-    paddingVertical: 20,
+    padding: theme.spacing.md, // Give it some space
   },
   refreshContainer: {
-    padding: 16,
-    paddingBottom: 32,
+    paddingVertical: theme.spacing.lg, // Add vertical padding
+    // Button inside will be full width due to StackedButton default for type="rect"
   },
+  // Removed old styles (centered, header, subHeader)
 });
 
 export default PatternRecognitionEngineScreen;

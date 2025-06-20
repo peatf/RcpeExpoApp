@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { HDType } from '../types/humanDesign'; // Ensure this path is correct
+import { HDType } from '../types/humanDesign';
+import { theme } from '../constants/theme'; // Import theme
 
 interface DecisionMakerTabProps {
   userType: HDType;
@@ -38,7 +39,7 @@ const DecisionMakerTab: React.FC<DecisionMakerTabProps> = ({ userType }) => {
   if (tools.length === 0 && userType) {
     return (
       <View style={styles.container}>
-        <Text>No specific tools identified for type: {userType}.</Text>
+        <Text style={styles.fallbackText}>No specific tools identified for type: {userType}.</Text>
       </View>
     );
   }
@@ -46,7 +47,7 @@ const DecisionMakerTab: React.FC<DecisionMakerTabProps> = ({ userType }) => {
   if (!userType) {
     return (
       <View style={styles.container}>
-        <Text>User type not available.</Text>
+        <Text style={styles.fallbackText}>User type not available.</Text>
       </View>
     )
   }
@@ -63,22 +64,34 @@ const DecisionMakerTab: React.FC<DecisionMakerTabProps> = ({ userType }) => {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
+    padding: theme.spacing.md, // Use theme spacing
   },
   header: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
+    fontFamily: theme.fonts.mono, // Themed font
+    fontSize: theme.typography.headingMedium.fontSize, // Themed size
+    fontWeight: theme.typography.headingMedium.fontWeight, // Themed weight
+    color: theme.colors.textPrimary, // Themed color
+    marginBottom: theme.spacing.md, // Use theme spacing
   },
-  toolContainer: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 8,
-    marginBottom: 8,
+  fallbackText: { // Style for "No specific tools..." or "User type not available."
+    fontFamily: theme.fonts.body,
+    fontSize: theme.typography.bodyMedium.fontSize,
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
+    marginTop: theme.spacing.lg,
+  },
+  toolContainer: { // Styled like an .input-panel
+    padding: theme.spacing.md,
+    borderWidth: 1,
+    borderColor: theme.colors.base1,
+    borderRadius: theme.borderRadius.sm,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    marginBottom: theme.spacing.sm,
   },
   toolText: {
-    fontSize: 16,
+    fontFamily: theme.fonts.body, // Themed font
+    fontSize: theme.typography.bodyMedium.fontSize, // Themed size
+    color: theme.colors.textPrimary, // Themed color
   },
 });
 

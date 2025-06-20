@@ -5,7 +5,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image } from 'react-native';
 import StackedButton from '../../components/StackedButton';
-import { colors, typography, spacing } from '../../constants/theme';
+import { theme } from '../../constants/theme'; // Import full theme
 
 interface WelcomeScreenProps {
   onBeginSession?: () => void;
@@ -17,15 +17,19 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onBeginSession }) => {
       <View style={styles.content}>
         {/* Logo and Title Section */}
         <View style={styles.titleSection}>
-          <Text style={styles.title}>RCPE</Text>
+          <Image
+            source={require('../../../assets/inoslogotextonlycharcoal.png')}
+            style={styles.logo}
+          />
+          <Text style={styles.subtitle}>Reality Creation & Perception Engine</Text>
         </View>
         
         {/* Main Action Section */}
         <View style={styles.actionSection}>
           <StackedButton
-            type="circle"
+            type="circle" // type="circle" is 160x160px by default from its own style
             onPress={() => onBeginSession?.()}
-            text="START"
+            // text prop removed as circle button doesn't use it for a primary label
           />
           <Text style={styles.actionLabel}>Begin Session</Text>
         </View>
@@ -33,8 +37,8 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onBeginSession }) => {
         {/* Status Section */}
         <View style={styles.statusSection}>
           <View style={styles.statusPanel}>
-            <View style={styles.statusIndicator} />
-            <Text style={styles.statusText}>● ALL SYSTEMS NOMINAL</Text>
+            <Text style={styles.statusIndicator}>●</Text>
+            <Text style={styles.statusText}>ALL SYSTEMS NOMINAL</Text>
           </View>
         </View>
       </View>
@@ -45,81 +49,74 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onBeginSession }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'transparent',
+    backgroundColor: 'transparent', // Assuming AppBackground provides the actual background image
   },
   content: {
     flex: 1,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.xl,
+    paddingHorizontal: theme.spacing.lg, // Use theme spacing
+    paddingVertical: theme.spacing.xl,   // Use theme spacing
+    justifyContent: 'space-between', // Distribute space between sections
   },
   titleSection: {
-    flex: 1,
+    flex: 1, // Takes available space, pushing others
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: spacing.xl,
+    justifyContent: 'center', // Center logo and subtitle
+    // paddingTop: theme.spacing.xl, // Keep or adjust as needed
   },
   logo: {
-    width: 120,
-    height: 40,
-    marginBottom: spacing.md,
+    width: 240, // As per spec
+    height: 80, // Example height, adjust to maintain aspect ratio if needed
+    resizeMode: 'contain',
+    marginBottom: theme.spacing.sm, // Space between logo and subtitle
   },
-  title: {
-    ...typography.displayLarge,
-    fontFamily: 'System',
-    fontWeight: '800',
-    color: colors.textPrimary,
-    textAlign: 'center',
-    letterSpacing: -2,
-    lineHeight: 64,
-  },
+  // title style removed as it's replaced by logo image
   subtitle: {
-    ...typography.labelSmall,
-    fontFamily: 'monospace',
-    color: colors.textSecondary,
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.labelSmall.fontSize || 12, // Default to 12 if not in theme
+    color: theme.colors.textSecondary,
     textAlign: 'center',
-    marginTop: spacing.xs,
+    marginTop: theme.spacing.sm,
   },
   actionSection: {
-    flex: 1,
+    flex: 1, // Takes available space
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'center', // Center button and label
   },
   actionLabel: {
-    ...typography.labelLarge,
-    fontFamily: 'monospace',
-    color: colors.textSecondary,
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.labelSmall.fontSize || 12,
+    color: theme.colors.textSecondary,
     textAlign: 'center',
-    marginTop: spacing.lg,
+    marginTop: theme.spacing.md, // HTML: mt-6 (24px), theme.spacing.md is 16px. Adjust if needed.
   },
   statusSection: {
-    flex: 1,
+    // flex: 1, // Let it take natural height or a smaller flex value if needed
+    minHeight: 60, // Ensure space for the status panel, adjust as needed
     alignItems: 'center',
-    justifyContent: 'flex-end',
-    paddingBottom: spacing.md,
+    justifyContent: 'flex-end', // Push status panel to bottom of its flex space
+    paddingBottom: theme.spacing.md,
   },
   statusPanel: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: 8,
+    paddingHorizontal: theme.spacing.md, // HTML: px-4 (16px)
+    paddingVertical: theme.spacing.sm,   // HTML: py-3 (12px)
     borderWidth: 1,
-    borderColor: colors.base1,
-    backdropFilter: 'blur(10px)',
+    borderColor: theme.colors.base1,
+    borderRadius: theme.borderRadius.sm, // 8px
+    backgroundColor: 'rgba(255, 255, 255, 0.1)', // As per spec
+    // backdropFilter: 'blur(10px)', // Not supported in React Native standard components
   },
-  statusIndicator: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.accent,
-    marginRight: spacing.sm,
+  statusIndicator: { // This style is for the "●" text now
+    color: theme.colors.accent,
+    fontSize: theme.typography.labelSmall.fontSize || 12, // Match text size
+    marginRight: theme.spacing.sm, // Space between dot and text
   },
   statusText: {
-    ...typography.labelSmall,
-    fontFamily: 'monospace',
-    color: colors.accent,
-    fontWeight: '600',
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.labelSmall.fontSize || 12, // HTML: text-xs
+    color: theme.colors.accent,
+    // fontWeight: '600', // If needed, but labelSmall might define it
   },
 });
 

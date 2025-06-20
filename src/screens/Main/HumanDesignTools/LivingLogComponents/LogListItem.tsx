@@ -4,7 +4,8 @@
  */
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { LogEntry } from '../../../../types/humanDesignTools'; // Adjusted path
+import { LogEntry, AuthorityType } from '../../../../types/humanDesignTools'; // Adjusted path
+import { theme } from '../../../../constants/theme'; // Import full theme
 
 /**
  * @interface LogListItemProps
@@ -24,93 +25,100 @@ const LogListItem: React.FC<LogListItemProps> = ({ entry, onPress }) => {
     }
   };
 
+  // Determine dot color based on some logic, e.g., entry type or a specific tag
+  // For now, a default or simple dynamic color.
+  const dotColor = entry.tags?.includes('important')
+    ? theme.colors.accent
+    : theme.colors.base3;
+
   return (
     <TouchableOpacity onPress={handlePress} style={styles.container} disabled={!onPress}>
       <View style={styles.header}>
-        <Text style={styles.dateText}>
-          {new Date(entry.timestamp).toLocaleDateString()} - {new Date(entry.timestamp).toLocaleTimeString()}
+        <Text style={styles.timestampText}>
+          {new Date(entry.timestamp).toLocaleDateString()} - {new Date(entry.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </Text>
-        <Text style={styles.mediaTypeText}>Type: {entry.mediaType}</Text>
+        <View style={[styles.dotIndicator, { backgroundColor: dotColor }]} />
       </View>
       <Text style={styles.contentText}>{entry.content}</Text>
-      <View style={styles.footer}>
-        {entry.tags && entry.tags.length > 0 && (
-          <Text style={styles.tagsText}>Tags: {entry.tags.join(', ')}</Text>
-        )}
-        <Text style={styles.authorityText}>
-          Authority: {entry.authorityData.type}
-          {entry.authorityData.state ? ` (${entry.authorityData.state})` : ''}
-          {entry.authorityData.intensity !== undefined ? ` Intensity: ${entry.authorityData.intensity}` : ''}
-        </Text>
-      </View>
-      {entry.clarityMarker && (
-        <View style={styles.claritySection}>
-          <Text style={styles.clarityText}>
-            Clarity Marked: {entry.clarityMarker.isClarity ? 'Yes' : 'No'}
-            {entry.clarityMarker.notes ? ` - ${entry.clarityMarker.notes}` : ''}
-          </Text>
+
+      {/* Optional: Footer for tags or other metadata if needed, styled simply */}
+      {(entry.tags && entry.tags.length > 0) || entry.authorityData?.type ? (
+        <View style={styles.footer}>
+          {entry.tags && entry.tags.length > 0 && (
+            <Text style={styles.tagsText}>Tags: {entry.tags.join(', ')}</Text>
+          )}
+          {/* Authority data could be displayed more subtly if desired */}
+          {/* <Text style={styles.authorityText}>
+            Authority: {entry.authorityData.type}
+            {entry.authorityData.state ? ` (${entry.authorityData.state})` : ''}
+          </Text> */}
         </View>
+      ) : null}
+
+      {/* Clarity marker can also be part of the footer or styled as a small badge/text */}
+      {entry.clarityMarker?.isClarity && (
+         <Text style={styles.clarityText}>
+           Clarity: {entry.clarityMarker.notes || 'Marked'}
+         </Text>
       )}
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: '#ffffff',
-    borderRadius: 8,
-    padding: 15,
-    marginVertical: 6,
-    marginHorizontal: 16, // Match InfoCard horizontal margin
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 2,
-    elevation: 2,
+  container: { // Styled as .input-panel
+    padding: theme.spacing.md,
+    borderWidth: 1,
+    borderColor: theme.colors.base1,
+    borderRadius: theme.borderRadius.sm,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    marginBottom: theme.spacing.md, // space-y-4 if items are directly one after another
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    alignItems: 'flex-start', // Align items to the start of the cross axis
+    marginBottom: theme.spacing.sm,
   },
-  dateText: {
-    fontSize: 12,
-    color: '#555',
+  timestampText: { // Renamed from dateText
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.labelSmall.fontSize,
+    color: theme.colors.textSecondary,
   },
-  mediaTypeText: {
-    fontSize: 12,
-    color: '#555',
-    fontStyle: 'italic',
+  dotIndicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginLeft: theme.spacing.sm, // Space it from the timestamp if on same line end
+    marginTop: theme.spacing.xs, // Align with text line
   },
+  // mediaTypeText removed as per HTML reference (dot indicator is used)
   contentText: {
-    fontSize: 15,
-    color: '#333',
-    lineHeight: 20,
-    marginBottom: 10,
+    fontFamily: theme.fonts.body,
+    fontSize: theme.typography.bodyMedium.fontSize,
+    color: theme.colors.textPrimary,
+    lineHeight: theme.typography.bodyMedium.lineHeight,
   },
-  footer: {
+  footer: { // Optional footer
     borderTopWidth: 1,
-    borderTopColor: '#eee',
-    paddingTop: 8,
+    borderTopColor: theme.colors.base2, // Use a subtle border
+    paddingTop: theme.spacing.sm,
+    marginTop: theme.spacing.sm,
   },
   tagsText: {
-    fontSize: 12,
-    color: '#007bff', // Blue for tags
-    marginBottom: 4,
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.labelSmall.fontSize,
+    color: theme.colors.accent, // Accent color for tags
+    marginBottom: theme.spacing.xs,
   },
-  authorityText: {
-    fontSize: 12,
-    color: '#28a745', // Green for authority info
-  },
-  claritySection: {
-    marginTop: 8,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#eee',
-  },
+  // authorityText style removed for now to simplify, can be added back if needed
+  // claritySection removed, clarityText is now standalone if present
   clarityText: {
-    fontSize: 12,
-    color: '#663399', // Purple for clarity info
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.labelSmall.fontSize,
+    color: theme.colors.accentSecondary, // A different accent for clarity
+    fontStyle: 'italic',
+    marginTop: theme.spacing.xs,
   }
 });
 

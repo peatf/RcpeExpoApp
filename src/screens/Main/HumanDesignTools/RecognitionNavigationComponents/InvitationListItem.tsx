@@ -3,8 +3,10 @@
  * @description Component to display a single Invitation.
  */
 import React from 'react';
-import { View, Text, StyleSheet, Button } from 'react-native';
-import { Invitation } from '../../../../types/humanDesignTools'; // Adjusted path
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'; // Replaced Button
+import { Invitation } from '../../../../types/humanDesignTools';
+import { theme } from '../../../../constants/theme'; // Import theme
+import { Ionicons } from '@expo/vector-icons'; // For icons
 
 export interface InvitationListItemProps {
   invitation: Invitation;
@@ -73,89 +75,112 @@ const InvitationListItem: React.FC<InvitationListItemProps> = ({ invitation, onE
         </View>
       )}
 
-
       <View style={styles.actionsContainer}>
         {invitation.status === 'new' && onEvaluate && (
-          <Button title="Evaluate" onPress={() => onEvaluate(invitation.id)} color="#007bff" />
+          <TouchableOpacity onPress={() => onEvaluate(invitation.id)} style={styles.actionButton}>
+            <Ionicons name="checkmark-done-circle-outline" size={20} color={theme.colors.accent} />
+            <Text style={[styles.actionText, { color: theme.colors.accent }]}>Evaluate</Text>
+          </TouchableOpacity>
         )}
-        {/* Add more buttons based on status, e.g., Respond, View Details */}
-        {onViewDetails && <Button title="Details" onPress={() => onViewDetails(invitation.id)} color="#6c757d" />}
+        {onViewDetails && (
+          <TouchableOpacity onPress={() => onViewDetails(invitation.id)} style={styles.actionButton}>
+            <Ionicons name="eye-outline" size={20} color={theme.colors.textSecondary} />
+            <Text style={[styles.actionText, { color: theme.colors.textSecondary }]}>Details</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: '#ffffff',
-    borderRadius: 8,
-    padding: 15,
-    marginVertical: 8,
-    marginHorizontal: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
+  container: { // Styled as .input-panel
+    padding: theme.spacing.md,
+    borderWidth: 1,
+    borderColor: theme.colors.base1,
+    borderRadius: theme.borderRadius.sm,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    marginBottom: theme.spacing.md,
   },
   descriptionText: {
-    fontSize: 16,
+    fontFamily: theme.fonts.body,
+    fontSize: theme.typography.bodyLarge.fontSize,
     fontWeight: 'bold',
-    color: '#334d6e', // Projector theme color
-    marginBottom: 10,
+    color: theme.colors.textPrimary,
+    marginBottom: theme.spacing.sm,
   },
   row: {
     flexDirection: 'row',
-    marginBottom: 5,
+    marginBottom: theme.spacing.xs,
     alignItems: 'flex-start',
   },
   detailLabel: {
-    fontSize: 13,
-    color: '#5c6ac4', // Projector accent
-    fontWeight: '600',
-    marginRight: 5,
-    width: 80,
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.labelSmall.fontSize,
+    color: theme.colors.textSecondary,
+    fontWeight: '500',
+    marginRight: theme.spacing.xs,
+    width: 90, // Adjusted width for labels like "Received:"
   },
   detailValue: {
-    fontSize: 13,
-    color: '#334d6e',
+    fontFamily: theme.fonts.body,
+    fontSize: theme.typography.labelSmall.fontSize, // Consistent size
+    color: theme.colors.textPrimary,
     flexShrink: 1,
   },
   statusText: {
-    fontSize: 12,
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.labelXSmall.fontSize, // Smaller for status chip
     fontWeight: 'bold',
-    paddingHorizontal: 6,
+    paddingHorizontal: theme.spacing.xs,
     paddingVertical: 2,
-    borderRadius: 4,
-    color: 'white',
+    borderRadius: theme.borderRadius.xs,
+    color: theme.colors.bg, // Default text color for status (white/bg)
     textAlign: 'center',
     overflow: 'hidden',
+    textTransform: 'uppercase',
   },
-  status_new: { backgroundColor: '#007bff' },          // Blue
-  status_evaluating: { backgroundColor: '#ffc107', color: '#000' }, // Yellow
-  status_accepted: { backgroundColor: '#28a745' },      // Green
-  status_declined: { backgroundColor: '#dc3545' },      // Red
-  status_expired: { backgroundColor: '#6c757d' },       // Gray
-  status_default: { backgroundColor: '#6c757d' },
+  // Theme-based status colors
+  status_new: { backgroundColor: theme.colors.accent }, // Accent for new
+  status_evaluating: { backgroundColor: theme.colors.accentSecondary, color: theme.colors.textPrimary }, // A secondary accent
+  status_accepted: { backgroundColor: theme.colors.base4 }, // Example: a positive/confirm color from theme (like a green)
+  status_declined: { backgroundColor: theme.colors.base3 },  // Example: a muted/error color
+  status_expired: { backgroundColor: theme.colors.base2 },   // Muted
+  status_default: { backgroundColor: theme.colors.base2 },
   section: {
-    marginTop: 10,
-    paddingTop: 10,
+    marginTop: theme.spacing.sm,
+    paddingTop: theme.spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: '#eef2f7',
+    borderTopColor: theme.colors.base2,
   },
   sectionTitle: {
-    fontSize: 14,
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.labelMedium.fontSize,
     fontWeight: 'bold',
-    color: '#5c6ac4',
-    marginBottom: 5,
+    color: theme.colors.textPrimary,
+    marginBottom: theme.spacing.xs,
   },
   actionsContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-around', // Space out buttons more
-    paddingTop: 10,
-    marginTop: 10,
+    justifyContent: 'flex-end',
+    paddingTop: theme.spacing.sm,
+    marginTop: theme.spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: '#eef2f7',
+    borderTopColor: theme.colors.base2,
+    gap: theme.spacing.md,
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.sm,
+    borderRadius: theme.borderRadius.xs,
+  },
+  actionText: {
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.labelSmall.fontSize,
+    marginLeft: theme.spacing.xs,
+    fontWeight: 'bold',
   },
 });
 

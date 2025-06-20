@@ -14,13 +14,14 @@ import {
   ActivityIndicator,
   Animated,
   Modal,
+  Easing, // Import Easing
 } from 'react-native';
 // Navigation hooks not needed in this implementation
 import StepTracker from '../../components/StepTracker'; // Import StepTracker
 import { FLOW_STEPS, STEP_LABELS } from '../../constants/flowSteps'; // Import constants
 import {Ionicons} from '@expo/vector-icons';
 import StackedButton from '../../components/StackedButton';
-import { colors, typography, spacing } from '../../constants/theme';
+import { theme } from '../../constants/theme'; // Import full theme
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import aiOracleService, {
   OracleInputSynthesis,
@@ -37,7 +38,8 @@ interface OracleScreenProps {
 
 const OracleScreen: React.FC<OracleScreenProps> = ({navigation, route}) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current; // For quest elements
+  const oraclePulseAnimVal = useRef(new Animated.Value(0)).current; // For Oracle thinking loader
   
   // Core state
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -201,6 +203,35 @@ const OracleScreen: React.FC<OracleScreenProps> = ({navigation, route}) => {
 
     initializeOracle();
   }, [route?.params]);
+
+  // Effect for Oracle Pulse Loader Animation
+  useEffect(() => {
+    let pulseAnimation: Animated.CompositeAnimation | null = null;
+
+    if (isThinking) {
+      oraclePulseAnimVal.setValue(0); // Reset animation value
+      pulseAnimation = Animated.loop(
+        Animated.timing(oraclePulseAnimVal, {
+          toValue: 1,
+          duration: 2500,
+          easing: Easing.bezier(0.25, 0.46, 0.45, 0.94),
+          useNativeDriver: true,
+        })
+      );
+      pulseAnimation.start();
+    } else {
+      if (pulseAnimation) {
+        pulseAnimation.stop();
+      }
+      oraclePulseAnimVal.setValue(0); // Ensure it's reset when not thinking
+    }
+
+    return () => {
+      if (pulseAnimation) {
+        pulseAnimation.stop();
+      }
+    };
+  }, [isThinking, oraclePulseAnimVal]);
 
   // Effect to update visualCurrentStep based on currentView
   useEffect(() => {
@@ -575,70 +606,121 @@ const OracleScreen: React.FC<OracleScreenProps> = ({navigation, route}) => {
   };
 
   // Render Oracle wisdom (legacy mode)
-  const renderOracleWisdom = () => (
-    <View style={styles.wisdomContainer}>
-      <View style={styles.contentWrapper}>
+  const renderOracleWisdom = () => {
+    // Pulse animation related state would go here if not already global
+    // For now, pulseAnim from component scope will be used.
+
+    // Focus state for input panel
+    const [isInputFocused, setIsInputFocused] = useState(false);
+
+    return (
+      // This View replaces styles.wisdomContainer and styles.contentWrapper from old structure
+      // It will receive padding from the parent ScrollView's contentContainerStyle or apply its own.
+      // For the refactor, assuming this is the direct child of ScrollView.
+      <View style={styles.oracleWisdomViewWrapper}>
+        {/* Title Section (Reusing titleSection, pageTitle, pageSubtitle styles from other screens if compatible) */}
+        {/* These styles will be defined/updated in the StyleSheet later */}
         <View style={styles.titleSection}>
           <Text style={styles.pageTitle}>ORACLE</Text>
           <Text style={styles.pageSubtitle}>Ask & Receive</Text>
         </View>
 
-        <View style={styles.oracleContent}>
+        {/* Content that needs to be centered if ScrollView is not filled */}
+        {/* This View will act as the main content container for the Oracle elements */}
+        <View style={styles.oracleInteractiveContent}>
           {isThinking && (
             <View style={styles.pulseLoaderContainer}>
-              <View style={styles.pulseLoader}>
-                <View style={styles.pulseBlip} />
-                <View style={[styles.pulseBlip, { animationDelay: '0.5s' }]} />
-                <View style={[styles.pulseBlip, { animationDelay: '1.0s' }]} />
-              </View>
+              {[0, 1, 2].map((index) => { // Create 3 blips. Index for key, not for delay here.
+                // The staggering via animation-delay in CSS is complex to replicate perfectly
+                // with a single looping Animated.Value in RN without causing issues with loop/reset.
+                // This simplified version will have all blips animate based on the same oraclePulseAnimVal.
+                // True staggered delays would require more complex animation setup (e.g., Animated.stagger
+                // or multiple Animated.Values, which is harder to loop cleanly with a single control).
+                // The visual effect will be simultaneous pulsing, relying on opacity/scale curves.
+                return (
+                  <Animated.View
+                    key={index}
+                    style={[
+                      styles.pulseBlip,
+                      {
+                        opacity: oraclePulseAnimVal.interpolate({
+                          inputRange: [0, 0.5, 1],
+                          outputRange: [0, 0.7, 0], // Opacity curve: fade in then out
+                        }),
+                        transform: [
+                          {
+                            scale: oraclePulseAnimVal.interpolate({
+                              inputRange: [0, 1],
+                              outputRange: [0.5, 4], // Scale curve: small to large
+                            }),
+                          },
+                        ],
+                      },
+                    ]}
+                  />
+                );
+              })}
             </View>
           )}
 
-          {oracleMessages.length === 0 && !isThinking && (
-            <Text style={styles.oracleDescription}>
+          {!isThinking && oracleMessages.length === 0 && (
+            <Text style={styles.descriptiveParagraph}>
               The Oracle awaits. Focus your intent, then ask your question.
             </Text>
           )}
 
-          {oracleMessages.map((message) => (
-            <View key={message.id} style={styles.inputPanel}>
-              <View style={styles.questionSection}>
-                <Text style={styles.inputPanelLabel}>YOUR QUESTION</Text>
-                <Text style={styles.questionText}>{message.question}</Text>
-              </View>
-              <View style={styles.answerSection}>
-                <Text style={styles.inputPanelLabel}>ORACLE'S GUIDANCE</Text>
-                <Text style={styles.answerText}>{message.answer}</Text>
-                <Text style={styles.timestamp}>
-                  {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </Text>
-              </View>
-            </View>
-          ))}
+          {/* Display previous messages if any */}
+          {oracleMessages.length > 0 && !isThinking && (
+            <ScrollView style={styles.messagesScrollView} nestedScrollEnabled={true}>
+              {oracleMessages.map((message) => (
+                <View key={message.id} style={styles.messageCard}>
+                  <View style={styles.messageSection}>
+                    <Text style={styles.messageLabel}>YOUR QUESTION</Text>
+                    <Text style={styles.messageText}>{message.question}</Text>
+                  </View>
+                  <View style={styles.messageSection}>
+                    <Text style={styles.messageLabel}>ORACLE'S GUIDANCE</Text>
+                    <Text style={styles.messageText}>{message.answer}</Text>
+                    <Text style={styles.messageTimestamp}>
+                      {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </Text>
+                  </View>
+                </View>
+              ))}
+            </ScrollView>
+          )}
 
-          <View style={styles.inputPanel}>
-            <Text style={styles.inputPanelLabel}>ORACLE QUERY</Text>
-            <TextInput
-              style={styles.formElement}
-              value={oracleQuestion}
-              onChangeText={setOracleQuestion}
-              placeholder="Ask your question..."
-              multiline
-              maxLength={200}
-              editable={!isThinking}
-              placeholderTextColor={colors.textSecondary}
-            />
-          </View>
+          {/* Input Panel for new query */}
+          {!isThinking && (
+            <View style={[styles.inputPanelContainer, isInputFocused && styles.inputPanelFocused]}>
+              <Text style={styles.inputPanelLabel}>ORACLE QUERY</Text>
+              <TextInput
+                style={styles.textInputMain}
+                value={oracleQuestion}
+                onChangeText={setOracleQuestion}
+                placeholder="Ask your question..."
+                multiline
+                maxLength={200}
+                editable={!isThinking}
+                placeholderTextColor={theme.colors.textSecondary}
+                onFocus={() => setIsInputFocused(true)}
+                onBlur={() => setIsInputFocused(false)}
+              />
+            </View>
+          )}
           
-          <StackedButton
-            type="rect"
-            text={isThinking ? 'CONTEMPLATING...' : 'SUBMIT QUERY'}
-            onPress={handleAskOracle}
-          />
+          {/* Action Button */}
+          {!isThinking && (
+            <StackedButton
+              type="rect"
+              text={isThinking ? 'CONTEMPLATING...' : 'SUBMIT QUERY'}
+              onPress={handleAskOracle}
+            />
+          )}
         </View>
       </View>
-    </View>
-  );
+    );
+  };
 
   // Render hint modal
   const renderHintModal = () => (
@@ -701,137 +783,158 @@ const OracleScreen: React.FC<OracleScreenProps> = ({navigation, route}) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
+  container: { // Main screen container
     flex: 1,
-    backgroundColor: 'transparent',
+    backgroundColor: 'transparent', // Handled by AppBackground
   },
-  scrollView: {
+  scrollView: { // Parent scroll view for the entire screen
     flex: 1,
   },
-  scrollContent: {
-    flexGrow: 1,
-    padding: spacing.lg,
+  scrollContent: { // contentContainerStyle for the main ScrollView
+    flexGrow: 1, // Important for centering content when it's short
+    padding: theme.spacing.lg, // Overall padding for the screen content
+    justifyContent: 'center', // Center content vertically if flexGrow is active
   },
-  contentWrapper: {
+  oracleWisdomViewWrapper: {
     flex: 1,
-    flexDirection: 'column',
+    // The ScrollView's contentContainerStyle (scrollContent) handles overall centering.
+    // This wrapper can manage internal layout if needed, but might not need flex:1 if scrollContent does its job.
   },
   titleSection: {
     alignItems: 'center',
-    marginBottom: spacing.xl,
-    flexShrink: 0,
+    marginBottom: theme.spacing.xl, // mb-8
   },
-  pageTitle: {
-    ...typography.displayMedium,
-    fontFamily: 'System',
-    fontWeight: '700',
-    color: colors.textPrimary,
+  pageTitle: { // "ORACLE"
+    fontFamily: theme.fonts.display,
+    fontSize: theme.typography.displayMedium.fontSize, // 24px
+    fontWeight: theme.typography.displayMedium.fontWeight, // '700'
+    color: theme.colors.textPrimary,
     textAlign: 'center',
     letterSpacing: 2,
   },
-  pageSubtitle: {
-    ...typography.labelSmall,
-    fontFamily: 'monospace',
-    color: colors.textSecondary,
+  pageSubtitle: { // "Ask & Receive"
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.labelSmall.fontSize,
+    color: theme.colors.textSecondary,
     textAlign: 'center',
-    marginTop: spacing.xs,
+    marginTop: theme.spacing.xs,
   },
-  oracleContent: {
-    flex: 1,
-    flexDirection: 'column',
-    justifyContent: 'center',
-    gap: spacing.lg,
-  },
-  oracleDescription: {
-    textAlign: 'center',
-    fontSize: 16,
-    lineHeight: 24,
-    color: colors.textSecondary,
-    maxWidth: 320,
-    alignSelf: 'center',
+  oracleInteractiveContent: { // Groups loader/paragraph, input, and button
+    flexGrow: 1,
+    justifyContent: 'center', // Center this block vertically
+    alignItems: 'center',
+    width: '100%',
+    gap: theme.spacing.lg,
   },
   pulseLoaderContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  pulseLoader: {
     width: 80,
     height: 80,
     position: 'relative',
     alignItems: 'center',
     justifyContent: 'center',
+    // marginBottom is handled by parent gap of oracleInteractiveContent
   },
   pulseBlip: {
     position: 'absolute',
     width: 8,
     height: 8,
-    backgroundColor: colors.accent,
+    backgroundColor: theme.colors.accent,
     borderRadius: 4,
-    opacity: 0,
+    // Opacity and transform are handled by Animated styles
   },
-  inputPanel: {
-    position: 'relative',
+  descriptiveParagraph: {
+    fontFamily: theme.fonts.body,
+    fontSize: theme.typography.bodyMedium.fontSize,
+    lineHeight: (theme.typography.bodyMedium.lineHeight || 20) * 1.5, // leading-relaxed
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
+    maxWidth: 300, // max-w-sm equivalent
+    alignSelf: 'center',
+    // marginBottom: theme.spacing.lg, // Handled by parent gap
+  },
+  // Input Panel Styles (similar to FrequencyMapperScreen)
+  inputPanelContainer: {
     borderWidth: 1,
-    borderColor: colors.base1,
-    borderRadius: 8,
+    borderColor: theme.colors.base1,
+    borderRadius: theme.borderRadius.sm, // 8px
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    padding: spacing.md,
-    marginBottom: spacing.md,
+    position: 'relative',
+    // marginBottom: theme.spacing.lg, // Handled by parent gap
+    padding: 0, // Padding is on TextInput
+    width: '100%', // Take full width available
+    minHeight: 100, // Example min height, adjust as needed for multiline
+  },
+  inputPanelFocused: {
+    borderColor: theme.colors.accent,
+    shadowColor: theme.colors.accentGlow,
+    shadowOffset: { width: 0, height: 0 },
+    shadowRadius: 10,
+    shadowOpacity: 0.7,
+    elevation: 5,
   },
   inputPanelLabel: {
     position: 'absolute',
     top: -10,
     left: 12,
-    backgroundColor: colors.bg,
-    paddingHorizontal: 6,
-    fontFamily: 'monospace',
-    fontSize: 11,
-    fontWeight: '500',
-    color: colors.textSecondary,
+    backgroundColor: theme.colors.bg, // Match app background
+    paddingHorizontal: theme.spacing.xs,
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.labelSmall.fontSize,
+    fontWeight: theme.typography.labelSmall.fontWeight,
+    color: theme.colors.textSecondary,
     textTransform: 'uppercase',
-    letterSpacing: 0.1,
+    letterSpacing: theme.typography.labelSmall.letterSpacing,
+    zIndex: 1,
   },
-  formElement: {
-    width: '100%',
+  textInputMain: { // For Oracle Query
     backgroundColor: 'transparent',
-    color: colors.textPrimary,
+    padding: theme.spacing.md, // 16px
+    color: theme.colors.textPrimary,
     fontSize: 15,
-    lineHeight: 22,
-    minHeight: 48,
-    textAlignVertical: 'top',
+    lineHeight: 22.5,
+    textAlignVertical: 'top', // For multiline input
+    minHeight: 80, // Ensure decent height for multiline
   },
-  questionSection: {
-    marginBottom: spacing.md,
-    paddingBottom: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.base1,
+  // Styles for displaying previous messages
+  messagesScrollView: {
+    maxHeight: 200, // Limit height of message history
+    width: '100%',
+    marginBottom: theme.spacing.md,
   },
-  answerSection: {
-    position: 'relative',
+  messageCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.05)', // Slightly different from input panel
+    borderRadius: theme.borderRadius.sm,
+    padding: theme.spacing.md,
+    marginBottom: theme.spacing.md,
+    borderWidth: 1,
+    borderColor: theme.colors.base2,
   },
-  questionText: {
-    fontSize: 15,
-    color: colors.textPrimary,
-    fontStyle: 'italic',
-    marginTop: spacing.sm,
+  messageSection: {
+    marginBottom: theme.spacing.sm,
   },
-  answerText: {
-    fontSize: 15,
-    color: colors.textPrimary,
-    lineHeight: 22,
-    marginTop: spacing.sm,
-    marginBottom: spacing.sm,
+  messageLabel: {
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.labelSmall.fontSize,
+    color: theme.colors.textSecondary,
+    textTransform: 'uppercase',
+    marginBottom: theme.spacing.xs,
   },
-  timestamp: {
-    fontSize: 11,
-    color: colors.textSecondary,
+  messageText: {
+    fontFamily: theme.fonts.body,
+    fontSize: theme.typography.bodyMedium.fontSize,
+    color: theme.colors.textPrimary,
+    lineHeight: theme.typography.bodyMedium.lineHeight,
+  },
+  messageTimestamp: {
+    fontFamily: theme.fonts.mono,
+    fontSize: 10, // Smaller for timestamp
+    color: theme.colors.textSecondary,
     textAlign: 'right',
-    fontFamily: 'monospace',
+    marginTop: theme.spacing.xs,
   },
-  wisdomContainer: {
-    flex: 1,
-  },
-  loadingContainer: {
+  // Styles for other parts of the Oracle screen (awakening, quest_selection, etc.) are kept as is for now.
+  // ... (keep existing styles for loadingContainer, awakeningContainer, etc.)
+  loadingContainer: { // Ensure loadingContainer is styled if used as fallback
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',

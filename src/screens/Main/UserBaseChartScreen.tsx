@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import {useAuth} from '../../contexts/AuthContext';
 import StackedButton from '../../components/StackedButton';
-import { colors, typography, spacing } from '../../constants/theme';
+import { theme } from '../../constants/theme'; // Import full theme
 import baseChartService, {BaseChartData} from '../../services/baseChartService';
 import blueprintVisualizerService from '../../services/blueprintVisualizerService';
 import BlueprintCanvas from '../../components/EnergeticBlueprint/BlueprintCanvas';
@@ -129,7 +129,7 @@ const UserBaseChartScreen: React.FC<{navigation: any}> = ({navigation}) => {
   const renderTextView = () => (
     <View>
       {chartData && (
-        <View>
+        <>
           <View style={styles.sectionCard}>
             <Text style={styles.sectionTitle}>Basic Information</Text>
             <View style={styles.dataRow}>
@@ -165,10 +165,11 @@ const UserBaseChartScreen: React.FC<{navigation: any}> = ({navigation}) => {
           {chartData.active_gates && chartData.active_gates.length > 0 && (
             <View style={styles.sectionCard}>
               <Text style={styles.sectionTitle}>Active Gates</Text>
-              <Text style={styles.dataValue}>{chartData.active_gates.join(', ')}</Text>
+              {/* Assuming active_gates is an array of numbers or strings that can be joined */}
+              <Text style={styles.dataValue}>{String(chartData.active_gates.join(', '))}</Text>
             </View>
           )}
-        </View>
+        </>
       )}
     </View>
   );
@@ -180,27 +181,49 @@ const UserBaseChartScreen: React.FC<{navigation: any}> = ({navigation}) => {
     return (
       <View style={styles.visualizationContainer}>
         <View style={styles.canvasContainer}>
-          <BlueprintCanvas
-            width={canvasSize}
-            height={canvasSize}
-            chartData={chartData}
-            highlightedCategory={highlightedCategory}
-            onCategoryPress={handleHighlight}
-            onReady={() => setCanvasReady(true)}
-          />
+          {chartData && ( // Ensure chartData is available before rendering BlueprintCanvas
+            <BlueprintCanvas
+              width={canvasSize}
+              height={canvasSize}
+              chartData={chartData}
+              highlightedCategory={highlightedCategory}
+              onCategoryPress={handleHighlight}
+              onReady={() => setCanvasReady(true)}
+              // Pass theme colors to BlueprintCanvas - assuming these props exist
+              accentColor={theme.colors.accent}
+              baseColor={theme.colors.base2} // For lines and less prominent elements
+              textColor={theme.colors.textPrimary}
+              backgroundColor={theme.colors.bg} // Or a specific chart background like base0
+              // fontFamily={theme.fonts.mono} // If BlueprintCanvas supports custom fonts for SVG text
+            />
+          )}
         </View>
         
-        <ScrollView style={styles.descriptionsContainer}>
+        {/* Info Panel Section */}
+        <View style={styles.infoPanelContainer}>
           {descriptions.map((desc, index) => (
-            <BlueprintDescription
-              key={index}
-              category={desc.category}
-              description={desc.description}
-              isHighlighted={desc.isHighlighted}
-              onPress={() => handleHighlight(desc.category)}
-            />
+            // Wrap BlueprintDescription in a View styled as infoPanel
+            // Or, if BlueprintDescription can take style prop for its root, that's an alternative.
+            // For now, wrapping it.
+            <View key={index} style={styles.infoPanel}>
+              <Text style={styles.infoPanelTextLine}>
+                <Text style={styles.infoPanelLabel}>{desc.category}: </Text>
+                <Text style={styles.infoPanelValue}>{desc.description}</Text>
+              </Text>
+              {/*
+                BlueprintDescription component might render its own content.
+                The goal is to make each item look like:
+                <View style={styles.infoPanel}>
+                  <Text style={styles.infoPanelLabel}>Profile:</Text>
+                  <Text style={styles.infoPanelValue}>6/2</Text>
+                </View>
+                If BlueprintDescription renders category and description with its own styles,
+                we might need to adjust or pass props to it.
+                Forcing the style here by reconstructing the Text:
+              */}
+            </View>
           ))}
-        </ScrollView>
+        </View>
       </View>
     );
   };
@@ -275,31 +298,31 @@ const UserBaseChartScreen: React.FC<{navigation: any}> = ({navigation}) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'transparent',
+    backgroundColor: theme.colors.bg, // Apply theme background
   },
   contentWrapper: {
     flex: 1,
-    padding: spacing.lg,
+    padding: theme.spacing.lg, // Use theme spacing
   },
   titleSection: {
     alignItems: 'center',
-    marginBottom: spacing.xl,
+    marginBottom: theme.spacing.xl, // Use theme spacing
     flexShrink: 0,
   },
-  pageTitle: {
-    ...typography.displayMedium,
-    fontFamily: 'System',
-    fontWeight: '700',
-    color: colors.textPrimary,
+  pageTitle: { // "BASE CHART"
+    fontFamily: theme.fonts.display,
+    fontSize: theme.typography.displayMedium.fontSize,
+    fontWeight: theme.typography.displayMedium.fontWeight,
+    color: theme.colors.textPrimary,
     textAlign: 'center',
     letterSpacing: 2,
   },
-  pageSubtitle: {
-    ...typography.labelSmall,
-    fontFamily: 'monospace',
-    color: colors.textSecondary,
+  pageSubtitle: { // "Your energetic foundation"
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.labelSmall.fontSize,
+    color: theme.colors.textSecondary,
     textAlign: 'center',
-    marginTop: spacing.xs,
+    marginTop: theme.spacing.xs, // Use theme spacing
   },
   scrollView: {
     flex: 1,
@@ -318,77 +341,113 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: spacing.xl,
+    padding: theme.spacing.xl,
   },
   loadingText: {
-    ...typography.bodyMedium,
-    color: colors.textSecondary,
-    marginTop: spacing.md,
+    fontFamily: theme.fonts.body, // Use theme font
+    fontSize: theme.typography.bodyMedium.fontSize,
+    color: theme.colors.textSecondary,
+    marginTop: theme.spacing.md,
     textAlign: 'center',
   },
   messageContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: spacing.xl,
-    gap: spacing.lg,
+    padding: theme.spacing.xl,
+    gap: theme.spacing.lg,
   },
   messageText: {
-    ...typography.bodyLarge,
-    color: colors.textSecondary,
+    fontFamily: theme.fonts.body, // Use theme font
+    fontSize: theme.typography.bodyLarge.fontSize,
+    color: theme.colors.textSecondary,
     textAlign: 'center',
-    lineHeight: 24,
+    lineHeight: theme.typography.bodyLarge.lineHeight,
   },
-  // Legacy styles for backward compatibility
+  // Styles for text view mode
   sectionCard: {
-    marginBottom: spacing.lg,
-    padding: spacing.md,
-    backgroundColor: colors.bg,
-    borderRadius: 8,
+    marginBottom: theme.spacing.lg,
+    padding: theme.spacing.md,
+    backgroundColor: theme.colors.bg, // Or a slightly different shade like base0 or base0.5 if defined
+    borderRadius: theme.borderRadius.md, // Use theme border radius
     borderWidth: 1,
-    borderColor: colors.base1,
+    borderColor: theme.colors.base1,
   },
   sectionTitle: {
-    ...typography.headingMedium,
-    color: colors.textPrimary,
-    marginBottom: spacing.md,
+    fontFamily: theme.fonts.display, // Or a suitable heading font from theme
+    fontSize: theme.typography.headingMedium.fontSize, // Use theme typography
+    fontWeight: theme.typography.headingMedium.fontWeight,
+    color: theme.colors.textPrimary,
+    marginBottom: theme.spacing.md,
   },
   dataRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: spacing.xs,
+    paddingVertical: theme.spacing.sm, // Use theme spacing
     borderBottomWidth: 1,
-    borderBottomColor: colors.base1,
+    borderBottomColor: theme.colors.base2, // Use a slightly lighter border for rows
   },
   dataLabel: {
-    ...typography.bodyMedium,
-    fontWeight: '600',
-    color: colors.textSecondary,
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.bodyMedium.fontSize,
+    color: theme.colors.textSecondary,
   },
   dataValue: {
-    ...typography.bodyMedium,
-    color: colors.textPrimary,
-    backgroundColor: colors.base1,
-    padding: spacing.xs,
-    borderRadius: 4,
-    fontFamily: 'monospace',
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.bodyMedium.fontSize,
+    color: theme.colors.textPrimary,
+    backgroundColor: theme.colors.base1, // Use a subtle background for value
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
+    borderRadius: theme.borderRadius.sm,
   },
-  // Visualization specific styles
-  visualizationContainer: {
+  // Styles for visualization view mode
+  visualizationContainer: { // Container for SVG and descriptions
     alignItems: 'center',
-    padding: spacing.md,
+    // padding: theme.spacing.md, // Padding for the whole viz section if needed
   },
-  canvasContainer: {
+  canvasContainer: { // Wrapper for BlueprintCanvas
+    width: '100%',
+    aspectRatio: 1, // Make it square
     borderWidth: 1,
-    borderColor: colors.base1,
-    borderRadius: 8,
-    marginBottom: spacing.md,
-    backgroundColor: colors.bg,
-    maxWidth: 500,
+    borderColor: theme.colors.base1,
+    borderRadius: theme.borderRadius.md, // Consistent border radius
+    marginBottom: theme.spacing.lg, // mb-6 from HTML
+    backgroundColor: theme.colors.bg, // Or base0 if different from screen bg
+    // maxWidth: 500, // Already present, keep if needed
   },
+  infoPanelContainer: { // Wrapper for multiple info panels if needed, or apply to BlueprintDescription directly
+    width: '100%', // Panels take full width
+    gap: theme.spacing.md, // Space between info panels
+  },
+  infoPanel: { // Style for each "Profile: 6/2" type of panel
+    padding: theme.spacing.md, // p-4
+    borderWidth: 1,
+    borderColor: theme.colors.base1,
+    borderRadius: theme.borderRadius.sm, // rounded-lg (8px)
+    backgroundColor: 'rgba(255, 255, 255, 0.1)', // transparent white
+    // marginBottom: theme.spacing.md, // If not using gap in parent
+  },
+  infoPanelTextLine: { // For each line like "Profile: 6/2"
+    flexDirection: 'row',
+    justifyContent: 'space-between', // If label and value are separate Text components
+    // If single Text component, these are not needed here.
+  },
+  infoPanelLabel: {
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.bodyMedium.fontSize, // text-sm
+    color: theme.colors.textSecondary,
+  },
+  infoPanelValue: {
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.bodyMedium.fontSize, // text-sm
+    color: theme.colors.textPrimary,
+  },
+  // descriptionsContainer is from old code, might be replaced by infoPanelContainer logic
   descriptionsContainer: {
-    padding: spacing.sm,
+    // padding: theme.spacing.sm, // This was for ScrollView of BlueprintDescription items
+    width: '100%', // Ensure it takes full width
   },
 });
 

@@ -4,7 +4,8 @@
  */
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Response as SacralResponseType } from '../../../../types/humanDesignTools'; // Adjusted path
+import { Response as SacralResponseType } from '../../../../types/humanDesignTools';
+import { theme } from '../../../../constants/theme'; // Import theme
 
 /**
  * @interface ResponseListItemProps
@@ -81,91 +82,102 @@ const ResponseListItem: React.FC<ResponseListItemProps> = ({ response, onPress, 
 };
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: '#ffffff',
-    borderRadius: 8,
-    padding: 15,
-    marginVertical: 8,
-    marginHorizontal: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
+  container: { // Styled as .input-panel
+    padding: theme.spacing.md,
+    borderWidth: 1,
+    borderColor: theme.colors.base1,
+    borderRadius: theme.borderRadius.sm,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    marginBottom: theme.spacing.md,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: theme.spacing.sm,
   },
   dateText: {
-    fontSize: 12,
-    color: '#666',
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.labelSmall.fontSize,
+    color: theme.colors.textSecondary,
   },
-  responseType: {
-    fontSize: 14,
+  responseType: { // Chip-like style for YES/NO
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.labelSmall.fontSize, // Make it small like a tag
     fontWeight: 'bold',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-    color: 'white',
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs / 2,
+    borderRadius: theme.borderRadius.xs,
+    color: theme.colors.bg, // Text color on chip (usually white/bg)
+    textTransform: 'uppercase',
   },
   yesResponse: {
-    backgroundColor: '#4CAF50', // Green
+    backgroundColor: theme.colors.accent, // Use accent for YES
   },
   noResponse: {
-    backgroundColor: '#F44336', // Red
+    backgroundColor: theme.colors.base4, // Use a contrasting/negative color for NO
   },
   questionText: {
-    fontSize: 15,
-    fontWeight: '500',
-    color: '#333',
-    marginBottom: 8,
+    fontFamily: theme.fonts.body,
+    fontSize: theme.typography.bodyMedium.fontSize,
+    fontWeight: '500', // Semi-bold for question
+    color: theme.colors.textPrimary,
+    marginBottom: theme.spacing.xs,
+    fontStyle: 'italic', // Italicize question
   },
   detailsRow: {
-    marginBottom: 5,
+    marginBottom: theme.spacing.xs,
   },
   detailItem: {
-    fontSize: 13,
-    color: '#454545',
-    lineHeight: 18,
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.labelSmall.fontSize,
+    color: theme.colors.textSecondary,
+    lineHeight: theme.typography.labelSmall.lineHeight,
   },
   distortionText: {
-    fontSize: 13,
-    color: '#E67E22', // Orange for distortion
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.labelSmall.fontSize,
+    color: theme.colors.accentSecondary, // Use a warning/notice color
     fontStyle: 'italic',
-    marginTop: 5,
+    marginTop: theme.spacing.xs,
   },
-  satisfactionText: {
-    fontSize: 13,
-    color: '#3498DB', // Blue for satisfaction
+  satisfactionText: { // For already recorded satisfaction
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.labelMedium.fontSize, // Slightly more prominent
+    color: theme.colors.accent, // Use accent color
     fontWeight: 'bold',
-    marginTop: 5,
+    marginTop: theme.spacing.sm,
   },
-  satisfactionCapture: {
-    marginTop: 10,
-    paddingTop: 10,
+  satisfactionCapture: { // Container for "Rate Satisfaction"
+    marginTop: theme.spacing.md,
+    paddingTop: theme.spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: '#eee',
+    borderTopColor: theme.colors.base2, // Subtle separator
   },
   satisfactionLabel: {
-    fontSize: 13,
-    color: '#333',
-    marginBottom: 5,
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.labelSmall.fontSize,
+    color: theme.colors.textSecondary,
+    marginBottom: theme.spacing.sm,
   },
   satisfactionButtons: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between', // Space out buttons
+    flexWrap: 'wrap', // Allow wrapping if many buttons
+    gap: theme.spacing.xs, // Gap between buttons
   },
   satisfactionButton: {
-    backgroundColor: '#e0e0e0',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 5,
+    backgroundColor: theme.colors.base2,
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
+    borderRadius: theme.borderRadius.sm, // Consistent border radius
+    minWidth: 30, // Ensure touchable area
+    alignItems: 'center',
   },
   satisfactionButtonText: {
-    fontSize: 13,
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.labelSmall.fontSize,
+    color: theme.colors.textPrimary,
   }
 });
 

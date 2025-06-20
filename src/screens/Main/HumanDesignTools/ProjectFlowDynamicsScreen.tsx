@@ -3,8 +3,10 @@
  * @description Screen for the Project Flow Dynamics tool, for Manifesting Generators.
  */
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, Button, ActivityIndicator, Alert, TextInput, FlatList } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert, TextInput, FlatList, RefreshControl } from 'react-native'; // Removed Button, Added RefreshControl
 import { InfoCard, InsightDisplay } from '../../../components/HumanDesignTools';
+import StackedButton from '../../../components/StackedButton'; // Import StackedButton
+import { theme } from '../../../constants/theme'; // Import theme
 import * as projectFlowDynamicsService from '../../../services/projectFlowDynamicsService';
 import * as authorityService from '../../../services/authorityService';
 import { AuthorityType, WorkflowPattern, SkipStepPattern, RhythmPattern, FrustrationPoint } from '../../../types/humanDesignTools';
@@ -25,6 +27,17 @@ const ProjectFlowDynamicsScreen: React.FC = () => {
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [projectStep, setProjectStep] = useState('');
   const [frustrationNote, setFrustrationNote] = useState('');
+  const [isRefreshing, setIsRefreshing] = useState(false); // For pull-to-refresh
+
+  // Focus states for new inputs
+  const [projectStepFocused, setProjectStepFocused] = useState(false);
+  const [frustrationNoteFocused, setFrustrationNoteFocused] = useState(false);
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await loadMGData();
+    setIsRefreshing(false);
+  }, [loadMGData]);
 
   useEffect(() => {
     const fetchAuthority = async () => {
@@ -124,168 +137,251 @@ const ProjectFlowDynamicsScreen: React.FC = () => {
 
 
   if (isLoadingAuthority) {
-    return <View style={styles.centered}><ActivityIndicator size="large" /><Text>Loading authority...</Text></View>;
+    return <View style={styles.loadingContainer}><ActivityIndicator size="large" color={theme.colors.accent} /><Text style={styles.loadingText}>Loading authority...</Text></View>;
   }
 
-  // Simplified check for MG - primarily Sacral. Refine with actual Type system.
   const isManifestingGenerator = userAuthority === AuthorityType.Sacral || userAuthority === AuthorityType.Emotional;
-
 
   if (!isManifestingGenerator) {
     return (
-      <View style={styles.centered}>
-        <InfoCard title="Project Flow Dynamics">
-          <Text style={styles.messageText}>This tool is designed for Manifesting Generators (with Sacral Authority).</Text>
-          <Text style={styles.messageText}>Your detected authority is: {userAuthority || 'Not yet determined'}</Text>
-        </InfoCard>
+      <View style={styles.container}>
+        <View style={styles.contentWrapper}>
+          <View style={styles.titleSection}>
+            <Text style={styles.pageTitle}>PROJECT FLOW DYNAMICS</Text>
+          </View>
+          <InfoCard title="Information">
+            <Text style={styles.messageText}>This tool is designed for Manifesting Generators (with Sacral or Emotional Authority).</Text>
+            <Text style={styles.messageText}>Your detected authority is: {userAuthority || 'Not yet determined'}</Text>
+          </InfoCard>
+        </View>
       </View>
     );
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.header}>Project Flow Dynamics</Text>
-      <Text style={styles.subHeader}>Authority Context: {userAuthority}</Text>
+    <View style={styles.container}>
+      <View style={styles.contentWrapper}>
+        <View style={styles.titleSection}>
+          <Text style={styles.pageTitle}>PROJECT FLOW DYNAMICS</Text>
+          <Text style={styles.pageSubtitle}>Authority Context: {userAuthority}</Text>
+        </View>
 
-      <InfoCard title="Record Project Step">
-        <TextInput
-            style={styles.input}
-            placeholder="Describe current project step/task..."
-            value={projectStep}
-            onChangeText={setProjectStep}
-            multiline
-        />
-        <Button title="Log Step" onPress={handleRecordStep} />
-      </InfoCard>
-
-      <InfoCard title="Record Frustration Point">
-        <TextInput
-            style={styles.input}
-            placeholder="What's causing frustration or a block?"
-            value={frustrationNote}
-            onChangeText={setFrustrationNote}
-            multiline
-        />
-        <Button title="Log Frustration" onPress={handleRecordFrustration} color="orange" />
-      </InfoCard>
-
-      {isLoadingData && <ActivityIndicator style={styles.loader}/>}
-
-      <InfoCard title="Your Workflow Patterns">
-        {workflowPatterns.length > 0 ? (
-          <FlatList
-            data={workflowPatterns}
-            renderItem={({ item }) => <WorkflowPatternListItem pattern={item} />}
-            keyExtractor={item => item.id}
-            scrollEnabled={false}
-          />
-        ) : <Text style={styles.emptyStateText}>No workflow patterns identified yet.</Text>}
-        {insights.map((insight, i) => <InsightDisplay key={`insight-${i}`} insightText={insight} source="Project Flow Analysis" />)}
-      </InfoCard>
-
-      <InfoCard title="Skip-Step Analytics">
-        {skipStepPatterns.length > 0 ? (
-          <FlatList
-            data={skipStepPatterns}
-            renderItem={({ item }) => <SkipStepPatternListItem pattern={item} />}
-            keyExtractor={item => item.id}
-            scrollEnabled={false}
-          />
-        ) : <Text style={styles.emptyStateText}>No skip-step analytics available.</Text>}
-      </InfoCard>
-
-      <InfoCard title="Personal Workflow Rhythm">
-         {rhythmPatterns.length > 0 ? (
-           <FlatList
-            data={rhythmPatterns}
-            renderItem={({ item }) => <RhythmPatternListItem pattern={item} />}
-            keyExtractor={item => item.id}
-            scrollEnabled={false}
-           />
-         ) : <Text style={styles.emptyStateText}>Workflow rhythm data not yet available.</Text>}
-      </InfoCard>
-
-      {/* Display Frustration Points (optional, could be many) */}
-      {frustrationPoints.length > 0 && (
-        <InfoCard title="Recent Frustration Points">
-            {frustrationPoints.slice(0,2).map(fp => (
-                <View key={fp.id} style={styles.listItem}>
-                    <Text style={styles.itemTitle}>Frustration: Level {fp.frustrationLevel} on {new Date(fp.timestamp).toLocaleDateString()}</Text>
-                    <Text>Blockers: {fp.blockers.join(', ')}</Text>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={theme.colors.accent}/>}
+        >
+          <View style={styles.mainContent}>
+            <InfoCard title="Record Project Step">
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Current Step/Task:</Text>
+                <View style={[styles.inputPanel, projectStepFocused && styles.inputPanelFocused]}>
+                  <TextInput
+                      style={styles.textInput}
+                      placeholder="Describe current project step/task..."
+                      value={projectStep}
+                      onChangeText={setProjectStep}
+                      multiline
+                      onFocus={() => setProjectStepFocused(true)}
+                      onBlur={() => setProjectStepFocused(false)}
+                      placeholderTextColor={theme.colors.textSecondary}
+                  />
                 </View>
-            ))}
-        </InfoCard>
-      )}
+              </View>
+              <StackedButton text="Log Step" onPress={handleRecordStep} type="rect" />
+            </InfoCard>
 
-    </ScrollView>
+            <InfoCard title="Record Frustration Point">
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Frustration/Block:</Text>
+                <View style={[styles.inputPanel, frustrationNoteFocused && styles.inputPanelFocused]}>
+                  <TextInput
+                      style={styles.textInput}
+                      placeholder="What's causing frustration or a block?"
+                      value={frustrationNote}
+                      onChangeText={setFrustrationNote}
+                      multiline
+                      onFocus={() => setFrustrationNoteFocused(true)}
+                      onBlur={() => setFrustrationNoteFocused(false)}
+                      placeholderTextColor={theme.colors.textSecondary}
+                  />
+                </View>
+              </View>
+              <StackedButton text="Log Frustration" onPress={handleRecordFrustration} type="rect" />
+            </InfoCard>
+
+            {isLoadingData && !isRefreshing && <ActivityIndicator style={styles.loader} color={theme.colors.accent}/>}
+
+            <InfoCard title="Your Workflow Patterns">
+              {workflowPatterns.length > 0 ? (
+                <FlatList
+                  data={workflowPatterns}
+                  renderItem={({ item }) => <WorkflowPatternListItem pattern={item} />}
+                  keyExtractor={item => item.id}
+                  scrollEnabled={false}
+                />
+              ) : <Text style={styles.emptyStateText}>No workflow patterns identified yet.</Text>}
+              {insights.map((insight, i) => <InsightDisplay key={`insight-${i}`} insightText={insight} source="Project Flow Analysis" />)}
+            </InfoCard>
+
+            <InfoCard title="Skip-Step Analytics">
+              {skipStepPatterns.length > 0 ? (
+                <FlatList
+                  data={skipStepPatterns}
+                  renderItem={({ item }) => <SkipStepPatternListItem pattern={item} />}
+                  keyExtractor={item => item.id}
+                  scrollEnabled={false}
+                />
+              ) : <Text style={styles.emptyStateText}>No skip-step analytics available.</Text>}
+            </InfoCard>
+
+            <InfoCard title="Personal Workflow Rhythm">
+              {rhythmPatterns.length > 0 ? (
+                <FlatList
+                  data={rhythmPatterns}
+                  renderItem={({ item }) => <RhythmPatternListItem pattern={item} />}
+                  keyExtractor={item => item.id}
+                  scrollEnabled={false}
+                />
+              ) : <Text style={styles.emptyStateText}>Workflow rhythm data not yet available.</Text>}
+            </InfoCard>
+
+            {frustrationPoints.length > 0 && (
+              <InfoCard title="Recent Frustration Points">
+                  {frustrationPoints.slice(0,2).map(fp => (
+                      <View key={fp.id} style={styles.dataPanelItem}>
+                          <Text style={styles.itemTitle}>Frustration: Level {fp.frustrationLevel} on {new Date(fp.timestamp).toLocaleDateString()}</Text>
+                          <Text style={styles.itemText}>Blockers: {fp.blockers.join(', ')}</Text>
+                      </View>
+                  ))}
+              </InfoCard>
+            )}
+          </View>
+        </ScrollView>
+      </View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  centered: {
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.bg,
+  },
+  contentWrapper: {
+    flex: 1,
+    padding: theme.spacing.lg,
+  },
+  titleSection: {
+    alignItems: 'center',
+    marginBottom: theme.spacing.xl,
+    flexShrink: 0,
+  },
+  pageTitle: {
+    fontFamily: theme.fonts.display,
+    fontSize: theme.typography.displayMedium.fontSize,
+    fontWeight: theme.typography.displayMedium.fontWeight,
+    color: theme.colors.textPrimary,
+    textAlign: 'center',
+    letterSpacing: 2,
+  },
+  pageSubtitle: {
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.labelSmall.fontSize,
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
+    marginTop: theme.spacing.xs,
+  },
+  scrollView: { flex: 1 },
+  scrollContent: { flexGrow: 1, paddingBottom: theme.spacing.lg },
+  mainContent: { gap: theme.spacing.xl },
+
+  inputGroup: { // Wrapper for Label + InputPanel for the custom inputs on this screen
+    marginBottom: theme.spacing.md, // Space before button if button is outside group
+  },
+  label: { // Label for new step / frustration note
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.labelSmall.fontSize,
+    color: theme.colors.textSecondary,
+    marginBottom: theme.spacing.xs,
+    fontWeight: '500',
+  },
+  inputPanel: { // Panel around TextInput
+    borderWidth: 1,
+    borderColor: theme.colors.base1,
+    borderRadius: theme.borderRadius.sm,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  inputPanelFocused: {
+    borderColor: theme.colors.accent,
+    shadowColor: theme.colors.accentGlow,
+    shadowOffset: { width: 0, height: 0 },
+    shadowRadius: 10,
+    shadowOpacity: 0.7,
+    elevation: 3,
+  },
+  textInput: { // TextInput itself
+    backgroundColor: 'transparent',
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.md,
+    color: theme.colors.textPrimary,
+    fontSize: 15,
+    minHeight: 80, // For multiline
+    textAlignVertical: 'top',
+  },
+  loader: {
+    marginVertical: theme.spacing.md,
+  },
+  loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
-    backgroundColor: '#f8f9fa',
+    padding: theme.spacing.xl,
+    backgroundColor: theme.colors.bg,
   },
-  container: {
-    flex: 1,
-    backgroundColor: '#f8f9fa',
-  },
-  loader: {
-    marginVertical: 20,
-  },
-  header: {
-    fontSize: 26,
-    fontWeight: 'bold',
-    paddingHorizontal: 16,
-    paddingTop: 20,
-    paddingBottom: 5,
-    color: '#343a40',
-  },
-  subHeader: {
-    fontSize: 18,
-    fontWeight: '600',
-    paddingHorizontal: 16,
-    paddingBottom: 15,
-    color: '#495057',
+  loadingText: {
+    fontFamily: theme.fonts.body,
+    fontSize: theme.typography.bodyMedium.fontSize,
+    color: theme.colors.textSecondary,
+    marginTop: theme.spacing.md,
   },
   messageText: {
-    fontSize: 16,
+    fontFamily: theme.fonts.body,
+    fontSize: theme.typography.bodyMedium.fontSize,
+    lineHeight: theme.typography.bodyMedium.lineHeight,
+    color: theme.colors.textSecondary,
     textAlign: 'center',
-    marginVertical: 10,
-    lineHeight: 24,
-    color: '#212529',
+    marginBottom: theme.spacing.sm,
   },
-  input: {
-    backgroundColor: '#fff',
-    borderColor: '#ced4da',
+  dataPanelItem: { // For Frustration Points list items
+    padding: theme.spacing.md,
     borderWidth: 1,
-    borderRadius: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 16,
-    marginBottom: 10,
-    textAlignVertical: 'top',
+    borderColor: theme.colors.base1,
+    borderRadius: theme.borderRadius.sm,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    marginBottom: theme.spacing.sm,
   },
-  listItem: { // Kept for Frustration Points, or can be removed if those get a dedicated component too
-    paddingVertical: 10,
-    paddingHorizontal: 5,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e9ecef',
+  itemTitle: {
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.bodyMedium.fontSize,
+    fontWeight: 'bold',
+    color: theme.colors.textPrimary,
+    marginBottom: theme.spacing.xs,
   },
-  itemTitle: { // Kept for Frustration Points
-      fontWeight: 'bold',
-      fontSize: 16,
-      marginBottom: 4,
-      color: '#007bff',
+  itemText: { // For text within dataPanelItem
+     fontFamily: theme.fonts.body,
+    fontSize: theme.typography.bodySmall.fontSize,
+    color: theme.colors.textSecondary,
   },
   emptyStateText: {
+    fontFamily: theme.fonts.body,
+    fontSize: theme.typography.bodyMedium.fontSize,
+    color: theme.colors.textSecondary,
     textAlign: 'center',
-    paddingVertical: 10,
-    color: '#6c757d',
+    padding: theme.spacing.md,
+    fontStyle: 'italic',
   }
+  // Removed old styles: centered, header, subHeader, input, listItem
 });
 
 export default ProjectFlowDynamicsScreen;

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { colors, spacing, typography, borderRadius } from '../constants/theme'; // Assuming theme.ts
+import { theme } from '../constants/theme'; // Import full theme
 
 interface StepTrackerProps {
   currentStep: number;
@@ -46,25 +46,27 @@ const StepTracker: React.FC<StepTrackerProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    backgroundColor: colors.base1, // Light background for the tracker
+    paddingVertical: theme.spacing.sm,     // Use theme spacing
+    paddingHorizontal: theme.spacing.md,   // Use theme spacing
+    backgroundColor: theme.colors.base1,   // Use theme color
     borderBottomWidth: 1,
-    borderBottomColor: colors.base2,
+    borderBottomColor: theme.colors.base2, // Use theme color
   },
   textContainer: {
-    marginBottom: spacing.sm,
+    marginBottom: theme.spacing.sm,        // Use theme spacing
     alignItems: 'center',
   },
   stepText: {
-    ...typography.labelLarge,
-    color: colors.textPrimary,
+    fontFamily: theme.fonts.mono,          // Use theme font
+    fontSize: theme.typography.labelSmall.fontSize, // Use theme typography
+    color: theme.colors.textPrimary,       // Use theme color
     fontWeight: 'bold',
   },
   stepLabel: {
-    ...typography.bodyMedium,
-    color: colors.textSecondary,
-    marginTop: spacing.xs,
+    fontFamily: theme.fonts.mono,          // Use theme font
+    fontSize: theme.typography.labelSmall.fontSize, // Use theme typography
+    color: theme.colors.textSecondary,     // Use theme color
+    marginTop: theme.spacing.xs,           // Use theme spacing
   },
   progressContainer: {
     flexDirection: 'row',
@@ -72,23 +74,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   progressDot: {
-    width: 10,
-    height: 10,
-    borderRadius: borderRadius.full,
-    marginHorizontal: spacing.xs,
-    backgroundColor: colors.base3, // Default for pending
+    width: 8, // Slightly smaller dots for a tighter look
+    height: 8,
+    borderRadius: theme.borderRadius.full, // Use theme border radius (e.g., 4 for 8x8 dot)
+    marginHorizontal: theme.spacing.xs,    // Use theme spacing
+    // backgroundColor is set by specific states (pending, completed, current)
   },
-  pendingDot: {
-    backgroundColor: colors.base2,
+  pendingDot: { // For steps not yet completed and not current
+    backgroundColor: theme.colors.base3,   // Use theme color for inactive/pending
     opacity: 0.7,
   },
-  completedDot: {
-    backgroundColor: colors.accent,
+  completedDot: { // For steps completed (and not current)
+    backgroundColor: theme.colors.accent,  // Use theme color for completed
   },
   currentDot: { // Specific style for the current step's dot
-    backgroundColor: colors.accent, // Same as completed for now
-    transform: [{ scale: 1.2 }], // Make it slightly larger
-    // You could also use a different color or an outline
+    backgroundColor: theme.colors.accent,  // Use theme color for current
+    transform: [{ scale: 1.3 }],         // Make it slightly larger
+    // elevation: 1, // Optional: add a slight shadow for current dot
   }
 });
 

@@ -20,7 +20,7 @@ import { SCREEN_EXPLAINERS } from '../../constants/screenExplainers'; // Import 
 import {useNavigation} from '@react-navigation/native';
 import {Ionicons} from '@expo/vector-icons';
 import StackedButton from '../../components/StackedButton';
-import { colors, typography, spacing } from '../../constants/theme';
+import { theme } from '../../constants/theme'; // Import full theme
 import baseChartService, {BaseChartData} from '../../services/baseChartService';
 import aiFrequencyMapperService from '../../services/aiFrequencyMapperService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -516,8 +516,9 @@ const FrequencyMapperScreen: React.FC = () => {
   
   // Input state
   const [userInput, setUserInput] = useState<string>('');
-  const [inputMethod, setInputMethod] = useState<'text' | 'voice'>('text');
+  const [inputMethod, setInputMethod] = useState<'text' | 'voice'>('text'); // Keep if voice input is a future feature
   const [reflectionAnswers, setReflectionAnswers] = useState<string[]>(['', '', '']);
+  const [isInputFocused, setIsInputFocused] = useState<boolean>(false); // For input panel focus state
   
   // AI Response state
   const [reflectionOutput, setReflectionOutput] = useState<ReflectionOutput | null>(null);
@@ -886,25 +887,33 @@ const FrequencyMapperScreen: React.FC = () => {
 
   // Render entry screen
   const renderEntryScreen = () => {
-    const quickPrompts = getQuickStartPrompts();
+    // const quickPrompts = getQuickStartPrompts(); // Keep for later if needed for quick prompts UI
     
     return (
-      <View style={styles.frequencyContent}>
-        <Text style={styles.contentDescription}>
+      // This View will be styled as the main content block for the entry screen
+      // It corresponds to the content within the ScrollView in the new structure
+      <View style={styles.entryScreenContent}>
+        <Text style={styles.introParagraph}>
           Input your emerging desire, intention, or situation. Be as descriptive as you wish.
         </Text>
         
-        <View style={styles.inputPanel}>
+        {/* Input Panel - Structure for now, detailed styling in next step */}
+        <View style={[
+          styles.inputPanelContainer,
+          isInputFocused && styles.inputPanelFocused
+        ]}>
           <Text style={styles.inputPanelLabel}>INPUT SIGNAL</Text>
           <TextInput
-            style={styles.formElement}
+            style={styles.textInputMain}
+            onFocus={() => setIsInputFocused(true)}
+            onBlur={() => setIsInputFocused(false)}
             placeholder="Enter emerging desire, intention, or situation..."
             value={userInput}
             onChangeText={setUserInput}
             multiline
-            numberOfLines={4}
+            numberOfLines={4} // This is a suggestion, actual lines depend on height
             textAlignVertical="top"
-            placeholderTextColor={colors.textSecondary}
+            placeholderTextColor={theme.colors.textSecondary} // Use theme
           />
         </View>
         
@@ -912,6 +921,7 @@ const FrequencyMapperScreen: React.FC = () => {
           type="rect"
           text={isLoading ? 'PROCESSING...' : 'PROCESS & MAP'}
           onPress={handleInputSubmit}
+          // Button will take full width if its parent does.
         />
       </View>
     );
@@ -1213,80 +1223,100 @@ const FrequencyMapperScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
+  container: { // Root view of the screen
     flex: 1,
-    backgroundColor: 'transparent',
+    backgroundColor: 'transparent', // Assuming AppBackground handles actual BG image
   },
-  contentWrapper: {
+  contentWrapper: { // Wraps all content within the screen, provides padding
     flex: 1,
-    padding: spacing.lg,
+    padding: theme.spacing.lg, // 24px padding
   },
-  titleSection: {
+  titleSection: { // Contains main title and subtitle
     alignItems: 'center',
-    marginBottom: spacing.xl,
-    flexShrink: 0,
+    marginBottom: theme.spacing.xl, // 32px margin bottom (HTML: mb-8)
+    flexShrink: 0, // Prevent shrinking if content is too much
   },
-  pageTitle: {
-    ...typography.displayMedium,
-    fontFamily: 'System',
-    fontWeight: '700',
-    color: colors.textPrimary,
+  pageTitle: { // "FREQUENCY MAPPER"
+    fontFamily: theme.fonts.display,
+    fontSize: theme.typography.displayMedium.fontSize, // 24px
+    fontWeight: theme.typography.displayMedium.fontWeight, // '700'
+    color: theme.colors.textPrimary,
     textAlign: 'center',
     letterSpacing: 2,
   },
-  pageSubtitle: {
-    ...typography.labelSmall,
-    fontFamily: 'monospace',
-    color: colors.textSecondary,
+  pageSubtitle: { // "Phase 1: Articulation"
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.labelSmall.fontSize, // e.g., 11px or 12px
+    color: theme.colors.textSecondary,
     textAlign: 'center',
-    marginTop: spacing.xs,
+    marginTop: theme.spacing.xs, // 4px margin top
   },
-  inputPanel: {
-    position: 'relative',
+  scrollView: { // For the main scrollable content area
+    flex: 1, // Takes remaining space after titleSection
+  },
+  scrollContent: { // contentContainerStyle for ScrollView
+    flexGrow: 1, // Allows content to fill height if short, or scroll if long
+    paddingVertical: theme.spacing.md, // Padding inside scroll view
+    // justifyContent: 'center', // If content should be centered vertically when not enough to scroll
+  },
+  entryScreenContent: {
+    gap: theme.spacing.lg,
+    paddingBottom: theme.spacing.lg, // Ensure space for button at the end if content is short
+  },
+  introParagraph: {
+    fontFamily: theme.fonts.body,
+    fontSize: theme.typography.bodyMedium.fontSize || 14,
+    lineHeight: (theme.typography.bodyMedium.lineHeight || 20) * 1.5,
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: theme.spacing.md, // Explicit margin instead of relying solely on gap for this item
+  },
+  inputPanelContainer: {
     borderWidth: 1,
-    borderColor: colors.base1,
-    borderRadius: 8,
+    borderColor: theme.colors.base1,
+    borderRadius: theme.borderRadius.sm, // 8px
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    padding: spacing.md,
-    marginBottom: spacing.lg,
-    minHeight: 120,
+    position: 'relative', // For absolute positioning of the label
+    height: 192, // HTML: h-48 (12rem = 192px)
+    marginBottom: theme.spacing.md, // Space before the button
+    padding: 0, // Padding will be on the TextInput itself for better control
+  },
+  inputPanelFocused: {
+    borderColor: theme.colors.accent,
+    shadowColor: theme.colors.accentGlow, // Or theme.colors.accent with opacity
+    shadowOffset: { width: 0, height: 0 },
+    shadowRadius: 10, // Approx for CSS blur(20px)
+    shadowOpacity: 0.7, // Glow effect often has some opacity
+    elevation: 5, // For Android shadow
   },
   inputPanelLabel: {
     position: 'absolute',
-    top: -10,
-    left: 12,
-    backgroundColor: colors.bg,
-    paddingHorizontal: 6,
-    fontFamily: 'monospace',
-    fontSize: 11,
-    fontWeight: '500',
-    color: colors.textSecondary,
+    top: -10, // To sit on top of the border
+    left: 12, // Indent from left
+    backgroundColor: theme.colors.bg, // To cover the border line underneath the label
+    paddingHorizontal: theme.spacing.xs, // 6px in HTML
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.labelSmall.fontSize || 11,
+    fontWeight: theme.typography.labelSmall.fontWeight || '500',
+    color: theme.colors.textSecondary,
     textTransform: 'uppercase',
-    letterSpacing: 0.1,
+    letterSpacing: theme.typography.labelSmall.letterSpacing || 0.5,
+    zIndex: 1, // Ensure label is above the input field container's border
   },
-  formElement: {
-    width: '100%',
-    backgroundColor: 'transparent',
-    color: colors.textPrimary,
-    fontSize: 15,
-    lineHeight: 22,
-    minHeight: 80,
-    textAlignVertical: 'top',
+  textInputMain: {
+    flex: 1, // Fill the panel height
+    backgroundColor: 'transparent', // Panel provides background
+    padding: theme.spacing.md, // 16px padding inside the TextInput
+    color: theme.colors.textPrimary,
+    fontSize: 15, // From HTML
+    lineHeight: 22.5, // 1.5 * 15px
+    textAlignVertical: 'top', // Start text from the top
   },
-  frequencyContent: {
-    flex: 1,
-    gap: spacing.lg,
-    justifyContent: 'center',
-  },
-  contentDescription: {
-    textAlign: 'center',
-    fontSize: 16,
-    lineHeight: 24,
-    color: colors.textSecondary,
-    maxWidth: 320,
-    alignSelf: 'center',
-  },
-  progressContainer: {
+  // Old styles that are not directly mapped or need review:
+  // frequencyContent, contentDescription (replaced by introParagraph),
+  // inputPanel, formElement (replaced by inputPanelContainer, textInputMain)
+  // Styles for other parts of the multi-step flow (progressContainer, contentCard, etc.) are kept for now.
+  progressContainer: { // Keeping existing styles for other parts of the flow
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',

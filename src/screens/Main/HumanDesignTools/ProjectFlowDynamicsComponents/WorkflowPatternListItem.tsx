@@ -4,7 +4,8 @@
  */
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { WorkflowPattern } from '../../../../types/humanDesignTools'; // Adjusted path
+import { WorkflowPattern } from '../../../../types/humanDesignTools';
+import { theme } from '../../../../constants/theme'; // Import theme
 
 export interface WorkflowPatternListItemProps {
   pattern: WorkflowPattern;
@@ -29,31 +30,37 @@ const WorkflowPatternListItem: React.FC<WorkflowPatternListItemProps> = ({ patte
 };
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: '#fff',
-    padding: 12,
-    marginVertical: 6,
-    borderRadius: 6,
+  container: { // Styled as .input-panel
+    padding: theme.spacing.md,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: theme.colors.base1,
+    borderRadius: theme.borderRadius.sm,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    marginBottom: theme.spacing.md,
   },
-  title: {
-    fontSize: 15,
+  title: { // Description is the main "title" here
+    fontFamily: theme.fonts.body,
+    fontSize: theme.typography.bodyLarge.fontSize,
     fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 5,
+    color: theme.colors.textPrimary,
+    marginBottom: theme.spacing.sm,
   },
-  detailText: {
-    fontSize: 13,
-    color: '#555',
-    marginBottom: 3,
-    lineHeight: 18,
+  detailText: { // For sequence, skips
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.labelMedium.fontSize, // Slightly larger for better readability of sequences
+    color: theme.colors.textSecondary,
+    marginBottom: theme.spacing.xs,
+    lineHeight: theme.typography.labelMedium.lineHeight,
   },
-  metricsText: {
-    fontSize: 12,
-    color: '#777',
-    marginTop: 5,
+  metricsText: { // For completion, satisfaction, energy efficiency
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.labelSmall.fontSize,
+    color: theme.colors.accentSecondary, // Use a different color for metrics, or textSecondary
+    marginTop: theme.spacing.sm,
     fontStyle: 'italic',
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.base2,
+    paddingTop: theme.spacing.sm,
   },
 });
 

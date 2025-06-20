@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { colors, typography, spacing } from '../constants/theme'; // Assuming theme.ts
+import { theme } from '../constants/theme'; // Import full theme
 
 interface ScreenExplainerProps {
   text: string;
@@ -25,18 +25,21 @@ const ScreenExplainer: React.FC<ScreenExplainerProps> = ({ text, maxWords = 40 }
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    backgroundColor: colors.base1, // A subtle background color
-    borderBottomWidth: 1,
-    borderBottomColor: colors.base2,
-    alignItems: 'center', // Center text if it's short
+    paddingHorizontal: theme.spacing.lg, // Use theme spacing
+    paddingVertical: theme.spacing.md,   // Use theme spacing
+    backgroundColor: theme.colors.base1, // Subtle background
+    borderRadius: theme.borderRadius.sm, // Add border radius
+    marginBottom: theme.spacing.md,      // Add margin bottom
+    alignItems: 'center',
+    // borderBottomWidth: 1, // Removed border as per new spec (more like a contextual inline block)
+    // borderBottomColor: theme.colors.base2,
   },
   text: {
-    ...typography.bodyMedium, // Using bodyMedium for readability
-    color: colors.textSecondary, // Using secondary text color
+    fontFamily: theme.fonts.body, // Use theme font
+    fontSize: theme.typography.bodySmall.fontSize, // Use specified size
+    color: theme.colors.textSecondary,
     textAlign: 'center',
-    lineHeight: typography.bodyMedium.lineHeight ? typography.bodyMedium.lineHeight * 1.3 : undefined, // Slightly more line height
+    lineHeight: (theme.typography.bodySmall.lineHeight || (theme.typography.bodySmall.fontSize || 12) * 1.4) * 1.3, // Adjusted line height calculation
   },
 });
 

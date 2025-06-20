@@ -3,8 +3,10 @@
  * @description Component for submitting a daily Lunar Check-In.
  */
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
-import { RecordLunarCheckInPayload } from '../../../../services/environmentalAttunementService'; // Adjusted path
+import { View, Text, TextInput, StyleSheet, Alert } from 'react-native'; // Removed Button
+import { RecordLunarCheckInPayload } from '../../../../services/environmentalAttunementService';
+import { theme } from '../../../../constants/theme'; // Import full theme
+import StackedButton from '../../../../components/StackedButton'; // Import StackedButton
 
 // Helper to get current lunar day (very simplified mock - should match screen's or be passed)
 const getMockLunarDay = () => {
@@ -21,8 +23,15 @@ const LunarCheckInForm: React.FC<LunarCheckInFormProps> = ({ onSubmit, currentLu
   const [wellbeing, setWellbeing] = useState('7');
   const [clarity, setClarity] = useState('7');
   const [notes, setNotes] = useState('');
-  const [environmentName, setEnvironmentName] = useState('Current Location'); // Simple input for now
-  const [people, setPeople] = useState(''); // Simple comma-separated string for now
+  const [environmentName, setEnvironmentName] = useState('Current Location');
+  const [people, setPeople] = useState('');
+
+  // Focus states for input panels
+  const [wellbeingFocused, setWellbeingFocused] = useState(false);
+  const [clarityFocused, setClarityFocused] = useState(false);
+  const [environmentFocused, setEnvironmentFocused] = useState(false);
+  const [peopleFocused, setPeopleFocused] = useState(false);
+  const [notesFocused, setNotesFocused] = useState(false);
 
   const handleSubmit = async () => {
     const wellbeingScore = parseInt(wellbeing, 10);
@@ -76,68 +85,139 @@ const LunarCheckInForm: React.FC<LunarCheckInFormProps> = ({ onSubmit, currentLu
     <View style={styles.formContainer}>
       <Text style={styles.infoText}>Lunar Day: {currentLunarDay}</Text>
 
-      <Text style={styles.label}>Overall Wellbeing (0-10):</Text>
-      <TextInput style={styles.input} value={wellbeing} onChangeText={setWellbeing} keyboardType="number-pad" maxLength={2}/>
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>Overall Wellbeing (0-10):</Text>
+        <View style={[styles.inputPanel, wellbeingFocused && styles.inputPanelFocused]}>
+          <TextInput
+            style={styles.input}
+            value={wellbeing}
+            onChangeText={setWellbeing}
+            keyboardType="number-pad"
+            maxLength={2}
+            placeholderTextColor={theme.colors.textSecondary}
+            onFocus={() => setWellbeingFocused(true)}
+            onBlur={() => setWellbeingFocused(false)}
+          />
+        </View>
+      </View>
 
-      <Text style={styles.label}>Clarity Level (0-10):</Text>
-      <TextInput style={styles.input} value={clarity} onChangeText={setClarity} keyboardType="number-pad" maxLength={2}/>
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>Clarity Level (0-10):</Text>
+        <View style={[styles.inputPanel, clarityFocused && styles.inputPanelFocused]}>
+          <TextInput
+            style={styles.input}
+            value={clarity}
+            onChangeText={setClarity}
+            keyboardType="number-pad"
+            maxLength={2}
+            placeholderTextColor={theme.colors.textSecondary}
+            onFocus={() => setClarityFocused(true)}
+            onBlur={() => setClarityFocused(false)}
+          />
+        </View>
+      </View>
 
-      <Text style={styles.label}>Primary Environment:</Text>
-      <TextInput style={styles.input} value={environmentName} onChangeText={setEnvironmentName} placeholder="e.g., Home Office, Park"/>
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>Primary Environment:</Text>
+        <View style={[styles.inputPanel, environmentFocused && styles.inputPanelFocused]}>
+          <TextInput
+            style={styles.input}
+            value={environmentName}
+            onChangeText={setEnvironmentName}
+            placeholder="e.g., Home Office, Park"
+            placeholderTextColor={theme.colors.textSecondary}
+            onFocus={() => setEnvironmentFocused(true)}
+            onBlur={() => setEnvironmentFocused(false)}
+          />
+        </View>
+      </View>
 
-      <Text style={styles.label}>Key People/Interactions (comma-separated):</Text>
-      <TextInput style={styles.input} value={people} onChangeText={setPeople} placeholder="e.g., Partner, Team Meeting"/>
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>Key People/Interactions (comma-separated):</Text>
+        <View style={[styles.inputPanel, peopleFocused && styles.inputPanelFocused]}>
+          <TextInput
+            style={styles.input}
+            value={people}
+            onChangeText={setPeople}
+            placeholder="e.g., Partner, Team Meeting"
+            placeholderTextColor={theme.colors.textSecondary}
+            onFocus={() => setPeopleFocused(true)}
+            onBlur={() => setPeopleFocused(false)}
+          />
+        </View>
+      </View>
 
-      <Text style={styles.label}>Notes / Observations:</Text>
-      <TextInput
-        style={styles.inputMulti}
-        value={notes}
-        onChangeText={setNotes}
-        multiline
-        numberOfLines={3}
-        placeholder="How are you feeling? What did you notice about your environment or interactions?"
-      />
-      <Button title="Log Lunar Check-In" onPress={handleSubmit} />
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>Notes / Observations:</Text>
+        <View style={[styles.inputPanel, notesFocused && styles.inputPanelFocused]}>
+          <TextInput
+            style={styles.inputMulti}
+            value={notes}
+            onChangeText={setNotes}
+            multiline
+            numberOfLines={3} // This is a suggestion, actual height controlled by minHeight of inputMulti
+            placeholder="How are you feeling? What did you notice about your environment or interactions?"
+            placeholderTextColor={theme.colors.textSecondary}
+            onFocus={() => setNotesFocused(true)}
+            onBlur={() => setNotesFocused(false)}
+          />
+        </View>
+      </View>
+      <StackedButton text="Log Lunar Check-In" onPress={handleSubmit} type="rect" />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   formContainer: {
-    padding: 10,
+    padding: theme.spacing.xs,
+    gap: theme.spacing.md,
+  },
+  inputGroup: {
+    // marginBottom: theme.spacing.sm, // Handled by parent gap
   },
   label: {
-    fontSize: 15,
-    color: '#4a5568',
-    marginBottom: 4,
-    marginTop: 8,
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.labelSmall.fontSize,
+    color: theme.colors.textSecondary,
+    marginBottom: theme.spacing.xs,
+    fontWeight: '500',
   },
-  input: {
-    backgroundColor: '#fff',
-    borderColor: '#cbd5e0',
+  inputPanel: {
     borderWidth: 1,
-    borderRadius: 5,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    fontSize: 15,
-    marginBottom: 8,
-    color: '#2d3748',
+    borderColor: theme.colors.base1,
+    borderRadius: theme.borderRadius.sm,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    // No direct padding here, TextInput inside will have padding
   },
-  inputMulti: {
-    backgroundColor: '#fff',
-    borderColor: '#cbd5e0',
-    borderWidth: 1,
-    borderRadius: 5,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
+  inputPanelFocused: {
+    borderColor: theme.colors.accent,
+    shadowColor: theme.colors.accentGlow,
+    shadowOffset: { width: 0, height: 0 },
+    shadowRadius: 10,
+    shadowOpacity: 0.7,
+    elevation: 3,
+  },
+  input: { // For single line TextInput
+    backgroundColor: 'transparent',
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm, // Adjusted for typical single line input height
+    color: theme.colors.textPrimary,
     fontSize: 15,
-    marginBottom: 12,
-    minHeight: 70,
+  },
+  inputMulti: { // For multiline TextInput (Notes)
+    backgroundColor: 'transparent',
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.md, // More padding for multiline
+    color: theme.colors.textPrimary,
+    fontSize: 15,
+    minHeight: 80, // Good default for multiline
     textAlignVertical: 'top',
-    color: '#2d3748',
+    // Temporary borders removed
   },
   infoText: {
-    fontSize: 14,
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.labelSmall.fontSize,
     color: '#718096',
     textAlign: 'center',
     marginBottom: 10,

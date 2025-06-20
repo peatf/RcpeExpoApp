@@ -5,7 +5,8 @@
  */
 import React, { ReactNode } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { AuthorityType } from '../../types/humanDesignTools'; // Adjusted path
+import { AuthorityType } from '../../types/humanDesignTools';
+import { theme } from '../../constants/theme'; // Import theme
 
 /**
  * @interface AuthoritySpecificBlockProps
@@ -48,30 +49,32 @@ const AuthoritySpecificBlock: React.FC<AuthoritySpecificBlockProps> = ({ authori
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: 8,
-    marginHorizontal: 16,
-    padding: 16,
+    marginVertical: theme.spacing.sm,     // Use theme spacing
+    // marginHorizontal: theme.spacing.md, // Consider if this should be applied by parent or here
+    padding: theme.spacing.md,            // Use theme spacing
     borderWidth: 1,
-    borderColor: '#ddd', // Default border
-    borderRadius: 8,
-    backgroundColor: '#f9f9f9',
+    borderColor: theme.colors.base2,      // Themed border color
+    borderRadius: theme.borderRadius.md,  // Themed border radius
+    backgroundColor: theme.colors.base1,  // Themed background (e.g., a light off-white/gray)
   },
   blockTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#444',
-    marginBottom: 10,
+    fontFamily: theme.fonts.mono, // Or display/body if more prominent
+    fontSize: theme.typography.headingSmall.fontSize, // Themed heading size
+    fontWeight: theme.typography.headingSmall.fontWeight,
+    color: theme.colors.textPrimary,
+    marginBottom: theme.spacing.sm,        // Use theme spacing
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-    paddingBottom: 5,
+    borderBottomColor: theme.colors.base3, // Themed border color
+    paddingBottom: theme.spacing.xs,       // Use theme spacing
   },
   contentContainer: {
-    // Styles for the content area
+    // Styles for the content area if needed, e.g., marginTop if title is present
   },
   authorityDebugText: {
-    fontSize: 10,
-    color: '#aaa',
-    marginTop: 10,
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.labelXSmall.fontSize, // Very small for debug
+    color: theme.colors.textSecondary,    // Themed color
+    marginTop: theme.spacing.sm,          // Use theme spacing
     textAlign: 'right',
     fontStyle: 'italic',
   },

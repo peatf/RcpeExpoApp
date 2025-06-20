@@ -3,14 +3,15 @@
  * @description Screen for the Environmental Attunement tool, for Reflectors (Lunar Authority).
  */
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, Button, ActivityIndicator, Alert } from 'react-native'; // Removed TextInput
-import OnboardingBanner from '../../../components/OnboardingBanner'; // Import Banner
-import useOnboardingBanner from '../../../hooks/useOnboardingBanner'; // Import Hook
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert, RefreshControl } from 'react-native'; // Added RefreshControl
+import OnboardingBanner from '../../../components/OnboardingBanner';
+import useOnboardingBanner from '../../../hooks/useOnboardingBanner';
 import { InfoCard, InsightDisplay } from '../../../components/HumanDesignTools';
 import * as environmentalAttunementService from '../../../services/environmentalAttunementService';
 import * as authorityService from '../../../services/authorityService';
 import { AuthorityType, LunarCheckIn, LunarPattern, ClarityWindow, EnvironmentAnalysis, TimingWindow } from '../../../types/humanDesignTools';
-import LunarCheckInForm from './EnvironmentalAttunementComponents/LunarCheckInForm'; // Import LunarCheckInForm
+import LunarCheckInForm from './EnvironmentalAttunementComponents/LunarCheckInForm';
+import { theme } from '../../../constants/theme'; // Import full theme
 
 // Helper to get current lunar day (very simplified mock)
 const getMockLunarDay = () => {
@@ -102,22 +103,28 @@ const EnvironmentalAttunementScreen: React.FC = () => {
   };
 
   if (isLoadingAuthority) {
-    return <View style={styles.centered}><ActivityIndicator size="large" /><Text>Loading authority...</Text></View>;
+    return <View style={styles.loadingContainer}><ActivityIndicator size="large" color={theme.colors.accent} /><Text style={styles.loadingText}>Loading authority...</Text></View>;
   }
 
   if (userAuthority !== AuthorityType.Lunar) {
     return (
-      <View style={styles.centered}>
-        <InfoCard title="Environmental Attunement">
-          <Text style={styles.messageText}>This tool is specifically designed for Reflectors (Lunar Authority).</Text>
-          <Text style={styles.messageText}>Your detected authority is: {userAuthority || 'Not yet determined'}</Text>
-        </InfoCard>
+      <View style={styles.container}>
+        <View style={styles.contentWrapper}>
+          {/* Adding a title for non-reflectors view */}
+          <View style={styles.titleSection}>
+            <Text style={styles.pageTitle}>ENVIRONMENTAL ATTUNEMENT</Text>
+          </View>
+          <InfoCard title="Information">
+            <Text style={styles.messageText}>This tool is specifically designed for Reflectors (Lunar Authority).</Text>
+            <Text style={styles.messageText}>Your detected authority is: {userAuthority || 'Not yet determined'}</Text>
+          </InfoCard>
+        </View>
       </View>
     );
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
       {!isLoadingBanner && showBanner && (
         <OnboardingBanner
           toolName="Lunar Cycle Log"
@@ -125,63 +132,141 @@ const EnvironmentalAttunementScreen: React.FC = () => {
           onDismiss={dismissBanner}
         />
       )}
-      <Text style={styles.header}>Environmental Attunement</Text>
-      <Text style={styles.subHeader}>Lunar Day: {getMockLunarDay()} (Mock)</Text>
+      <View style={styles.contentWrapper}>
+        <View style={styles.titleSection}>
+          <Text style={styles.pageTitle}>ENVIRONMENTAL ATTUNEMENT</Text>
+          <Text style={styles.pageSubtitle}>Lunar Day: {getMockLunarDay()} (Mock)</Text>
+        </View>
 
-      <InfoCard title="Daily Lunar Check-In">
-        <LunarCheckInForm onSubmit={handleCheckInSubmit} currentLunarDay={getMockLunarDay()} />
-      </InfoCard>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={loadReflectorData} tintColor={theme.colors.accent} />}
+        >
+          <View style={styles.mainContent}>
+            <InfoCard title="Daily Lunar Check-In">
+              <LunarCheckInForm onSubmit={handleCheckInSubmit} currentLunarDay={getMockLunarDay()} />
+            </InfoCard>
 
-      {isLoadingData && <ActivityIndicator style={styles.loader} />}
+            {isLoadingData && !isRefreshing && <ActivityIndicator style={styles.loader} color={theme.colors.accent} />}
 
-      <InfoCard title="Clarity Windows & Decision Timing">
-        {clarityWindows.map((cw, i) => <InsightDisplay key={`cw-${i}`} insightText={`Predicted Clarity Window: Days ${cw.startDay}-${cw.endDay} (Confidence: ${(cw.confidence*100).toFixed(0)}%)`} source={`Recommended for: ${cw.decisionTypes.join(', ')}`} />)}
-        {decisionTimingRecs.map((dt, i) => <InsightDisplay key={`dt-${i}`} insightText={`Window: ${new Date(dt.startDate).toLocaleDateString()} - ${new Date(dt.endDate).toLocaleDateString()}`} source={`For important decisions. Suggested environments: ${dt.recommendedEnvironments.join(', ')}`} />)}
-        {clarityWindows.length === 0 && decisionTimingRecs.length === 0 && <Text style={styles.emptyStateText}>No timing recommendations yet.</Text>}
-      </InfoCard>
+            <InfoCard title="Clarity Windows & Decision Timing">
+              {clarityWindows.map((cw, i) => <InsightDisplay key={`cw-${i}`} insightText={`Predicted Clarity Window: Days ${cw.startDay}-${cw.endDay} (Confidence: ${(cw.confidence*100).toFixed(0)}%)`} source={`Recommended for: ${cw.decisionTypes.join(', ')}`} />)}
+              {decisionTimingRecs.map((dt, i) => <InsightDisplay key={`dt-${i}`} insightText={`Window: ${new Date(dt.startDate).toLocaleDateString()} - ${new Date(dt.endDate).toLocaleDateString()}`} source={`For important decisions. Suggested environments: ${dt.recommendedEnvironments.join(', ')}`} />)}
+              {clarityWindows.length === 0 && decisionTimingRecs.length === 0 && !isLoadingData && <Text style={styles.emptyStateText}>No timing recommendations yet.</Text>}
+            </InfoCard>
 
-      <InfoCard title="Recent Lunar Cycle Insights">
-        {lunarPatterns.map(p => <InsightDisplay key={p.id} insightText={p.description} source={`Confidence: ${(p.confidence*100).toFixed(0)}%`} />)}
-        {lunarPatterns.length === 0 && <Text style={styles.emptyStateText}>No lunar patterns identified yet.</Text>}
-      </InfoCard>
+            <InfoCard title="Recent Lunar Cycle Insights">
+              {lunarPatterns.map(p => <InsightDisplay key={p.id} insightText={p.description} source={`Confidence: ${(p.confidence*100).toFixed(0)}%`} />)}
+              {lunarPatterns.length === 0 && !isLoadingData && <Text style={styles.emptyStateText}>No lunar patterns identified yet.</Text>}
+            </InfoCard>
 
-      <InfoCard title="Environment Impact">
-         {environmentAnalytics.slice(0,2).map(env => ( // Show top 2 for brevity
-            <View key={env.id} style={styles.listItem}>
-                <Text style={styles.itemTitle}>{env.name} ({env.type})</Text>
-                <Text>Wellbeing Impact: {env.impact.wellbeing}, Clarity Impact: {env.impact.clarity}</Text>
-            </View>
-         ))}
-         {environmentAnalytics.length === 0 && <Text style={styles.emptyStateText}>No environment analytics yet.</Text>}
-      </InfoCard>
+            <InfoCard title="Environment Impact">
+              {environmentAnalytics.slice(0,2).map(env => (
+                  <View key={env.id} style={styles.dataPanelItem}>
+                      <Text style={styles.itemTitle}>{env.name} ({env.type})</Text>
+                      <Text style={styles.itemText}>Wellbeing Impact: {env.impact.wellbeing}, Clarity Impact: {env.impact.clarity}</Text>
+                  </View>
+              ))}
+              {environmentAnalytics.length === 0 && !isLoadingData && <Text style={styles.emptyStateText}>No environment analytics yet.</Text>}
+            </InfoCard>
 
-      {/* Placeholder for displaying LunarCheckIn data */}
-       <InfoCard title="Recent Check-Ins (Last 2)">
-        {lunarCycleData.slice(0,2).map(lc => (
-            <View key={lc.id} style={styles.listItem}>
-                <Text style={styles.itemTitle}>Day {lc.lunarDay} ({new Date(lc.timestamp).toLocaleDateString()})</Text>
-                <Text>Wellbeing: {lc.wellbeing.overall}/10, Clarity: {lc.clarity.level}/10</Text>
-                <Text>Notes: {lc.notes || "N/A"}</Text>
-            </View>
-        ))}
-        {lunarCycleData.length === 0 && <Text style={styles.emptyStateText}>No check-ins recorded in this cycle view.</Text>}
-      </InfoCard>
-
-    </ScrollView>
+            <InfoCard title="Recent Check-Ins (Last 2)">
+              {lunarCycleData.slice(0,2).map(lc => (
+                  <View key={lc.id} style={styles.dataPanelItem}>
+                      <Text style={styles.itemTitle}>Day {lc.lunarDay} ({new Date(lc.timestamp).toLocaleDateString()})</Text>
+                      <Text style={styles.itemText}>Wellbeing: {lc.wellbeing.overall}/10, Clarity: {lc.clarity.level}/10</Text>
+                      <Text style={styles.itemText}>Notes: {lc.notes || "N/A"}</Text>
+                  </View>
+              ))}
+              {lunarCycleData.length === 0 && !isLoadingData && <Text style={styles.emptyStateText}>No check-ins recorded in this cycle view.</Text>}
+            </InfoCard>
+          </View>
+        </ScrollView>
+      </View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20, backgroundColor: '#f4f6f8' },
-  container: { flex: 1, backgroundColor: '#f4f6f8' }, // Light grayish blue
-  loader: { marginVertical: 20 },
-  header: { fontSize: 26, fontWeight: 'bold', paddingHorizontal: 16, paddingTop: 20, paddingBottom: 5, color: '#4a5568' }, // Dark Slate Gray
-  subHeader: { fontSize: 18, fontWeight: '600', paddingHorizontal: 16, paddingBottom: 15, color: '#718096' },
-  messageText: { fontSize: 16, textAlign: 'center', marginVertical: 10, lineHeight: 24, color: '#2d3748' },
-  // label, input, inputMulti styles are now in LunarCheckInForm.tsx
-  listItem: { paddingVertical: 12, paddingHorizontal: 8, borderBottomWidth: 1, borderBottomColor: '#e2e8f0' },
-  itemTitle: { fontWeight: 'bold', fontSize: 16, marginBottom: 5, color: '#2c5282' },
-  emptyStateText: { textAlign: 'center', paddingVertical: 10, color: '#718096' },
+  container: { flex: 1, backgroundColor: theme.colors.bg },
+  contentWrapper: { flex: 1, padding: theme.spacing.lg },
+  titleSection: {
+    alignItems: 'center',
+    marginBottom: theme.spacing.xl,
+    flexShrink: 0,
+  },
+  pageTitle: {
+    fontFamily: theme.fonts.display,
+    fontSize: theme.typography.displayMedium.fontSize,
+    fontWeight: theme.typography.displayMedium.fontWeight,
+    color: theme.colors.textPrimary,
+    textAlign: 'center',
+    letterSpacing: 2,
+  },
+  pageSubtitle: {
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.labelSmall.fontSize,
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
+    marginTop: theme.spacing.xs,
+  },
+  scrollView: { flex: 1 },
+  scrollContent: { flexGrow: 1, paddingBottom: theme.spacing.lg }, // Added paddingBottom
+  mainContent: { gap: theme.spacing.xl }, // Use gap for spacing between InfoCards
+
+  loader: { marginVertical: theme.spacing.md },
+  loadingContainer: { // Replaces old 'centered' for loading authority
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: theme.spacing.xl,
+    backgroundColor: theme.colors.bg, // Ensure bg color
+  },
+  loadingText: { // For "Loading authority..."
+    fontFamily: theme.fonts.body,
+    fontSize: theme.typography.bodyMedium.fontSize,
+    color: theme.colors.textSecondary,
+    marginTop: theme.spacing.md,
+  },
+  messageText: { // For "This tool is specifically for Reflectors..."
+    fontFamily: theme.fonts.body,
+    fontSize: theme.typography.bodyMedium.fontSize,
+    lineHeight: theme.typography.bodyMedium.lineHeight,
+    color: theme.colors.textSecondary, // Use textSecondary for less emphasis
+    textAlign: 'center',
+    marginBottom: theme.spacing.sm,
+  },
+  dataPanelItem: { // New style for .input-panel like items
+    padding: theme.spacing.md,
+    borderWidth: 1,
+    borderColor: theme.colors.base1,
+    borderRadius: theme.borderRadius.sm,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    marginBottom: theme.spacing.sm, // Space between items if listed
+  },
+  itemTitle: {
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.bodyMedium.fontSize, // Was labelSmall, making it more readable
+    fontWeight: 'bold', // Make title bold
+    color: theme.colors.textPrimary,
+    marginBottom: theme.spacing.xs,
+  },
+  itemText: { // For generic text within dataPanelItem
+    fontFamily: theme.fonts.body,
+    fontSize: theme.typography.bodySmall.fontSize,
+    color: theme.colors.textSecondary,
+    lineHeight: theme.typography.bodySmall.lineHeight,
+  },
+  emptyStateText: {
+    fontFamily: theme.fonts.body,
+    fontSize: theme.typography.bodyMedium.fontSize,
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
+    padding: theme.spacing.md,
+    fontStyle: 'italic',
+  },
+  // Removed old centered, header, subHeader, listItem styles
 });
 
 export default EnvironmentalAttunementScreen;

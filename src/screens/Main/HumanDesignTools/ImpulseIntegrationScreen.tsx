@@ -3,12 +3,14 @@
  * @description Screen for the Impulse Integration tool, for Manifestors.
  */
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, Button, ActivityIndicator, Alert, FlatList } from 'react-native'; // Added FlatList, removed TextInput
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert, FlatList, RefreshControl } from 'react-native'; // Added RefreshControl, removed Button
 import { InfoCard, InsightDisplay, LogInput } from '../../../components/HumanDesignTools';
+import StackedButton from '../../../components/StackedButton'; // Import StackedButton
 import * as impulseIntegrationService from '../../../services/impulseIntegrationService';
 import * as authorityService from '../../../services/authorityService';
 import { AuthorityType, Impulse, ImpulsePattern, InformStrategy, EnergyPeriod } from '../../../types/humanDesignTools';
-import ImpulseListItem from './ImpulseIntegrationComponents/ImpulseListItem'; // Import ImpulseListItem
+import ImpulseListItem from './ImpulseIntegrationComponents/ImpulseListItem';
+import { theme } from '../../../constants/theme'; // Import theme
 
 const ImpulseIntegrationScreen: React.FC = () => {
   const [userAuthority, setUserAuthority] = useState<AuthorityType | null>(null);
@@ -20,7 +22,14 @@ const ImpulseIntegrationScreen: React.FC = () => {
   const [energyForecast, setEnergyForecast] = useState<EnergyPeriod[]>([]);
 
   const [isLoadingData, setIsLoadingData] = useState(false);
-  const [newImpulseText, setNewImpulseText] = useState('');
+  const [newImpulseText, setNewImpulseText] = useState(''); // This is used by LogInput's onSubmit callback
+  const [isRefreshing, setIsRefreshing] = useState(false); // For pull-to-refresh
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await loadManifestorData();
+    setIsRefreshing(false);
+  }, [loadManifestorData]);
 
   useEffect(() => {
     const fetchAuthority = async () => {
@@ -121,7 +130,7 @@ const ImpulseIntegrationScreen: React.FC = () => {
 
 
   if (isLoadingAuthority) {
-    return <View style={styles.centered}><ActivityIndicator size="large" /><Text>Loading authority...</Text></View>;
+    return <View style={styles.loadingContainer}><ActivityIndicator size="large" color={theme.colors.accent} /><Text style={styles.loadingText}>Loading authority...</Text></View>;
   }
 
   const isManifestorAuthority = userAuthority &&
@@ -129,131 +138,178 @@ const ImpulseIntegrationScreen: React.FC = () => {
 
   if (!isManifestorAuthority) {
     return (
-      <View style={styles.centered}>
-        <InfoCard title="Impulse Integration">
-          <Text style={styles.messageText}>This tool is designed for Manifestor types (Emotional, Ego, or Splenic Authority).</Text>
-          <Text style={styles.messageText}>Your detected authority is: {userAuthority || 'Not yet determined'}</Text>
-        </InfoCard>
+      <View style={styles.container}>
+        <View style={styles.contentWrapper}>
+          <View style={styles.titleSection}>
+            <Text style={styles.pageTitle}>IMPULSE INTEGRATION</Text>
+          </View>
+          <InfoCard title="Information">
+            <Text style={styles.messageText}>This tool is designed for Manifestor types (Emotional, Ego, or Splenic Authority).</Text>
+            <Text style={styles.messageText}>Your detected authority is: {userAuthority || 'Not yet determined'}</Text>
+          </InfoCard>
+        </View>
       </View>
     );
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.header}>Impulse Integration</Text>
-      <Text style={styles.subHeader}>Authority: {userAuthority}</Text>
+    <View style={styles.container}>
+      <View style={styles.contentWrapper}>
+        <View style={styles.titleSection}>
+          <Text style={styles.pageTitle}>IMPULSE INTEGRATION</Text>
+          <Text style={styles.pageSubtitle}>Authority: {userAuthority}</Text>
+        </View>
 
-      <InfoCard title="Capture New Impulse">
-        <LogInput onSubmit={setNewImpulseText} placeholder="Describe your impulse..."/>
-        <Button title="Capture Impulse" onPress={handleCaptureImpulse} />
-      </InfoCard>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={theme.colors.accent} />}
+        >
+          <View style={styles.mainContent}>
+            <InfoCard title="Capture New Impulse">
+              {/* LogInput's onSubmit provides the text, which we set to newImpulseText */}
+              <LogInput onSubmit={setNewImpulseText} placeholder="Describe your impulse..."/>
+              {/* StackedButton to actually trigger capture with the text stored in newImpulseText */}
+              <View style={styles.captureButtonContainer}>
+                <StackedButton text="Capture Impulse" onPress={handleCaptureImpulse} type="rect" />
+              </View>
+            </InfoCard>
 
-      {isLoadingData && <ActivityIndicator style={styles.loader} />}
+            {isLoadingData && !isRefreshing && <ActivityIndicator style={styles.loader} color={theme.colors.accent} />}
 
-      <InfoCard title="Recent Impulses">
-        {impulses.length > 0 ? (
-          <FlatList
-            data={impulses} // Display all statuses, ListItem handles visual cues & actions
-            renderItem={({item}) => (
-              <ImpulseListItem
-                impulse={item}
-                onEvaluate={handleEvaluateImpulse}
-                onInform={handleInformAction}
-                // onViewDetails={(id) => Alert.alert("View Details", `Impulse ID: ${id}`)} // Example
-              />
-            )}
-            keyExtractor={item => item.id}
-            scrollEnabled={false} // As it's inside a ScrollView
-          />
-        ) : (<Text style={styles.emptyStateText}>No impulses captured yet.</Text>)}
-      </InfoCard>
+            <InfoCard title="Recent Impulses">
+              {impulses.length > 0 ? (
+                <FlatList
+                  data={impulses}
+                  renderItem={({item}) => (
+                    <ImpulseListItem
+                      impulse={item}
+                      onEvaluate={handleEvaluateImpulse}
+                      onInform={handleInformAction}
+                    />
+                  )}
+                  keyExtractor={item => item.id}
+                  scrollEnabled={false}
+                />
+              ) : (<Text style={styles.emptyStateText}>No impulses captured yet.</Text>)}
+            </InfoCard>
 
-      {/* Sections for New and Evaluated impulses are now combined above, using ImpulseListItem's internal logic/display changes based on status */}
+            <InfoCard title="Informing Strategies">
+              {informStrategies.map(s => <InsightDisplay key={s.id} insightText={s.strategyName +": "+ s.description} source={`Effectiveness: ${s.effectivenessScore*100}%`} />)}
+              {informStrategies.length === 0 && !isLoadingData && <Text style={styles.emptyStateText}>No specific inform strategies loaded yet.</Text>}
+            </InfoCard>
 
-      <InfoCard title="Informing Strategies">
-        {informStrategies.map(s => <InsightDisplay key={s.id} insightText={s.strategyName +": "+ s.description} source={`Effectiveness: ${s.effectivenessScore*100}%`} />)}
-        {informStrategies.length === 0 && <Text>No specific inform strategies loaded yet.</Text>}
-      </InfoCard>
+            <InfoCard title="Today's Energy Forecast">
+              {energyForecast.map(ef => (
+                  <View key={ef.startTime} style={styles.dataPanelItem}>
+                      <Text style={styles.itemTitle}>Level {ef.energyLevel}/10 (Capacity: {ef.initiationCapacity}/10)</Text>
+                      <Text style={styles.itemText}>Activities: {ef.recommendedActivity.join(', ') || 'Rest'}</Text>
+                      <Text style={styles.itemText}>Ends: {new Date(ef.endTime).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}</Text>
+                  </View>
+              ))}
+              {energyForecast.length === 0 && !isLoadingData && <Text style={styles.emptyStateText}>No energy forecast available.</Text>}
+            </InfoCard>
 
-      <InfoCard title="Today's Energy Forecast">
-         {energyForecast.map(ef => (
-            <View key={ef.startTime} style={styles.listItem}>
-                <Text style={styles.itemTitle}>Level {ef.energyLevel}/10 (Capacity: {ef.initiationCapacity}/10)</Text>
-                <Text>Activities: {ef.recommendedActivity.join(', ') || 'Rest'}</Text>
-                <Text>Ends: {new Date(ef.endTime).toLocaleTimeString()}</Text>
-            </View>
-         ))}
-         {energyForecast.length === 0 && <Text>No energy forecast available.</Text>}
-      </InfoCard>
-
-       <InfoCard title="Impulse Patterns">
-        {impulsePatterns.map(p => <InsightDisplay key={p.id} insightText={p.description} source={`Category: ${p.category} (Confidence: ${p.confidence.toFixed(2)})`} />)}
-        {impulsePatterns.length === 0 && <Text>No impulse patterns detected yet.</Text>}
-      </InfoCard>
-
-    </ScrollView>
+            <InfoCard title="Impulse Patterns">
+              {impulsePatterns.map(p => <InsightDisplay key={p.id} insightText={p.description} source={`Category: ${p.category} (Confidence: ${p.confidence.toFixed(2)})`} />)}
+              {impulsePatterns.length === 0 && !isLoadingData && <Text style={styles.emptyStateText}>No impulse patterns detected yet.</Text>}
+            </InfoCard>
+          </View>
+        </ScrollView>
+      </View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  centered: {
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.bg,
+  },
+  contentWrapper: {
+    flex: 1,
+    padding: theme.spacing.lg,
+  },
+  titleSection: {
+    alignItems: 'center',
+    marginBottom: theme.spacing.xl,
+    flexShrink: 0,
+  },
+  pageTitle: {
+    fontFamily: theme.fonts.display,
+    fontSize: theme.typography.displayMedium.fontSize,
+    fontWeight: theme.typography.displayMedium.fontWeight,
+    color: theme.colors.textPrimary,
+    textAlign: 'center',
+    letterSpacing: 2,
+  },
+  pageSubtitle: {
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.labelSmall.fontSize,
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
+    marginTop: theme.spacing.xs,
+  },
+  scrollView: { flex: 1 },
+  scrollContent: { flexGrow: 1, paddingBottom: theme.spacing.lg },
+  mainContent: { gap: theme.spacing.xl },
+
+  captureButtonContainer: { // To provide margin for the button after LogInput
+    marginTop: theme.spacing.md,
+  },
+  loader: {
+    marginVertical: theme.spacing.md,
+  },
+  loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
-    backgroundColor: '#fdfcfe',
+    padding: theme.spacing.xl,
+    backgroundColor: theme.colors.bg,
   },
-  container: {
-    flex: 1,
-    backgroundColor: '#fdfcfe', // Light, almost white background
+  loadingText: {
+    fontFamily: theme.fonts.body,
+    fontSize: theme.typography.bodyMedium.fontSize,
+    color: theme.colors.textSecondary,
+    marginTop: theme.spacing.md,
   },
-  loader: {
-    marginVertical: 20,
-  },
-  header: {
-    fontSize: 26,
-    fontWeight: 'bold',
-    paddingHorizontal: 16,
-    paddingTop: 20,
-    paddingBottom: 5,
-    color: '#2a2a2a', // Darker text for Manifestor theme
-  },
-  subHeader: {
-    fontSize: 18,
-    fontWeight: '600',
-    paddingHorizontal: 16,
-    paddingBottom: 15,
-    color: '#4a4a4a',
-  },
-  messageText: {
-    fontSize: 16,
+  messageText: { // For "This tool is designed for..."
+    fontFamily: theme.fonts.body,
+    fontSize: theme.typography.bodyMedium.fontSize,
+    lineHeight: theme.typography.bodyMedium.lineHeight,
+    color: theme.colors.textSecondary,
     textAlign: 'center',
-    marginVertical: 10,
-    lineHeight: 24,
-    color: '#333',
+    marginBottom: theme.spacing.sm,
   },
-  listItem: {
-    paddingVertical: 12,
-    paddingHorizontal: 8, // Kept for other list items if any
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f5',
+  dataPanelItem: { // For Energy Forecast items
+    padding: theme.spacing.md,
+    borderWidth: 1,
+    borderColor: theme.colors.base1,
+    borderRadius: theme.borderRadius.sm,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    marginBottom: theme.spacing.sm,
   },
-  itemTitle: { // Kept for other list items if any
-      fontWeight: 'bold',
-      fontSize: 16,
-      marginBottom: 5,
-      color: '#3d3d3d',
+  itemTitle: {
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.bodyMedium.fontSize,
+    fontWeight: 'bold',
+    color: theme.colors.textPrimary,
+    marginBottom: theme.spacing.xs,
   },
-  actions: { // This style is now within ImpulseListItem
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    marginTop: 8,
+  itemText: { // For text within dataPanelItem
+    fontFamily: theme.fonts.body,
+    fontSize: theme.typography.bodySmall.fontSize,
+    color: theme.colors.textSecondary,
   },
   emptyStateText: {
+    fontFamily: theme.fonts.body,
+    fontSize: theme.typography.bodyMedium.fontSize,
+    color: theme.colors.textSecondary,
     textAlign: 'center',
-    paddingVertical: 10,
-    color: '#6c757d',
+    padding: theme.spacing.md,
+    fontStyle: 'italic',
   },
+  // Removed old 'centered', 'header', 'subHeader', 'listItem', 'actions' styles.
 });
 
 export default ImpulseIntegrationScreen;

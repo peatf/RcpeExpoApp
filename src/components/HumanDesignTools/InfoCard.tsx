@@ -4,7 +4,7 @@
  */
 import React, { ReactNode } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { colors, typography, spacing } from '../../constants/theme';
+import { theme } from '../../constants/theme'; // Import full theme
 
 /**
  * @interface InfoCardProps
@@ -36,27 +36,30 @@ const styles = StyleSheet.create({
   cardContainer: {
     position: 'relative',
     borderWidth: 1,
-    borderColor: colors.base1,
-    borderRadius: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    padding: spacing.md,
-    marginBottom: spacing.lg,
+    borderColor: theme.colors.base1, // Use theme
+    borderRadius: theme.borderRadius.md, // Use theme, sm or md depending on desired look (8px or 12px)
+    backgroundColor: 'rgba(255, 255, 255, 0.05)', // Slightly more subtle than input panels, or same if preferred
+    padding: theme.spacing.md, // Use theme
+    marginBottom: theme.spacing.lg, // Use theme
+    // position: 'relative', // Already present
   },
-  title: {
+  title: { // This style is similar to .input-panel-label
     position: 'absolute',
-    top: -10,
-    left: 12,
-    backgroundColor: colors.bg,
-    paddingHorizontal: 6,
-    fontFamily: 'monospace',
-    fontSize: 11,
-    fontWeight: '500',
-    color: colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.1,
+    top: -12, // Adjust to ensure it sits nicely on the border
+    left: theme.spacing.md, // Consistent padding
+    backgroundColor: theme.colors.bg, // To cover the border
+    paddingHorizontal: theme.spacing.sm,
+    // Use a themed heading style, e.g., headingSmall or a label style
+    fontFamily: theme.fonts.mono, // As per .input-panel-label
+    fontSize: theme.typography.labelSmall.fontSize, // As per .input-panel-label
+    fontWeight: theme.typography.labelSmall.fontWeight, // As per .input-panel-label
+    color: theme.colors.textSecondary, // As per .input-panel-label
+    textTransform: 'uppercase', // As per .input-panel-label
+    letterSpacing: theme.typography.labelSmall.letterSpacing, // As per .input-panel-label
+    zIndex: 1, // Ensure title is above the content's potential background elements
   },
   content: {
-    paddingTop: spacing.xs,
+    paddingTop: theme.spacing.sm, // Add some space so content doesn't overlap with absolute positioned title
   },
 });
 
