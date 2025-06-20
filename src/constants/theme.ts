@@ -17,6 +17,7 @@ export const colors = {
   accentSecondary: '#c7d2fe',
   textPrimary: '#323230',
   textSecondary: '#7c7d76',
+  warning: '#F59E0B',           // Amber warning color
   energyFamily: '#E8B86D',      // Warm gold
   energyClass: '#7B9EA8',       // Cool blue
   processingCore: '#A8A8D8',    // Soft purple

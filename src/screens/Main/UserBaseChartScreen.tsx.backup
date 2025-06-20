@@ -60,7 +60,7 @@ const getActiveGates = (data: BaseChartData) => {
 };
 
 const UserBaseChartScreen: React.FC<{navigation: any}> = ({navigation}) => {
-  // State
+  // Original state
   const {user, isAuthenticated, isLoading: authLoading} = useAuth();
   const [chartData, setChartData] = useState<BaseChartData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -68,7 +68,7 @@ const UserBaseChartScreen: React.FC<{navigation: any}> = ({navigation}) => {
   const [fromCache, setFromCache] = useState(false);
   const [isMockData, setIsMockData] = useState(false);
   
-  // Blueprint visualization state
+  // New state for blueprint visualization
   const [viewMode, setViewMode] = useState<'text' | 'visualization'>('text');
   const [highlightedCategory, setHighlightedCategory] = useState<string | null>(null);
   const [canvasReady, setCanvasReady] = useState(false);
@@ -131,8 +131,9 @@ const UserBaseChartScreen: React.FC<{navigation: any}> = ({navigation}) => {
   const screenWidth = Dimensions.get('window').width;
   const canvasSize = Math.min(screenWidth * 0.9, 500); // Cap at 500 for larger screens
   
-  // Load base chart function
+  // Original loadBaseChart function
   const loadBaseChart = useCallback(async (forceRefresh = false) => {
+    // Your existing code for loading chart data
     if (!isAuthenticated) {
       setError('Please log in to view your chart');
       return;
@@ -248,7 +249,7 @@ const UserBaseChartScreen: React.FC<{navigation: any}> = ({navigation}) => {
     ];
   }, [chartData]);
 
-  // Text view rendering
+  // Original text view rendering
   const renderTextView = () => (
     <View>
       {chartData && displayData && (
@@ -268,7 +269,7 @@ const UserBaseChartScreen: React.FC<{navigation: any}> = ({navigation}) => {
               <Text style={styles.dataValue}>{displayData.inner_authority}</Text>
             </View>
             <View style={styles.dataRow}>
-              <Text style={styles.dataLabel}>Profile:</Text>
+              <Text style={styles.dataLabel}>Profile:</</Text>
               <Text style={styles.dataValue}>{displayData.profile}</Text>
             </View>
           </View>
@@ -288,6 +289,7 @@ const UserBaseChartScreen: React.FC<{navigation: any}> = ({navigation}) => {
           {displayData.active_gates && displayData.active_gates.length > 0 && (
             <View style={styles.sectionCard}>
               <Text style={styles.sectionTitle}>Active Gates</Text>
+              {/* Assuming active_gates is an array of numbers or strings that can be joined */}
               <Text style={styles.dataValue}>{String(displayData.active_gates.join(', '))}</Text>
             </View>
           )}
@@ -296,7 +298,7 @@ const UserBaseChartScreen: React.FC<{navigation: any}> = ({navigation}) => {
     </View>
   );
 
-  // Visualization view rendering with interactive highlighting  
+  // New visualization view rendering with interactive highlighting  
   const renderVisualizationView = () => {
     if (!chartData) return null;
     
@@ -532,57 +534,103 @@ const styles = StyleSheet.create({
   refreshButtonContainer: {
     marginTop: spacing.xs,
   },
+  // Styles for text view mode
   sectionCard: {
+    marginBottom: spacing.lg,
+    padding: spacing.md,
     backgroundColor: colors.bg,
     borderRadius: borderRadius.md,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-    ...shadows.small,
     borderWidth: 1,
     borderColor: colors.base1,
+    ...shadows.small,
   },
   sectionTitle: {
     fontFamily: fonts.display,
-    fontSize: typography.headingSmall.fontSize,
-    fontWeight: typography.headingSmall.fontWeight,
+    fontSize: typography.headingMedium.fontSize,
+    fontWeight: typography.headingMedium.fontWeight,
     color: colors.textPrimary,
-    marginBottom: spacing.sm,
+    marginBottom: spacing.md,
   },
   dataRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: spacing.xs,
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.base2,
   },
   dataLabel: {
-    fontFamily: fonts.body,
+    fontFamily: fonts.mono,
     fontSize: typography.bodyMedium.fontSize,
     color: colors.textSecondary,
-    fontWeight: '600',
   },
   dataValue: {
     fontFamily: fonts.mono,
     fontSize: typography.bodyMedium.fontSize,
     color: colors.textPrimary,
-    flex: 1,
-    textAlign: 'right',
+    backgroundColor: colors.base1,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.sm,
   },
+  
+  // Styles for visualization view mode
   visualizationContainer: {
     alignItems: 'center',
-    marginTop: spacing.md,
+    width: '100%',
   },
   canvasContainer: {
-    position: 'relative',
+    borderWidth: 1,
+    borderColor: colors.base1,
+    borderRadius: borderRadius.md,
     marginBottom: spacing.lg,
+    backgroundColor: colors.bg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    ...shadows.small,
   },
   canvasOverlay: {
     ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(250, 250, 242, 0.6)',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+  },
+  infoPanelContainer: {
+    width: '100%',
+    maxHeight: 300, // Limit height so it doesn't push other elements off-screen
+  },
+  infoPanelContent: {
+    padding: spacing.sm,
+  },
+  infoPanel: {
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.base1,
+    borderRadius: borderRadius.sm,
+    backgroundColor: colors.bg,
+    ...shadows.small,
+  },
+  infoPanelHighlighted: {
+    borderColor: colors.accent,
+    backgroundColor: colors.base1,
+  },
+  infoPanelLabel: {
+    fontFamily: fonts.display,
+    fontSize: typography.labelMedium.fontSize,
+    fontWeight: 'bold',
+    color: colors.textPrimary,
+    marginBottom: spacing.xs,
+  },
+  infoPanelValue: {
+    fontFamily: fonts.mono,
+    fontSize: typography.bodySmall.fontSize,
+    color: colors.textSecondary,
   },
   descriptionsScroll: {
-    maxHeight: 300,
     width: '100%',
+    maxWidth: 500,
   },
   descriptionsContainer: {
     padding: spacing.sm,

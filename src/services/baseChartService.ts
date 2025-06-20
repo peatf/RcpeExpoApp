@@ -95,6 +95,7 @@ export interface BaseChartResponse {
   data?: BaseChartData;
   error?: string;
   fromCache?: boolean;
+  isMockData?: boolean;
 }
 
 const BASE_CHART_CACHE_KEY = 'userBaseChart_';
@@ -237,6 +238,7 @@ export const baseChartService = {
       // First, get the user's profile ID
       const profileId = await baseChartService.getUserProfileId(userId);
       if (!profileId) {
+        console.error('Could not determine profile ID for user:', userId);
         return {
           success: false,
           error: 'Could not determine profile ID for user',
@@ -246,7 +248,10 @@ export const baseChartService = {
       console.log('Using profile ID:', profileId);
       
       // Use the correct backend endpoint: /api/v1/profiles/{profile_id}/base_chart
-      const response = await apiClient.get(`/api/v1/profiles/${profileId}/base_chart`);
+      const endpoint = `/api/v1/profiles/${profileId}/base_chart`;
+      console.log('Making API request to endpoint:', endpoint);
+      
+      const response = await apiClient.get(endpoint);
 
       console.log('Base chart API response:', {
         status: response.status,
@@ -257,6 +262,7 @@ export const baseChartService = {
       if (response.data && response.data.data) {
         // Backend returns { status: "success", data: BaseChart }
         const baseChartData = response.data.data;
+        console.log('Successfully received base chart data with keys:', Object.keys(baseChartData));
         
         // Save to cache using user ID for convenience
         await baseChartService.saveToCache(userId, baseChartData);
@@ -295,6 +301,85 @@ export const baseChartService = {
   },
 
   /**
+   * Get mock base chart data for fallback
+   * This provides emergency fallback data when the server isn't responding
+   */
+  getMockBaseChartData: (userId: string): BaseChartData => {
+    console.log('Generating mock base chart data for:', userId);
+    return {
+      metadata: {
+        profile_id: 'mock-profile-fallback',
+        user_id: userId,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        status: 'completed',
+        version: '1.0.0'
+      },
+      hd_type: 'Generator',
+      typology_pair_key: 'adaptive-fluid',
+      energy_family: {
+        profile_lines: '4/6',
+        conscious_line: 4,
+        unconscious_line: 6,
+        astro_sun_sign: 'Leo',
+        astro_sun_house: 8,
+      },
+      energy_class: {
+        ascendant_sign: 'Virgo',
+        chart_ruler_sign: 'Mercury',
+        chart_ruler_house: 3,
+        incarnation_cross: 'Right Angle Cross of Planning',
+        incarnation_cross_quarter: 'Quarter of Initiation',
+        profile_type: 'Opportunist/Role Model',
+      },
+      processing_core: {
+        astro_moon_sign: 'Cancer',
+        astro_moon_house: 9,
+        astro_mercury_sign: 'Virgo',
+        astro_mercury_house: 2,
+        head_state: 'undefined',
+        ajna_state: 'defined',
+        emotional_state: 'defined',
+        cognition_variable: 'Right-brained',
+      },
+      decision_growth_vector: {
+        strategy: 'Wait to Respond',
+        authority: 'Emotional',
+        choice_navigation_spectrum: 'Adaptive',
+      },
+      drive_mechanics: {
+        heart_state: 'undefined',
+        root_state: 'defined',
+        kinetic_drive_spectrum: 'Adaptive',
+        resonance_field_spectrum: 'Grounded',
+      },
+      manifestation_interface_rhythm: {
+        throat_definition: 'undefined',
+        throat_gates: [12, 23, 35],
+        throat_channels: ['Channel of Community'],
+        manifestation_rhythm_spectrum: 'Fluid',
+      },
+      energy_architecture: {
+        definition_type: 'Split',
+        channel_list: ['Channel of Curiosity', 'Channel of Awareness'],
+        split_bridges: ['Root to Solar Plexus', 'G Center to Heart'],
+      },
+      tension_points: {},
+      evolutionary_path: {
+        g_center_access: 'Developing',
+        incarnation_cross: 'Right Angle Cross of Planning',
+        astro_north_node_sign: 'Taurus',
+        astro_north_node_house: 7,
+        conscious_line: 4,
+        unconscious_line: 6,
+        core_priorities: ['Community', 'Stability', 'Growth', 'Wisdom'],
+      },
+      dominant_mastery_values: ['Innovation', 'Connection', 'Exploration'],
+      fetchedAt: Date.now()
+    };
+  },
+
+  /**
    * Get user base chart (tries cache first, then API)
    */
   getUserBaseChart: async (
@@ -321,7 +406,44 @@ export const baseChartService = {
     }
 
     // Fetch from API
-    return await baseChartService.fetchFromAPI(userId);
+    try {
+      const apiResponse = await baseChartService.fetchFromAPI(userId);
+      
+      // If API call fails, use mock data as fallback but only in development
+      if (!apiResponse.success && __DEV__) {
+        console.warn('API failed, using mock data fallback');
+        const mockData = baseChartService.getMockBaseChartData(userId);
+        // Save mock data to cache to prevent repeated failures
+        await baseChartService.saveToCache(userId, mockData);
+        return {
+          success: true,
+          data: mockData,
+          fromCache: false,
+          isMockData: true
+        };
+      }
+      
+      return apiResponse;
+    } catch (error) {
+      console.error('Critical error in getUserBaseChart:', error);
+      
+      // Ultimate fallback - provide mock data even after API errors
+      if (__DEV__) {
+        console.warn('Critical failure, using emergency mock data');
+        const mockData = baseChartService.getMockBaseChartData(userId);
+        return {
+          success: true,
+          data: mockData,
+          fromCache: false,
+          isMockData: true
+        };
+      }
+      
+      return {
+        success: false,
+        error: 'Failed to load chart data'
+      };
+    }
   },
 
   /**

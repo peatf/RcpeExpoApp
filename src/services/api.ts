@@ -18,6 +18,8 @@ const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  // Add timeout to prevent hanging requests
+  timeout: 15000,
 });
 
 // Request interceptor to add the auth token to headers
@@ -31,6 +33,8 @@ apiClient.interceptors.request.use(
           url: config.url,
           method: config.method,
           token: token.substring(0, 10) + '...', // Log only part of token for security
+          baseURL: config.baseURL || '',
+          fullURL: (config.baseURL || '') + (config.url || ''),
         });
       }
     } else {
@@ -38,12 +42,15 @@ apiClient.interceptors.request.use(
         console.warn('No auth token available for request:', {
           url: config.url,
           method: config.method,
+          baseURL: config.baseURL || '',
+          fullURL: (config.baseURL || '') + (config.url || ''),
         });
       }
     }
     return config;
   },
   error => {
+    console.error('Request interceptor error:', error);
     return Promise.reject(error);
   },
 );

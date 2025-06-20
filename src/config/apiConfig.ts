@@ -8,9 +8,12 @@
 const API_VERSION = 'v1';
 
 // Base URL for API requests
+import { Platform } from 'react-native';
+
 export const API_CONFIG = {
   // Base URL - Updated to use localhost for profile creation
-  BASE_URL: 'http://localhost:3001', // Development: local backend for profile creation
+  // Use 10.0.2.2 for Android emulator, localhost for iOS simulator or physical device
+  BASE_URL: Platform.OS === 'android' ? 'http://10.0.2.2:3001' : 'http://localhost:3001', // Development: local backend for profile creation
   // BASE_URL: 'https://reality-creation-profile-engine.fly.dev', // Production: deployed on Fly.io
 
   // API Version path component (for versioned endpoints)

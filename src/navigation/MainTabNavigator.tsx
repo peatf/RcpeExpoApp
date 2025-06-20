@@ -13,9 +13,10 @@ import FrequencyMapperScreen from '../screens/Main/FrequencyMapperScreen';
 import OracleScreen from '../screens/Main/OracleScreen';
 import UserBaseChartScreen from '../screens/Main/UserBaseChartScreen';
 import LivingLogScreen from '../screens/Main/HumanDesignTools/LivingLogScreen';
-import DecisionMakerScreen from '../screens/Main/DecisionMakerScreen'; // Added import
+import DecisionMakerScreen from '../screens/Main/DecisionMakerScreen';
+import ProfileCreationScreen from '../screens/Main/ProfileCreationScreen';
 
-type ScreenName = 'welcome' | 'frequencyMapper' | 'oracle' | 'baseChart' | 'livingLog' | 'decisionMaker'; // Added screen
+type ScreenName = 'welcome' | 'frequencyMapper' | 'oracle' | 'baseChart' | 'livingLog' | 'decisionMaker' | 'profileCreation';
 
 const MainTabNavigator: React.FC = () => {
   const [currentScreen, setCurrentScreen] = useState<ScreenName>('welcome');
@@ -55,11 +56,17 @@ const MainTabNavigator: React.FC = () => {
       label: 'Log',
       component: LivingLogScreen,
     },
-    { // Added new navigation item
+    {
       id: 'decisionMaker',
       icon: 'keypad-outline', // Example icon
       label: 'Decision', // Short label for collapsed nav
       component: DecisionMakerScreen,
+    },
+    {
+      id: 'profileCreation',
+      icon: 'person',
+      label: 'Profile',
+      component: ProfileCreationScreen,
     },
   ];
 
@@ -87,6 +94,9 @@ const MainTabNavigator: React.FC = () => {
         case 'decisionMaker':
           // @ts-ignore - DecisionMakerScreen may have different prop requirements
           return <DecisionMakerScreen />;
+        case 'profileCreation':
+          // @ts-ignore - ProfileCreationScreen expects navigation prop
+          return <ProfileCreationScreen />;
         default:
           return <WelcomeScreen onBeginSession={() => setCurrentScreen('frequencyMapper')} />;
       }

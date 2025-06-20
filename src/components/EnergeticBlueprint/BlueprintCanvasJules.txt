@@ -1,0 +1,1427 @@
+import React, { useMemo, useEffect, useState } from 'react';
+import { View, StyleSheet, Text } from 'react-native';
+import { 
+  Canvas, 
+  Skia, 
+  vec,
+  Group,
+  Paint,
+  Rect,
+  Circle,
+  Line,
+  Image,
+  ColorType,
+  AlphaType,
+  ImageSVG,
+  FilterMode,
+  MipmapMode
+} from '@shopify/react-native-skia';
+import { VisualizationData } from '../../services/blueprintVisualizerService';
+import { theme } from '../../constants/theme';
+
+// ### PROPS AND INTERFACES ###
+interface BlueprintCanvasProps {
+  data: VisualizationData | null;
+  highlightedCategory: string | null;
+  width: number;
+  height: number;
+  onCanvasReady?: () => void;
+}
+
+interface Point {
+  x: number;
+  y: number;
+}
+
+interface Particle {
+  position: Point;
+  velocity: Point;
+  baseRadius: number;
+  color: string;
+  ditherPattern: number;
+}
+
+// ### CONSTANTS ###
+const PIXEL_RESOLUTION = 250;
+const center = { x: PIXEL_RESOLUTION / 2, y: PIXEL_RESOLUTION / 2 };
+
+// ### PIXEL ART HELPER FUNCTIONS ###
+// ### COLOR HELPER FUNCTIONS (outside component) ###
+const hexToRgb = (hex: string): [number, number, number] => {
+  const bigint = parseInt(hex.startsWith('#') ? hex.slice(1) : hex, 16);
+  const r = (bigint >> 16) & 255;
+  const g = (bigint >> 8) & 255;
+  const b = bigint & 255;
+  return [r, g, b];
+};
+
+const rgbToHex = (r: number, g: number, b: number): string => {
+  return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase();
+};
+
+const darkenColor = (hexColor: string, factor: number): string => {
+  let [r, g, b] = hexToRgb(hexColor);
+  r = Math.max(0, Math.floor(r * (1 - factor)));
+  g = Math.max(0, Math.floor(g * (1 - factor)));
+  b = Math.max(0, Math.floor(b * (1 - factor)));
+  return rgbToHex(r, g, b);
+};
+
+const adjustColorOpacity = (hexColor: string, opacity: number): string => {
+  const [r, g, b] = hexToRgb(hexColor);
+  return `rgba(${r},${g},${b},${opacity})`;
+};
+
+const getHouseColorVariation = (baseHexColor: string, house: number | string, isProfileLineColor: boolean = false): string => {
+  if (!baseHexColor) return '#FFFFFF'; // Default to white if base color is invalid
+  const numericHouse = typeof house === 'string' ? parseInt(house.replace('st', '').replace('nd', '').replace('rd', '').replace('th', '')) : house;
+  if (isNaN(numericHouse) || numericHouse < 1 || numericHouse > 12) return baseHexColor;
+
+  let [r, g, b] = hexToRgb(baseHexColor); // Assumes hexToRgb is defined globally in the file
+
+  // Create subtle variations. Example: cycle through R, G, B emphasis.
+  // This is a simple example; a more sophisticated mapping might be needed for distinct visual appeal.
+  const variationFactor = isProfileLineColor ? 0.2 : 0.1; // Smaller variation for main rays, larger for profile-specific
+  switch (numericHouse % 3) {
+    case 0: r = Math.min(255, r + Math.floor(25 * variationFactor * (numericHouse % 2 === 0 ? 1 : -1))); break;
+    case 1: g = Math.min(255, g + Math.floor(25 * variationFactor * (numericHouse % 2 === 0 ? 1 : -1))); break;
+    case 2: b = Math.min(255, b + Math.floor(25 * variationFactor * (numericHouse % 2 === 0 ? 1 : -1))); break;
+  }
+  // Ensure colors stay within bounds
+  r = Math.max(0, Math.min(255, r));
+  g = Math.max(0, Math.min(255, g));
+  b = Math.max(0, Math.min(255, b));
+
+  return rgbToHex(r, g, b); // Assumes rgbToHex is defined globally
+};
+
+// Helper to get astrological element from a sign
+const getAstroElement = (sign: string): 'Fire' | 'Earth' | 'Air' | 'Water' | 'Unknown' => {
+  if (!sign) return 'Unknown';
+  const s = sign.toLowerCase();
+  if (['aries', 'leo', 'sagittarius'].includes(s)) return 'Fire';
+  if (['taurus', 'virgo', 'capricorn'].includes(s)) return 'Earth';
+  if (['gemini', 'libra', 'aquarius'].includes(s)) return 'Air';
+  if (['cancer', 'scorpio', 'pisces'].includes(s)) return 'Water';
+  return 'Unknown';
+};
+
+// Helper to get ruling planet from a sign (simplified)
+const getRulingPlanet = (sign: string): string => {
+  if (!sign) return 'Sun'; // Default
+  const s = sign.toLowerCase();
+  // This is a simplified mapping. Traditional/modern rulers can vary.
+  if (s === 'aries') return 'Mars';
+  if (s === 'taurus') return 'Venus';
+  if (s === 'gemini') return 'Mercury';
+  if (s === 'cancer') return 'Moon';
+  if (s === 'leo') return 'Sun';
+  if (s === 'virgo') return 'Mercury';
+  if (s === 'libra') return 'Venus';
+  if (s === 'scorpio') return 'Pluto'; // or Mars
+  if (s === 'sagittarius') return 'Jupiter';
+  if (s === 'capricorn') return 'Saturn';
+  if (s === 'aquarius') return 'Uranus'; // or Saturn
+  if (s === 'pisces') return 'Neptune'; // or Jupiter
+  return 'Sun';
+};
+
+// Helper to draw a small planet symbol (very simplified pixel art)
+const drawPlanetSymbol = (pixelData: Uint8Array, planet: string, cx: number, cy: number, color: string, alpha: number) => {
+  // Simple symbols - these would need to be actual pixel art designs
+  // For now, just a colored dot or small shape
+  let symbolRadius = 2;
+  let fill: 'solid' | 'dither' = 'solid';
+
+  if (planet === 'Sun') { drawPixelCircle(pixelData, cx, cy, symbolRadius, color, 'solid', alpha); drawPixelCircle(pixelData, cx, cy, 1, color, 'solid', alpha); } // Circle with dot
+  else if (planet === 'Moon') { drawPixelCircle(pixelData, cx, cy, symbolRadius, color, 'none', alpha); } // Crescent (hard to do in 1px line) -> simple circle for now
+  else if (planet === 'Mars') { drawPixelLine(pixelData, cx - symbolRadius, cy - symbolRadius, cx + symbolRadius, cy + symbolRadius, color, undefined, alpha); drawPixelLine(pixelData, cx - symbolRadius, cy + symbolRadius, cx + symbolRadius, cy - symbolRadius, color, undefined, alpha); } // Cross
+  else if (planet === 'Venus') { drawPixelCircle(pixelData, cx, cy, symbolRadius, color, 'solid', alpha); }
+  else if (planet === 'Mercury') { drawPixelCircle(pixelData, cx, cy, symbolRadius -1, color, 'solid', alpha); drawPixelLine(pixelData, cx, cy-symbolRadius, cx, cy+symbolRadius, color, undefined, alpha); } // Circle with line
+  else { drawPixelCircle(pixelData, cx, cy, symbolRadius, color, 'dither', alpha); } // Default dithered circle
+};
+
+// Helper to draw incarnation cross quarter markers
+const drawCrossQuarterMarker = (pixelData: Uint8Array, quarter: string, cx: number, cy: number, color: string, alpha: number, size: number = 3) => {
+  if (quarter === 'Right Angle') { // '>' symbol
+    drawPixelLine(pixelData, cx - size, cy - size, cx, cy, color, undefined, alpha);
+    drawPixelLine(pixelData, cx - size, cy + size, cx, cy, color, undefined, alpha);
+  } else if (quarter === 'Left Angle') { // '<' symbol
+    drawPixelLine(pixelData, cx + size, cy - size, cx, cy, color, undefined, alpha);
+    drawPixelLine(pixelData, cx + size, cy + size, cx, cy, color, undefined, alpha);
+  } else if (quarter === 'Juxtaposition') { // '=' symbol
+    drawPixelLine(pixelData, cx - size, cy - size/2, cx + size, cy - size/2, color, undefined, alpha);
+    drawPixelLine(pixelData, cx - size, cy + size/2, cx + size, cy + size/2, color, undefined, alpha);
+  } else if (quarter === 'Fixed') { // Square '[]'
+    drawPixelLine(pixelData, cx - size, cy - size, cx + size, cy - size, color, undefined, alpha);
+    drawPixelLine(pixelData, cx - size, cy + size, cx + size, cy + size, color, undefined, alpha);
+    drawPixelLine(pixelData, cx - size, cy - size, cx - size, cy + size, color, undefined, alpha);
+    drawPixelLine(pixelData, cx + size, cy - size, cx + size, cy + size, color, undefined, alpha);
+  }
+};
+
+// Helper to draw a lunar phase symbol (simplified)
+const drawLunarPhase = (pixelData: Uint8Array, phase: number /* 0-7 for 8 phases */, cx: number, cy: number, radius: number, color: string, bgColor: string, alpha: number) => {
+  // Phase 0: New Moon (dark circle - effectively done by clearing behind)
+  // Phase 1: Waxing Crescent
+  // Phase 2: First Quarter (right half light)
+  // Phase 3: Waxing Gibbous
+  // Phase 4: Full Moon (light circle)
+  // Phase 5: Waning Gibbous
+  // Phase 6: Last Quarter (left half light)
+  // Phase 7: Waning Crescent
+
+  drawPixelCircle(pixelData, cx, cy, radius, bgColor, 'solid', alpha); // Clear area first
+
+  if (phase === 4) { // Full Moon
+    drawPixelCircle(pixelData, cx, cy, radius, color, 'solid', alpha);
+    return;
+  }
+  if (phase === 0) return; // New Moon - already cleared
+
+  // Draw the lit part (simplified)
+  // For quarter moons, draw half circles
+  if (phase === 2) { // First Quarter
+     for (let x = 0; x <= radius; x++) for (let y = -radius; y <= radius; y++) if (x*x + y*y <= radius*radius) setPixel(pixelData, cx + x, cy + y, ...colorToRGBA(color, alpha));
+  } else if (phase === 6) { // Last Quarter
+     for (let x = -radius; x <= 0; x++) for (let y = -radius; y <= radius; y++) if (x*x + y*y <= radius*radius) setPixel(pixelData, cx + x, cy + y, ...colorToRGBA(color, alpha));
+  }
+  // For crescents/gibbous, draw full moon and then overlay a dark circle offset
+  else if (phase === 1 || phase === 3 || phase === 5 || phase === 7) {
+     drawPixelCircle(pixelData, cx, cy, radius, color, 'solid', alpha); // Start with full lit part
+     const darkRadius = radius * 0.8;
+     let darkOffsetX = 0;
+     if (phase === 1) darkOffsetX = radius * 0.5;   // Waxing Crescent (dark on left)
+     if (phase === 7) darkOffsetX = -radius * 0.5;  // Waning Crescent (dark on right)
+     if (phase === 3) darkOffsetX = -radius * 0.5;  // Waxing Gibbous (small dark on left)
+     if (phase === 5) darkOffsetX = radius * 0.5;   // Waning Gibbous (small dark on right)
+
+     // For gibbous, the "dark" overlay is smaller or the main circle is what we see mostly
+     // For crescent, the "dark" overlay is larger
+     const effectiveDarkRadius = (phase === 1 || phase === 7) ? radius : radius * 0.7;
+
+     drawPixelCircle(pixelData, cx - darkOffsetX, cy, effectiveDarkRadius, bgColor, 'solid', alpha);
+  }
+};
+
+// Helper for Mercury communication patterns (simplified)
+const drawMercuryPattern = (pixelData: Uint8Array, patternType: number, cx: number, cy: number, size: number, color: string, alpha: number, t: number) => {
+  const animatedSize = size * (0.8 + Math.sin(t * Math.PI * 4) * 0.2); // Pulsating size
+  if (patternType === 0) { // Radiating lines
+    for (let i = 0; i < 6; i++) {
+      const angle = (i / 6) * Math.PI * 2 + t * Math.PI; // Rotate
+      const x2 = cx + Math.cos(angle) * animatedSize;
+      const y2 = cy + Math.sin(angle) * animatedSize;
+      drawPixelLine(pixelData, cx, cy, x2, y2, color, [1,2], alpha); // Dashed lines
+    }
+  } else if (patternType === 1) { // Wave pattern
+    for (let i = -Math.floor(animatedSize); i <= Math.floor(animatedSize); i++) {
+      const waveY = Math.sin((i + t * 20) * 0.5) * (size / 3);
+      setPixel(pixelData, cx + i, cy + waveY, ...colorToRGBA(color, alpha));
+    }
+  } else { // Dots
+    for (let i = 0; i < 5; i++) {
+      const angle = (i / 5) * Math.PI * 2 + t * Math.PI * 2; // Rotating dots
+      const radius = animatedSize * 0.7;
+      const dotX = cx + Math.cos(angle) * radius;
+      const dotY = cy + Math.sin(angle) * radius;
+      drawPixelCircle(pixelData, dotX, dotY, 1, color, 'solid', alpha);
+    }
+  }
+};
+
+const parseGateChannelString = (str: string | undefined | null): number[] => {
+  if (!str) return [];
+  const items: number[] = [];
+  const parts = str.split(',');
+  parts.forEach(part => {
+    part = part.trim();
+    if (part.includes('-')) {
+      const range = part.split('-').map(Number);
+      if (range.length === 2 && !isNaN(range[0]) && !isNaN(range[1])) {
+        for (let i = range[0]; i <= range[1]; i++) {
+          items.push(i);
+        }
+      }
+    } else {
+      const num = Number(part);
+      if (!isNaN(num)) {
+        items.push(num);
+      }
+    }
+  });
+  return [...new Set(items)].sort((a,b) => a-b); // Unique and sorted
+};
+
+// Placeholder for drawing numbers - very basic. A real pixel font would be better.
+// This is highly simplified and will just draw a small shape for a number.
+const drawPixelNumber = (pixelData: Uint8Array, num: number, cx: number, cy: number, color: string, alpha: number) => {
+    // For simplicity, just draw a small circle for each number, maybe vary size for 1 vs 10 etc.
+    const size = num < 10 ? 1 : 2;
+    drawPixelCircle(pixelData, cx, cy, size, color, 'solid', alpha);
+    if (num >= 10 && num < 20) { // e.g. a line for "1" in "1x"
+         drawPixelLine(pixelData, cx-size, cy-size, cx-size, cy+size, color, undefined, alpha);
+    } else if (num >=20 && num <30) { // two lines for "2"
+         drawPixelLine(pixelData, cx-size, cy-size, cx+size, cy-size, color, undefined, alpha);
+         drawPixelLine(pixelData, cx-size, cy, cx+size, cy, color, undefined, alpha);
+    }
+    // This needs a proper small pixel font renderer for legibility.
+};
+
+const MOTOR_GATES: ReadonlySet<number> = new Set([12, 20, 22, 35, 45, 21, 34, 40, 59]); // Example list, verify if possible
+
+// Helper to get a symbol for a core priority string (simplified)
+const getPrioritySymbol = (priority: string, cx: number, cy: number, color: string, alpha: number, pixelData: Uint8Array) => {
+  const hash = simpleHash(priority.toLowerCase()); // Ensure simpleHash is available
+  const size = 2;
+  if (priority.toLowerCase().includes('love') || priority.toLowerCase().includes('heart')) { // Heart-like
+    setPixel(pixelData, cx-1, cy, ...colorToRGBA(color,alpha)); setPixel(pixelData, cx+1, cy, ...colorToRGBA(color,alpha));
+    setPixel(pixelData, cx, cy+1, ...colorToRGBA(color,alpha));
+    setPixel(pixelData, cx-2, cy-1, ...colorToRGBA(color,alpha));setPixel(pixelData, cx+2, cy-1, ...colorToRGBA(color,alpha));
+    setPixel(pixelData, cx-1, cy-2, ...colorToRGBA(color,alpha));setPixel(pixelData, cx+1, cy-2, ...colorToRGBA(color,alpha));
+  } else if (priority.toLowerCase().includes('direction') || priority.toLowerCase().includes('path')) { // Arrow-like
+    drawPixelLine(pixelData, cx, cy - size, cx, cy + size, color, undefined, alpha);
+    drawPixelLine(pixelData, cx, cy - size, cx - size, cy, color, undefined, alpha);
+    drawPixelLine(pixelData, cx, cy - size, cx + size, cy, color, undefined, alpha);
+  } else { // Default: small square
+    drawPixelLine(pixelData, cx - size/2, cy - size/2, cx + size/2, cy - size/2, color, undefined, alpha);
+    drawPixelLine(pixelData, cx + size/2, cy - size/2, cx + size/2, cy + size/2, color, undefined, alpha);
+    drawPixelLine(pixelData, cx + size/2, cy + size/2, cx - size/2, cy + size/2, color, undefined, alpha);
+    drawPixelLine(pixelData, cx - size/2, cy + size/2, cx - size/2, cy - size/2, color, undefined, alpha);
+  }
+};
+
+
+// ### PIXEL ART HELPER FUNCTIONS ###
+// These functions draw to a pixel buffer that will be used to create a bitmap
+const setPixel = (
+  pixelData: Uint8Array,
+  x: number,
+  y: number,
+  r: number,
+  g: number,
+  b: number,
+  a: number = 255
+) => {
+  const pixelIndex = (Math.floor(y) * PIXEL_RESOLUTION + Math.floor(x)) * 4;
+  if (
+    pixelIndex >= 0 &&
+    pixelIndex < pixelData.length - 3 &&
+    x >= 0 &&
+    x < PIXEL_RESOLUTION &&
+    y >= 0 &&
+    y < PIXEL_RESOLUTION
+  ) {
+    pixelData[pixelIndex] = r;
+    pixelData[pixelIndex + 1] = g;
+    pixelData[pixelIndex + 2] = b;
+    pixelData[pixelIndex + 3] = a;
+  }
+};
+
+// Convert a color string (hex) to RGBA components
+const colorToRGBA = (color: string, alphaValue: number = 1.0): [number, number, number, number] => {
+  const [r, g, b] = hexToRgb(color); // Uses the new hexToRgb
+  return [r, g, b, Math.floor(alphaValue * 255)];
+};
+
+// Draw a pixel line between two points with optional dash pattern
+const drawPixelLine = (
+  pixelData: Uint8Array,
+  x1: number, y1: number,
+  x2: number, y2: number,
+  color: string, // Hex color
+  dash?: [number, number],
+  alphaValue: number = 1.0 // New parameter
+) => {
+  const [r, g, b, a] = colorToRGBA(color, alphaValue); // Use updated colorToRGBA
+  
+  x1 = Math.floor(x1);
+  y1 = Math.floor(y1);
+  x2 = Math.floor(x2);
+  y2 = Math.floor(y2);
+  
+  const dx = Math.abs(x2 - x1);
+  const sx = x1 < x2 ? 1 : -1;
+  const dy = -Math.abs(y2 - y1);
+  const sy = y1 < y2 ? 1 : -1;
+  let err = dx + dy, e2, dashCount = 0;
+  
+  while (true) {
+    if (!dash || (dashCount++ % (dash[0] + dash[1])) < dash[0]) {
+      setPixel(pixelData, x1, y1, r, g, b, a);
+    }
+    if (x1 === x2 && y1 === y2) break;
+    e2 = 2 * err;
+    if (e2 >= dy) { err += dy; x1 += sx; }
+    if (e2 <= dx) { err += dx; y1 += sy; }
+  }
+};
+
+// Draw a pixel circle with various fill patterns
+const drawPixelCircle = (
+  pixelData: Uint8Array,
+  cx: number, cy: number,
+  radius: number,
+  color: string, // Hex color
+  fillPattern: 'solid' | 'dither' | 'none' = 'none',
+  alphaValue: number = 1.0 // New parameter
+) => {
+  const [r, g, b, a] = colorToRGBA(color, alphaValue); // Use updated colorToRGBA
+  cx = Math.floor(cx);
+  cy = Math.floor(cy);
+  radius = Math.floor(radius);
+  
+  if (fillPattern !== 'none') {
+    // Fill the circle
+    for (let i = -radius; i <= radius; i++) {
+      for (let j = -radius; j <= radius; j++) {
+        if (i * i + j * j <= radius * radius) {
+          if (fillPattern === 'solid' || (fillPattern === 'dither' && (cx + i + cy + j) % 2 === 0)) {
+            setPixel(pixelData, cx + i, cy + j, r, g, b, a);
+          }
+        }
+      }
+    }
+  } else {
+    // Draw just the outline using Bresenham's circle algorithm
+    let x = radius, y = 0, err = 0;
+    while (x >= y) {
+      setPixel(pixelData, cx + x, cy + y, r, g, b, a);
+      setPixel(pixelData, cx + y, cy + x, r, g, b, a);
+      setPixel(pixelData, cx - y, cy + x, r, g, b, a);
+      setPixel(pixelData, cx - x, cy + y, r, g, b, a);
+      setPixel(pixelData, cx - x, cy - y, r, g, b, a);
+      setPixel(pixelData, cx - y, cy - x, r, g, b, a);
+      setPixel(pixelData, cx + y, cy - x, r, g, b, a);
+      setPixel(pixelData, cx + x, cy - y, r, g, b, a);
+      y += 1;
+      err += 1 + 2 * y;
+      if (2 * (err - x) + 1 > 0) {
+        x -= 1;
+        err += 1 - 2 * x;
+      }
+    }
+  }
+};
+
+// ### CORE COMPONENT ###
+const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({ data, highlightedCategory, width, height, onCanvasReady }) => {
+  // Use state for animation timing
+  const [animationTime, setAnimationTime] = useState(0);
+  
+  // Update animation time in animation loop
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setAnimationTime((Date.now() / 30000) % 1); // Normalize to 0-1 over 30 seconds
+    }, 1000 / 60); // 60fps
+    return () => clearInterval(interval);
+  }, []);
+  
+  // Create paints for drawing - with safety checks for Skia availability
+  const backgroundPaint = useMemo(() => {
+    if (!Skia?.Paint || !Skia?.Color) return null;
+    const paint = Skia.Paint();
+    paint.setColor(Skia.Color(theme.colors.bg));
+    return paint;
+  }, []);
+  
+  const primaryPaint = useMemo(() => {
+    if (!Skia?.Paint || !Skia?.Color) return null;
+    const paint = Skia.Paint();
+    paint.setColor(Skia.Color(theme.colors.textPrimary));
+    return paint;
+  }, []);
+  
+  const accentPaint = useMemo(() => {
+    if (!Skia?.Paint || !Skia?.Color) return null;
+    const paint = Skia.Paint();
+    paint.setColor(Skia.Color(theme.colors.accent));
+    return paint;
+  }, []);
+  
+  const faintPaint = useMemo(() => {
+    if (!Skia?.Paint || !Skia?.Color) return null;
+    const paint = Skia.Paint();
+    paint.setColor(Skia.Color(theme.colors.base1));
+    return paint;
+  }, []);
+
+  // ### HIGHLIGHTING LOGIC FUNCTIONS (inside component) ###
+  const getOpacity = (categoryName: string): number => {
+    if (!highlightedCategory || highlightedCategory === categoryName) {
+      return 1.0; // Full opacity if no category is highlighted or this one is
+    }
+    return 0.15; // Dimmed opacity for non-highlighted categories
+  };
+
+  const getCategorySkiaColor = (baseColorKey: keyof typeof theme.colors, categoryName: string): string => {
+    const opacity = getOpacity(categoryName);
+    const baseColor = theme.colors[baseColorKey] || theme.colors.textPrimary;
+    if (opacity < 1.0) {
+      return adjustColorOpacity(baseColor, opacity);
+    }
+    return baseColor; // Return hex if full opacity
+  };
+
+  const getCategoryPixelStyle = (baseColorKey: keyof typeof theme.colors, categoryName: string): { hexColor: string; alpha: number } => {
+    const baseColor = theme.colors[baseColorKey] || theme.colors.textPrimary;
+    const alpha = getOpacity(categoryName);
+    return { hexColor: baseColor, alpha };
+  };
+
+  // ### HELPER FUNCTIONS (generic) ###
+  const simpleHash = (str: string): number => {
+    if (!str) return 0;
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = (hash << 5) - hash + str.charCodeAt(i);
+      hash |= 0;
+    }
+    return Math.abs(hash);
+  };
+  
+  const mapValue = (value: number, inMin: number, inMax: number, outMin: number, outMax: number): number =>
+    (value - inMin) * (outMax - outMin) / (inMax - inMin) + outMin;
+
+  // Create a bitmap with the static/background pixel art elements
+  const staticBitmapImage = useMemo(() => {
+    if (!data || !Skia?.Data || !Skia?.Image) return null;
+
+    // Create a new pixel data array (RGBA format)
+    const pixelData = new Uint8Array(PIXEL_RESOLUTION * PIXEL_RESOLUTION * 4);
+    
+    // Fill with background color
+    const [bgR, bgG, bgB] = hexToRgb(theme.colors.bg); // Use hexToRgb directly
+    for (let i = 0; i < pixelData.length; i += 4) {
+      pixelData[i] = bgR;
+      pixelData[i + 1] = bgG;
+      pixelData[i + 2] = bgB;
+      pixelData[i + 3] = 255; // Full opacity
+    }
+    
+    const archStyle = getCategoryPixelStyle('architecture', 'Energy Architecture');
+    
+    // Draw energy architecture (concentric circles)
+    const numLayers = { 'Single': 5, 'Split': 4, 'Triple Split': 3, 'Quadruple Split': 2, 'No Definition': 6 }[data.definition_type] || 4;
+    const maxRadius = PIXEL_RESOLUTION * 0.45;
+
+    const parsedChannels = parseGateChannelString(data.channel_list);
+    const numActiveChannels = parsedChannels.length;
+    const hash = simpleHash(data.definition_type + (data.channel_list || "")); // Added fallback for channel_list
+
+
+    for (let i = 0; i < numLayers; i++) {
+      const radius = (maxRadius / numLayers) * (i + 1);
+      const isSplit = data.definition_type.includes('Split') && i === Math.floor(numLayers / 2);
+      
+      const breakAngle = mapValue(hash % 1000, 0, 1000, 0, Math.PI * 2);
+      // breakSize is not directly used for drawing the gap in circle, but it's conceptual for bridge placement
+      
+      const dashPattern = numActiveChannels > 5 && i % 2 === 0 ? [2,1] : (numActiveChannels > 10 ? [1,1] : undefined);
+      drawPixelCircle(pixelData, center.x, center.y, radius, archStyle.hexColor, 'none', archStyle.alpha, dashPattern);
+      
+      // Add split bridges
+      if (isSplit) {
+        const parsedSplitBridges = parseGateChannelString(data.split_bridges);
+        const numSplitBridges = parsedSplitBridges.length;
+        const bridgeLength = (maxRadius / numLayers);
+
+        const bridgeColor = numSplitBridges > 2 ? darkenColor(theme.colors.base1, -0.2) : theme.colors.base1; // Brighter if many bridges
+        const bridgeDash = numSplitBridges > 1 ? [3,1] : [2,2];
+
+        // Draw a symbolic bridge. If there are multiple, this representation is simplified.
+        // The breakAngle determines where this symbolic bridge is drawn.
+        const x1 = center.x + Math.cos(breakAngle) * radius;
+        const y1 = center.y + Math.sin(breakAngle) * radius;
+        const x2 = center.x + Math.cos(breakAngle) * (radius + bridgeLength);
+        const y2 = center.y + Math.sin(breakAngle) * (radius + bridgeLength);
+        if (numSplitBridges > 0) { // Only draw if there's at least one bridge
+            drawPixelLine(pixelData, x1, y1, x2, y2, bridgeColor, bridgeDash, archStyle.alpha);
+        }
+      }
+    }
+    
+    // Convert Uint8Array to SkImage using Skia v2 API
+    const skData = Skia.Data.fromBytes(pixelData);
+    return Skia.Image.MakeImage(
+      {
+        width: PIXEL_RESOLUTION,
+        height: PIXEL_RESOLUTION,
+        colorType: ColorType.RGBA_8888,
+        alphaType: AlphaType.Premul // Using Premultiplied alpha
+      },
+      skData,
+      PIXEL_RESOLUTION * 4 // rowBytes
+    );
+  }, [data, highlightedCategory]);
+  
+  // Create a bitmap for dynamic animated elements - recalculated every frame
+  const dynamicBitmapImage = useMemo(() => {
+    if (!data || !Skia?.Data || !Skia?.Image) return null;
+    const t = animationTime; // Get current animation time
+    
+    // Create a new pixel data array (RGBA format)
+    const pixelData = new Uint8Array(PIXEL_RESOLUTION * PIXEL_RESOLUTION * 4);
+    // Start with transparent pixels
+    pixelData.fill(0);
+    
+    const evoStyle = getCategoryPixelStyle('evolutionary', 'Evolutionary Path');
+    // Draw evolutionary path (spiral)
+    if (evoStyle.alpha > 0) { // Only draw if visible
+      const pathHash = simpleHash(data.incarnation_cross);
+      const pathLength = 50;
+      const startRadius = PIXEL_RESOLUTION * 0.1;
+      const endRadius = PIXEL_RESOLUTION * 0.4;
+      const startAngle = mapValue(pathHash % 1000, 0, 1000, 0, Math.PI * 2);
+      
+      // Integrate G-center access
+      const lineStyle = data.g_center_access === 'Consistent' ? undefined : 
+                        (data.g_center_access === 'Projected' ? [3,2] as [number, number] : 
+                                                               [1,3] as [number, number]); // Fallback to [1,3] for 'Fluid Identity' or others
+      
+      let lastX = center.x + Math.cos(startAngle) * startRadius;
+      let lastY = center.y + Math.sin(startAngle) * startRadius;
+
+      for (let i = 1; i <= pathLength; i++) {
+        const progress = i / pathLength;
+        const radius = startRadius + progress * (endRadius - startRadius);
+        const angle = startAngle + progress * 
+          (parseInt(data.conscious_line || '0') + parseInt(data.unconscious_line || '0')) + 
+          Math.sin(t * Math.PI * 2) * 0.1;
+        
+        const currentX = center.x + Math.cos(angle) * radius;
+        const currentY = center.y + Math.sin(angle) * radius;
+        
+        drawPixelLine(pixelData, lastX, lastY, currentX, currentY, evoStyle.hexColor, lineStyle, evoStyle.alpha);
+        lastX = currentX;
+        lastY = currentY;
+      }
+
+      // Core Priority Visualization
+      const priorities = (data.core_priorities || "").split(',').map(p => p.trim()).filter(p => p.length > 0); // Ensure non-empty priorities
+      const numPrioritiesToShow = priorities.length;
+      if (numPrioritiesToShow > 0) {
+        for (let k = 0; k < numPrioritiesToShow; k++) {
+          const priorityProgress = (k + 0.5) / numPrioritiesToShow;
+          const priorityRadius = startRadius + priorityProgress * (endRadius - startRadius);
+          const consciousLineNum = parseInt(data.conscious_line || '1') || 1; // Ensure it's at least 1 to avoid NaN issues
+          const unconsciousLineNum = parseInt(data.unconscious_line || '1') || 1;
+          // Angle calculation based on conscious/unconscious lines and path progress
+          const priorityAngle = startAngle + priorityProgress * (consciousLineNum + unconsciousLineNum) * 0.5 * (Math.PI / 6); // Modest angle change
+
+          const priorityX = center.x + Math.cos(priorityAngle) * priorityRadius;
+          const priorityY = center.y + Math.sin(priorityAngle) * priorityRadius;
+          getPrioritySymbol(priorities[k], priorityX, priorityY, evoStyle.hexColor, evoStyle.alpha, pixelData);
+        }
+      }
+    }
+    
+    const coreStyle = getCategoryPixelStyle('processingCore', 'Processing Core');
+    // Draw Processing Core
+    if (coreStyle.alpha > 0) { // Only draw if visible
+      const baseRadius = PIXEL_RESOLUTION * 0.08; // Smaller radius for individual centers if needed
+      const centersInfo = [
+        { state: data.head_state || 'Defined', name: 'Head', originalIndex: 0 },
+        { state: data.ajna_state || 'Defined', name: 'Ajna', originalIndex: 1 },
+        { state: data.emotional_state || 'Defined', name: 'Emotional', originalIndex: 2 }
+      ];
+
+      centersInfo.forEach((centerInfo, i) => {
+        const angle = (i / centersInfo.length) * Math.PI * 2 + t * Math.PI * (1 + i * 0.2) * (i % 2 === 0 ? 1 : -1); // Varied rotation
+        const currentCenterRadius = baseRadius * (0.5 + (simpleHash(centerInfo.name) % 500 / 1000)); // Each center can have slightly diff base size
+        const x = center.x + Math.cos(angle) * PIXEL_RESOLUTION * 0.25; // Position them further out if baseRadius is small
+        const y = center.y + Math.sin(angle) * PIXEL_RESOLUTION * 0.25;
+        const glyphSize = 4; // Size of the cognition glyph
+
+        // 1. Distinct Visual States
+        let centerAlpha = coreStyle.alpha;
+        let centerPattern: 'solid' | 'dither' | 'none' = 'solid';
+        let outlineDash: [number, number] | undefined = undefined;
+        
+        if (centerInfo.state === 'Undefined') {
+          centerPattern = 'none'; // No fill
+          outlineDash = [2, 2]; // Dashed outline
+          centerAlpha = coreStyle.alpha * (0.6 + Math.sin(t * Math.PI * 6) * 0.2); // Variable intensity (animated alpha)
+        } else if (centerInfo.state === 'Open') {
+          centerPattern = 'none'; // No fill, effectively transparent base
+          outlineDash = [1, 3]; // Very subtle dashed boundary
+          // Draw a faint circle with the boundary
+          drawPixelCircle(pixelData, x, y, currentCenterRadius, coreStyle.hexColor, 'none', centerAlpha * 0.3, outlineDash);
+          // No main glyph for open, or a very faint one
+        }
+
+        // Draw base circle for Defined/Undefined (outline for Undefined, solid for Defined)
+        if (centerInfo.state !== 'Open') {
+           drawPixelCircle(pixelData, x, y, currentCenterRadius, coreStyle.hexColor, centerPattern, centerAlpha, outlineDash);
+        }
+
+
+        // 2. Cognition Variable Specific Patterns
+        // (Only draw if not 'Open' or if 'Open' should have faint glyph)
+        if (centerInfo.state !== 'Open') {
+             const cognition = data.cognition_variable || "Default";
+             // Example: Map specific cognition variables to patterns.
+             // Current hash-based symbols: Cross, Square, Triangle
+             const cognHash = simpleHash(cognition);
+             const glyphColor = darkenColor(coreStyle.hexColor, -0.2); // Make glyphs brighter
+
+             // Existing glyph drawing logic (can be expanded)
+             switch (cognHash % 3) {
+                 case 0: // Cross
+                     drawPixelLine(pixelData, x - glyphSize, y, x + glyphSize, y, glyphColor, undefined, centerAlpha);
+                     drawPixelLine(pixelData, x, y - glyphSize, x, y + glyphSize, glyphColor, undefined, centerAlpha);
+                     break;
+                 case 1: // Square
+                     drawPixelLine(pixelData, x - glyphSize, y - glyphSize, x + glyphSize, y - glyphSize, glyphColor, undefined, centerAlpha);
+                     drawPixelLine(pixelData, x + glyphSize, y - glyphSize, x + glyphSize, y + glyphSize, glyphColor, undefined, centerAlpha);
+                     drawPixelLine(pixelData, x + glyphSize, y + glyphSize, x - glyphSize, y + glyphSize, glyphColor, undefined, centerAlpha);
+                     drawPixelLine(pixelData, x - glyphSize, y + glyphSize, x - glyphSize, y - glyphSize, glyphColor, undefined, centerAlpha);
+                     break;
+                 case 2: // Triangle
+                     drawPixelLine(pixelData, x, y - glyphSize, x + glyphSize, y + glyphSize, glyphColor, undefined, centerAlpha);
+                     drawPixelLine(pixelData, x + glyphSize, y + glyphSize, x - glyphSize, y + glyphSize, glyphColor, undefined, centerAlpha); // Corrected x-size to x-glyphSize
+                     drawPixelLine(pixelData, x - glyphSize, y + glyphSize, x, y - glyphSize, glyphColor, undefined, centerAlpha);
+                     break;
+             }
+        }
+
+
+        // 3. Moon Sign Influence (Emotional Center - index 2)
+        if (centerInfo.name === 'Emotional' && centerInfo.state !== 'Open') {
+          const moonSign = data.astro_moon_sign || "Aries";
+          // Map sign to a phase (0-7). Example: hash % 8
+          const phase = simpleHash(moonSign) % 8;
+          const lunarRadius = currentCenterRadius * 0.6; // Smaller than the center itself
+          // Ensure bgColor for drawLunarPhase is the actual background of the canvas, not transparent
+          const canvasBgColor = theme.colors.bg; // Assuming theme is accessible
+          drawLunarPhase(pixelData, phase, x, y, lunarRadius, darkenColor(coreStyle.hexColor, -0.3) /*brighter*/, canvasBgColor, centerAlpha);
+        }
+
+        // 4. Mercury Sign Influence (Ajna Center - index 1)
+        if (centerInfo.name === 'Ajna' && centerInfo.state !== 'Open') {
+          const mercurySign = data.astro_mercury_sign || "Aries";
+          const patternType = simpleHash(mercurySign) % 3; // 0, 1, or 2
+          const patternSize = currentCenterRadius * 1.5; // Extends beyond the center
+          drawMercuryPattern(pixelData, patternType, x, y, patternSize, coreStyle.hexColor, centerAlpha * 0.8, t);
+        }
+      });
+    }
+    
+    const tensionStyle = getCategoryPixelStyle('tensionPoints', 'Tension Points');
+    // Draw Tension Points
+    if (tensionStyle.alpha > 0) { // Only draw if visible
+      const intensity = data.tension_planets?.length || 1;
+      
+      if (intensity > 0) {
+        const glitchAreaSize = 20 + intensity * 5;
+        const glitchHash = simpleHash(data.chiron_gate || '');
+        const locationAngle = mapValue(glitchHash % 1000, 0, 1000, 0, Math.PI * 2);
+        const locationRadius = PIXEL_RESOLUTION * 0.4;
+        
+        const glitchCenterX = center.x + Math.cos(locationAngle) * locationRadius;
+        const glitchCenterY = center.y + Math.sin(locationAngle) * locationRadius;
+        
+        const glitchCount = Math.floor(intensity * 5 * (Math.sin(t * 50 * Math.PI) + 1));
+        for (let i = 0; i < glitchCount; i++) {
+          const x = glitchCenterX + (Math.random() - 0.5) * glitchAreaSize;
+          const y = glitchCenterY + (Math.random() - 0.5) * glitchAreaSize;
+
+          let primaryTensionColor = theme.colors.tensionPoints; // Default to category color
+          if (data.tension_planets && data.tension_planets.length > 0 && data.tension_planets[0]?.name) {
+            const firstPlanetName = data.tension_planets[0].name.toLowerCase();
+            if (firstPlanetName === 'saturn') primaryTensionColor = '#5A5A8A';
+            else if (firstPlanetName === 'mars') primaryTensionColor = '#D46A6A';
+            else if (firstPlanetName === 'chiron') primaryTensionColor = '#8FBC8F'; // Example for Chiron
+            // Add more planet color mappings here or use a helper
+          }
+          const colorForGlitch = (i % 3 === 0) ? primaryTensionColor
+                               : (i % 3 === 1 ? theme.colors.accent : theme.colors.base1); // Mix with theme accent/base
+          const [r, g, b] = hexToRgb(colorForGlitch);
+          setPixel(pixelData, x, y, r, g, b, Math.floor(tensionStyle.alpha * 255));
+        }
+      }
+    }
+    
+    const familyStyle = getCategoryPixelStyle('energyFamily', 'Energy Family');
+    // Draw Energy Family (radiating sun pattern)
+    if (familyStyle.alpha > 0) { // Only draw if visible
+      const sunHash = simpleHash(data.astro_sun_sign || ''); // Added fallback for sun_sign
+      const coreRadius = 8;
+
+      // House-based color for the main sun core
+      const sunCoreColor = getHouseColorVariation(familyStyle.hexColor, data.astro_sun_house || '1');
+      drawPixelCircle(pixelData, center.x, center.y, coreRadius, sunCoreColor, 'solid', familyStyle.alpha);
+
+      // Profile Line enhancements
+      const profileLines = data.profile_lines || "1/3"; // e.g., "1/3", "6/2"
+      const [consciousLine, unconsciousLine] = profileLines.split('/').map(Number);
+      
+      // Ray count based on profile lines (example: sum of lines, min 4, max 12)
+      let rayCount = Math.max(4, Math.min(12, consciousLine + unconsciousLine));
+      
+      // Ray patterns based on profile_lines
+      // This is a simplified mapping. A more detailed one might be needed.
+      let mainRayDashPattern: [number, number] | undefined = undefined; // Solid by default
+      let secondaryRayDashPattern: [number, number] | undefined = [2,2]; // Dashed for "other" rays
+
+      if (profileLines === "1/3" || profileLines === "1/4") mainRayDashPattern = undefined; // Solid
+      else if (profileLines === "2/4" || profileLines === "2/5") mainRayDashPattern = [4,1]; // Long dash, short gap
+      else if (profileLines === "3/5" || profileLines === "3/6") mainRayDashPattern = [3,2]; // Medium dash, medium gap
+      else if (profileLines === "4/6" || profileLines === "4/1") mainRayDashPattern = [2,3]; // Short dash, medium gap
+      else if (profileLines === "5/1" || profileLines === "5/2") mainRayDashPattern = [1,4]; // Dotted
+      else if (profileLines === "6/2" || profileLines === "6/3") mainRayDashPattern = [5,2]; // Very long dash
+
+      const baseRayLength = PIXEL_RESOLUTION * 0.15;
+
+      for (let i = 0; i < 12; i++) { // Keep 12 fixed positions for rays for consistent astrological mapping
+        const angle = (i / 12) * Math.PI * 2 + (sunHash % 1000 / 1000) * (Math.PI / 6); // Offset by sun sign hash slightly
+
+        // Determine if this ray is a "primary" ray based on profile line count
+        const isPrimaryRay = i < rayCount;
+        const currentDashPattern = isPrimaryRay ? mainRayDashPattern : secondaryRayDashPattern;
+        
+        // Ray length animation based on profile lines (conscious for primary, unconscious for secondary)
+        const lineInfluence = isPrimaryRay ? consciousLine : unconsciousLine;
+        const dynamicLengthFactor = 0.7 + Math.sin(t * Math.PI * (1 + lineInfluence * 0.2) + i) * 0.3;
+        const rayLength = baseRayLength * dynamicLengthFactor;
+
+        // Ray thickness (simulated by drawing style or a slightly bolder color if possible)
+        // For now, thickness is uniform (1 pixel). A bolder color can simulate thickness.
+        const rayColorHex = getHouseColorVariation(familyStyle.hexColor, data.astro_sun_house || '1', isPrimaryRay);
+
+        const x1 = center.x + Math.cos(angle) * coreRadius;
+        const y1 = center.y + Math.sin(angle) * coreRadius;
+        const x2 = center.x + Math.cos(angle) * (coreRadius + rayLength);
+        const y2 = center.y + Math.sin(angle) * (coreRadius + rayLength);
+        
+        drawPixelLine(pixelData, x1, y1, x2, y2, rayColorHex, currentDashPattern, familyStyle.alpha);
+      }
+
+      // North Node sign influence as an orbital ring
+      const northNodeSign = data.astro_north_node_sign || "Aries";
+      const northNodeHash = simpleHash(northNodeSign);
+      const orbitalRadius = coreRadius + baseRayLength + 5 + (northNodeHash % 5); // Position outside main rays
+      const orbitalColor = getHouseColorVariation(familyStyle.hexColor, (northNodeHash % 12) + 1); // Color based on hash "house"
+
+      // Orbital ring pattern based on North Node sign (example: first letter)
+      let orbitalDashPattern: [number, number] | undefined = undefined;
+      if (['Aries', 'Leo', 'Sagittarius'].includes(northNodeSign)) orbitalDashPattern = [5,2]; // Fire signs
+      else if (['Taurus', 'Virgo', 'Capricorn'].includes(northNodeSign)) orbitalDashPattern = [3,3]; // Earth signs
+      else if (['Gemini', 'Libra', 'Aquarius'].includes(northNodeSign)) orbitalDashPattern = [2,2]; // Air signs
+      else if (['Cancer', 'Scorpio', 'Pisces'].includes(northNodeSign)) orbitalDashPattern = [4,1]; // Water signs
+
+      // Draw the orbital ring (full circle with pattern)
+      const segments = 36; // More segments for a smoother circle pattern
+      for (let i = 0; i < segments; i++) {
+         if (!orbitalDashPattern || (i % (orbitalDashPattern[0] + orbitalDashPattern[1])) < orbitalDashPattern[0]) {
+             const angle1 = (i / segments) * Math.PI * 2;
+             const angle2 = ((i + 0.5) / segments) * Math.PI * 2; // Draw small segments
+             const x1_orb = center.x + Math.cos(angle1) * orbitalRadius;
+             const y1_orb = center.y + Math.sin(angle1) * orbitalRadius;
+             const x2_orb = center.x + Math.cos(angle2) * orbitalRadius;
+             const y2_orb = center.y + Math.sin(angle2) * orbitalRadius;
+             drawPixelLine(pixelData, x1_orb, y1_orb, x2_orb, y2_orb, orbitalColor, undefined, familyStyle.alpha * 0.8); // Slightly more transparent
+         }
+      }
+    }
+    
+    const classStyle = getCategoryPixelStyle('energyClass', 'Energy Class');
+    // Draw Energy Class (aura field)
+    if (classStyle.alpha > 0) { // Only draw if visible
+      const ascendantSign = data.ascendant_sign || "Aries";
+      const element = getAstroElement(ascendantSign);
+      const fieldStrengthHash = simpleHash(ascendantSign);
+      const baseFieldRadius = PIXEL_RESOLUTION * (0.2 + (fieldStrengthHash % 1000 / 1000) * 0.3); // 0.2 to 0.5
+
+      // 1. Ascendant Sign Aura Patterns (element-based)
+      const ringCount = 4;
+      for (let ring = 1; ring <= ringCount; ring++) {
+        const radius = (baseFieldRadius / ringCount) * ring;
+        let dashPattern: [number, number] | undefined = undefined;
+        let particleDensity = 0; // For Air/Water effects
+
+        if (element === 'Fire') { // Radiating lines, less dense
+          dashPattern = ring % 2 === 0 ? [5, 2] : [3, 4];
+          const segments = 12 + ring * 4; // More segments for outer rings
+          for (let seg = 0; seg < segments; seg++) {
+             if ((seg * (ring % 2 === 0 ? 1 : 2)) % (dashPattern[0] + dashPattern[1]) < dashPattern[0]) { // Vary density
+                 const angle = (seg / segments) * Math.PI * 2;
+                 const x1 = center.x + Math.cos(angle) * (radius - (ring * 0.5)); // Start slightly inside
+                 const y1 = center.y + Math.sin(angle) * (radius - (ring * 0.5));
+                 const x2 = center.x + Math.cos(angle) * (radius + (ring * 0.5)); // End slightly outside
+                 const y2 = center.y + Math.sin(angle) * (radius + (ring * 0.5));
+                 drawPixelLine(pixelData, x1, y1, x2, y2, classStyle.hexColor, undefined, classStyle.alpha * (0.5 + (1-ring/ringCount)*0.5) ); // Fade outer
+             }
+          }
+        } else if (element === 'Earth') { // Solid, blocky, more defined
+          dashPattern = ring % 2 === 0 ? undefined : [4,1]; // Solid or thick dashes
+           const segments = 24;
+           for (let seg = 0; seg < segments; seg++) {
+             if (!dashPattern || (seg % (dashPattern[0] + dashPattern[1])) < dashPattern[0]) {
+                 const angle1 = (seg / segments) * Math.PI * 2;
+                 const angle2 = ((seg + 0.5) / segments) * Math.PI * 2;
+                 const x1 = center.x + Math.cos(angle1) * radius;
+                 const y1 = center.y + Math.sin(angle1) * radius;
+                 const x2 = center.x + Math.cos(angle2) * radius;
+                 const y2 = center.y + Math.sin(angle2) * radius;
+                 drawPixelLine(pixelData, x1, y1, x2, y2, classStyle.hexColor, undefined, classStyle.alpha);
+             }
+           }
+        } else if (element === 'Air') { // Swirling, light patterns, more chaotic
+          particleDensity = 10 + ring * 5; // More particles for outer rings
+          for (let p = 0; p < particleDensity; p++) {
+             const angle = Math.random() * Math.PI * 2;
+             // Spread particles within the ring's band
+             const R = radius - (baseFieldRadius / ringCount / 2) + Math.random() * (baseFieldRadius / ringCount);
+             const particleX = center.x + Math.cos(angle + t * Math.PI * (p % 2 === 0 ? 0.5 : -0.5)) * R; // Swirl animation
+             const particleY = center.y + Math.sin(angle + t * Math.PI * (p % 2 === 0 ? 0.5 : -0.5)) * R;
+             setPixel(pixelData, particleX, particleY, ...colorToRGBA(classStyle.hexColor, classStyle.alpha * 0.7));
+          }
+        } else if (element === 'Water') { // Flowing, wavy patterns
+          particleDensity = 15 + ring * 3;
+          for (let p = 0; p < particleDensity; p++) {
+             const baseAngle = (p / particleDensity) * Math.PI * 2;
+             const waveOffset = Math.sin(baseAngle * 3 + t * Math.PI * 2) * (baseFieldRadius / ringCount / 3); // Wave effect
+             const R = radius + waveOffset;
+             const particleX = center.x + Math.cos(baseAngle) * R;
+             const particleY = center.y + Math.sin(baseAngle) * R;
+             setPixel(pixelData, particleX, particleY, ...colorToRGBA(classStyle.hexColor, classStyle.alpha * 0.8));
+          }
+        }
+      }
+
+      // 4. Cross-Specific Geometric Patterns (Overlay)
+      const crossName = data.incarnation_cross || "Default Cross";
+      const crossHash = simpleHash(crossName);
+      const crossPatternRadius = baseFieldRadius * 0.8; // Inside the main aura
+      const numCrossLines = 3 + (crossHash % 4); // 3 to 6 lines
+
+      for (let i = 0; i < numCrossLines; i++) {
+        const angle = (i / numCrossLines) * Math.PI + (crossHash % 100 / 100) * (Math.PI / numCrossLines) + t * Math.PI * 0.1; // Slow rotation
+        const x1 = center.x + Math.cos(angle) * crossPatternRadius;
+        const y1 = center.y + Math.sin(angle) * crossPatternRadius;
+        const x2 = center.x - Math.cos(angle) * crossPatternRadius; // Lines through center
+        const y2 = center.y - Math.sin(angle) * crossPatternRadius;
+        drawPixelLine(pixelData, x1, y1, x2, y2, classStyle.hexColor, [3,3], classStyle.alpha * 0.3); // Fainter, dashed lines
+      }
+
+      // 2. Incarnation Cross Quarter Visual Markers
+      const crossQuarter = data.incarnation_cross_quarter || "Right Angle";
+      const markerRadius = baseFieldRadius + 10; // Place outside the aura slightly
+      const markerSize = 4;
+      // Top, Right, Bottom, Left markers
+      drawCrossQuarterMarker(pixelData, crossQuarter, center.x, center.y - markerRadius, classStyle.hexColor, classStyle.alpha, markerSize);
+      drawCrossQuarterMarker(pixelData, crossQuarter, center.x + markerRadius, center.y, classStyle.hexColor, classStyle.alpha, markerSize);
+      drawCrossQuarterMarker(pixelData, crossQuarter, center.x, center.y + markerRadius, classStyle.hexColor, classStyle.alpha, markerSize);
+      drawCrossQuarterMarker(pixelData, crossQuarter, center.x - markerRadius, center.y, classStyle.hexColor, classStyle.alpha, markerSize);
+
+      // 3. Chart Ruler Planet Symbols
+      const rulerSign = data.chart_ruler_sign || "Aries";
+      const rulerPlanet = getRulingPlanet(rulerSign);
+      const rulerHouse = parseInt(String(data.chart_ruler_house || '1').replace(/\D/g,'')); // Get numeric house
+      const planetAngle = ((rulerHouse -1) / 12) * Math.PI * 2 - (Math.PI / 2); // Map house to angle (0 house = top)
+      const planetRadius = baseFieldRadius * 0.5; // Place within the aura
+      const planetX = center.x + Math.cos(planetAngle) * planetRadius;
+      const planetY = center.y + Math.sin(planetAngle) * planetRadius;
+      drawPlanetSymbol(pixelData, rulerPlanet, planetX, planetY, classStyle.hexColor, classStyle.alpha);
+    }
+    
+    // Decision Growth Vector (DGV)
+    const dgvStyle = getCategoryPixelStyle('decisionVector', 'Decision Growth Vector'); // Base color key
+    if (dgvStyle.alpha > 0) { // Only draw if DGV category is visible
+        const marsSigns = ["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"];
+        let marsSignIndex = marsSigns.indexOf(data.astro_mars_sign || 'Aries');
+        if (marsSignIndex === -1) marsSignIndex = 0;
+
+        const baseNeedleAngle = mapValue(marsSignIndex, 0, 11, 0, Math.PI * 2) + t * Math.PI * 0.5;
+        const compassCenter = { x: center.x, y: center.y + PIXEL_RESOLUTION * 0.25 };
+        const baseNeedleLength = PIXEL_RESOLUTION * 0.15;
+
+        const strategy = data.strategy || "Generator";
+        const authority = data.authority || "Emotional";
+        const spectrum = data.choice_navigation_spectrum || "Balanced";
+        const nnHouseValue = parseInt(String(data.north_node_house || '1').replace(/\D/g,''));
+
+        // --- Drawing North Node House Markers ---
+        const markerRingRadius = baseNeedleLength + 15;
+        for (let i = 1; i <= 12; i++) {
+          const angle = ((i - 1) / 12) * Math.PI * 2 - (Math.PI / 2);
+          const markerX = compassCenter.x + Math.cos(angle) * markerRingRadius;
+          const markerY = compassCenter.y + Math.sin(angle) * markerRingRadius;
+          const markerColor = (i === nnHouseValue) ? darkenColor(dgvStyle.hexColor, -0.3) : dgvStyle.hexColor;
+          const markerAlpha = (i === nnHouseValue) ? dgvStyle.alpha : dgvStyle.alpha * 0.5;
+          drawPixelCircle(pixelData, markerX, markerY, (i === nnHouseValue) ? 2 : 1, markerColor, 'solid', markerAlpha);
+        }
+
+        // --- Authority-Specific Visual Elements (around compass) ---
+        const authorityElementRadius = baseNeedleLength * 0.5;
+        if (authority === 'Emotional') {
+          for (let i = 0; i < 3; i++) {
+            const waveY = compassCenter.y + (i - 1) * 5;
+            for (let x = -10; x <= 10; x++) {
+              setPixel(pixelData, compassCenter.x + x + Math.sin(x * 0.5 + t * Math.PI * 4) * 2, waveY + Math.cos(x*0.3 + t*Math.PI*2)*2 , ...colorToRGBA(dgvStyle.hexColor, dgvStyle.alpha * 0.7));
+            }
+          }
+        } else if (authority === 'Sacral') {
+          const pulseSize = 2 + Math.sin(t * Math.PI * 8) * 1;
+          drawPixelCircle(pixelData, compassCenter.x, compassCenter.y, pulseSize, dgvStyle.hexColor, 'dither', dgvStyle.alpha);
+        } else if (authority === 'Splenic') {
+          for (let i=0; i<2; i++) {
+            const x1_auth = compassCenter.x + (i%2==0? -authorityElementRadius : authorityElementRadius) + Math.sin(t*Math.PI*3 +i)*3;
+            const y1_auth = compassCenter.y + Math.cos(t*Math.PI*2+i)*3;
+            drawPixelLine(pixelData, x1_auth, y1_auth, x1_auth + (i%2==0? -3:3), y1_auth - 3, dgvStyle.hexColor, undefined, dgvStyle.alpha);
+            drawPixelLine(pixelData, x1_auth + (i%2==0? -3:3), y1_auth - 3, x1_auth + (i%2==0? 0:0), y1_auth, dgvStyle.hexColor, undefined, dgvStyle.alpha);
+          }
+        } else if (authority === 'Heart/Ego') {
+          const frameSize = baseNeedleLength * 0.3;
+          drawPixelLine(pixelData, compassCenter.x - frameSize, compassCenter.y - frameSize, compassCenter.x + frameSize, compassCenter.y - frameSize, dgvStyle.hexColor, undefined, dgvStyle.alpha);
+          drawPixelLine(pixelData, compassCenter.x + frameSize, compassCenter.y - frameSize, compassCenter.x + frameSize, compassCenter.y + frameSize, dgvStyle.hexColor, undefined, dgvStyle.alpha);
+          drawPixelLine(pixelData, compassCenter.x + frameSize, compassCenter.y + frameSize, compassCenter.x - frameSize, compassCenter.y + frameSize, dgvStyle.hexColor, undefined, dgvStyle.alpha);
+          drawPixelLine(pixelData, compassCenter.x - frameSize, compassCenter.y + frameSize, compassCenter.x - frameSize, compassCenter.y - frameSize, dgvStyle.hexColor, undefined, dgvStyle.alpha);
+        } else if (authority === 'G-Center') {
+           let spiralRadius = 1;
+           let lastSpiralX = compassCenter.x;
+           let lastSpiralY = compassCenter.y;
+           for(let i=0; i < 20; i++){
+               const angle = 0.1 * i * Math.PI + t*Math.PI;
+               const x_ = compassCenter.x + Math.cos(angle) * spiralRadius;
+               const y_ = compassCenter.y + Math.sin(angle) * spiralRadius;
+               if(i>0) drawPixelLine(pixelData, lastSpiralX, lastSpiralY, x_, y_, dgvStyle.hexColor, undefined, dgvStyle.alpha *0.6);
+               lastSpiralX = x_;
+               lastSpiralY = y_;
+               spiralRadius += 0.5;
+               if(spiralRadius > authorityElementRadius) break;
+           }
+        } else if (authority === 'Mental') {
+           for(let i=0; i<5; i++){
+               const angle = (i/5)*Math.PI*2 + t*Math.PI;
+               drawPixelLine(pixelData, compassCenter.x, compassCenter.y, compassCenter.x + Math.cos(angle)*authorityElementRadius, compassCenter.y + Math.sin(angle)*authorityElementRadius, dgvStyle.hexColor, [1,2], dgvStyle.alpha*0.7);
+           }
+        }
+
+        // --- Strategy-Specific Compass Needle ---
+        let finalNeedleAngle = baseNeedleAngle;
+        let needleLength = baseNeedleLength;
+        let needleColor = dgvStyle.hexColor;
+        let needleAlpha = dgvStyle.alpha;
+        let needleDash: [number, number] | undefined = undefined;
+        let tipRadius = 2;
+
+        if (spectrum === 'Fluid') needleDash = [2,3];
+        else if (spectrum === 'Structured') tipRadius = 3;
+
+        if (strategy === 'Generator') {
+          const auraOffset = 2;
+          const endX = compassCenter.x + Math.cos(finalNeedleAngle) * needleLength;
+          const endY = compassCenter.y + Math.sin(finalNeedleAngle) * needleLength;
+          drawPixelLine(pixelData, compassCenter.x + Math.sin(finalNeedleAngle) * auraOffset, compassCenter.y - Math.cos(finalNeedleAngle) * auraOffset, endX + Math.sin(finalNeedleAngle) * auraOffset, endY - Math.cos(finalNeedleAngle) * auraOffset, needleColor, needleDash, needleAlpha * 0.3);
+          drawPixelLine(pixelData, compassCenter.x - Math.sin(finalNeedleAngle) * auraOffset, compassCenter.y + Math.cos(finalNeedleAngle) * auraOffset, endX - Math.sin(finalNeedleAngle) * auraOffset, endY + Math.cos(finalNeedleAngle) * auraOffset, needleColor, needleDash, needleAlpha * 0.3);
+        } else if (strategy === 'Projector') {
+          if (Math.floor(t * 10) % 2 === 0) {
+            needleAlpha = needleAlpha * 0.5;
+          }
+          const beamLength = needleLength * 0.5;
+          const beamX = compassCenter.x + Math.cos(finalNeedleAngle) * (needleLength + beamLength);
+          const beamY = compassCenter.y + Math.sin(finalNeedleAngle) * (needleLength + beamLength);
+          drawPixelLine(pixelData, compassCenter.x + Math.cos(finalNeedleAngle) * needleLength, compassCenter.y + Math.sin(finalNeedleAngle) * needleLength, beamX, beamY, needleColor, [1,1], needleAlpha * 0.5);
+        } else if (strategy === 'Manifestor') {
+          tipRadius = 3;
+          for (let i=1; i<=2; i++) {
+            const waveRadius = i * 5 + (t*10 % 5);
+            if (waveRadius < baseNeedleLength * 0.4) {
+               drawPixelCircle(pixelData, compassCenter.x, compassCenter.y, waveRadius, needleColor, 'none', needleAlpha * (0.5 - i*0.1) );
+            }
+          }
+        } else if (strategy === 'Reflector') {
+          finalNeedleAngle = t * Math.PI * 2;
+          needleDash = [3,3];
+        }
+
+        const needleEndX = compassCenter.x + Math.cos(finalNeedleAngle) * needleLength;
+        const needleEndY = compassCenter.y + Math.sin(finalNeedleAngle) * needleLength;
+        drawPixelLine(pixelData, compassCenter.x, compassCenter.y, needleEndX, needleEndY, needleColor, needleDash, needleAlpha);
+        drawPixelCircle(pixelData, needleEndX, needleEndY, tipRadius, needleColor, 'solid', needleAlpha);
+    }
+
+    const manifestStyle = getCategoryPixelStyle('manifestation', 'Manifestation Interface Rhythm');
+    // Draw Manifestation Interface Rhythm (throat patterns)
+    if (manifestStyle.alpha > 0) { // Only draw if visible
+      const throatDefinition = data.throat_definition || "Undefined";
+      const rhythmSpectrum = data.manifestation_rhythm_spectrum || "Variable";
+      const patternSizeBase = 15;
+      const throatY = center.y - PIXEL_RESOLUTION * 0.30; // Position higher up
+
+      let patternAlpha = manifestStyle.alpha;
+      if (throatDefinition === 'Undefined') {
+        patternAlpha *= 0.7; // Fainter if undefined
+      }
+
+      // --- Manifestation Rhythm Spectrum Pattern ---
+      if (rhythmSpectrum === 'Consistent') {
+         const patternSize = patternSizeBase * (throatDefinition === 'Defined' ? 1.2 : 0.8);
+         for (let x = -patternSize; x <= patternSize; x += (throatDefinition === 'Defined' ? 3:4)) {
+           for (let y = -patternSize/2; y <= patternSize/2; y += (throatDefinition === 'Defined' ? 3:4)) {
+             setPixel(pixelData, center.x + x, throatY + y, ...colorToRGBA(manifestStyle.hexColor, patternAlpha));
+           }
+         }
+      } else if (rhythmSpectrum === 'Variable') { // Wave pattern
+         const patternSize = patternSizeBase * (throatDefinition === 'Defined' ? 1.3 : 0.9);
+         for (let x = -patternSize; x <= patternSize; x++) {
+           const waveY = Math.sin((x + t * (throatDefinition === 'Defined' ? 10:20)) * 0.3) * (throatDefinition === 'Defined' ? 6:4);
+           setPixel(pixelData, center.x + x, throatY + waveY, ...colorToRGBA(manifestStyle.hexColor, patternAlpha));
+         }
+      } else { // Undefined/Scatter pattern
+         const patternSize = patternSizeBase;
+         const scatterCount = throatDefinition === 'Defined' ? 25 : 15;
+         for (let i = 0; i < scatterCount; i++) {
+           const scatterX = center.x + (Math.random() - 0.5) * patternSize * 2.5;
+           const scatterY = throatY + (Math.random() - 0.5) * patternSize * 1.5;
+           if (Math.random() > (throatDefinition === 'Defined' ? 0.3:0.5)) {
+             setPixel(pixelData, scatterX, scatterY, ...colorToRGBA(manifestStyle.hexColor, patternAlpha * (0.5 + Math.random()*0.5)));
+           }
+         }
+      }
+
+      // --- Throat Gates Visualization ---
+      const activeGates = parseGateChannelString(data.throat_gates);
+      const gateRadius = patternSizeBase * 2.5; // Place gates around the main pattern
+      activeGates.forEach((gateNum, index) => {
+        const angle = (index / activeGates.length) * Math.PI * 2 - Math.PI / 2; // Start from top
+        const gateX = center.x + Math.cos(angle) * gateRadius;
+        const gateY = throatY + Math.sin(angle) * gateRadius; // Relative to throatY
+
+        const isMotor = MOTOR_GATES.has(gateNum);
+        const gateColor = isMotor ? (theme.colors.decisionVector || '#D8A8A8') : (theme.colors.processingCore || '#A8A8D8');
+
+        drawPixelCircle(pixelData, gateX, gateY, isMotor ? 2:1.5, gateColor, 'solid', patternAlpha * 0.9);
+        if (isMotor) drawPixelCircle(pixelData, gateX, gateY, 0.5, manifestStyle.hexColor, 'solid', patternAlpha * 0.9); // Inner dot for motor
+      });
+
+      // --- Throat Channels Visualization (Simplified) ---
+      const activeChannels = parseGateChannelString(data.throat_channels); // Using same parser
+      const channelOuterRadius = gateRadius + 10 + activeChannels.length * 0.5; // Extend beyond gates
+      activeChannels.forEach((channelRepresentation, index) => {
+        const angle = (index / activeChannels.length) * Math.PI * 2 + Math.PI / activeChannels.length;
+        const startX = center.x + Math.cos(angle) * (gateRadius - 5);
+        const startY = throatY + Math.sin(angle) * (gateRadius - 5);
+        const endX = center.x + Math.cos(angle) * channelOuterRadius;
+        const endY = throatY + Math.sin(angle) * channelOuterRadius;
+
+        const channelHash = simpleHash(String(channelRepresentation));
+        const channelDash: [number,number] | undefined = channelHash % 3 === 0 ? undefined : (channelHash % 3 === 1 ? [2,2] : [3,1]);
+        const channelColor = channelHash % 2 === 0 ? manifestStyle.hexColor : darkenColor(manifestStyle.hexColor, 0.15);
+
+        drawPixelLine(pixelData, startX, startY, endX, endY, channelColor, channelDash, patternAlpha * 0.75);
+      });
+    }
+
+    }
+
+    // Drive Mechanics
+    if (highlightedCategory === null || highlightedCategory === 'Drive Mechanics') {
+      const dmStyle = getCategoryPixelStyle('driveMechanics', 'Drive Mechanics');
+      const particleCount = 50;
+
+      const motivation = data.motivation_color || "Innocence";
+      const heartState = data.heart_state || "Open";
+      const rootState = data.root_state || "Open";
+      const kineticSpectrum = data.kinetic_drive_spectrum || "Balanced";
+      const resonanceSpectrum = data.resonance_field_spectrum || "Wide";
+
+      let particleColorHex = dmStyle.hexColor;
+      if (motivation === 'Fear') particleColorHex = theme.colors.fear || '#4A4A4A';
+      else if (motivation === 'Hope') particleColorHex = theme.colors.hope || '#E8D4B8';
+      else if (motivation === 'Desire') particleColorHex = theme.colors.desire || '#D4A4A4';
+      else if (motivation === 'Need') particleColorHex = theme.colors.need || '#A4D4A4';
+      else if (motivation === 'Guilt') particleColorHex = theme.colors.guilt || '#8A8A8A';
+      else if (motivation === 'Innocence') particleColorHex = theme.colors.innocence || '#F0F0E8';
+
+      let areaWidth = PIXEL_RESOLUTION * 0.8;
+      let areaHeight = PIXEL_RESOLUTION * 0.5;
+      let areaOffsetX = center.x - areaWidth / 2;
+      let areaOffsetY = center.y - areaHeight / 2;
+
+      if (resonanceSpectrum === 'Narrow') {
+        areaWidth *= 0.3; areaHeight *= 0.8;
+      } else if (resonanceSpectrum === 'Focused') {
+        areaWidth *= 0.6; areaHeight *= 0.6;
+      }
+      areaOffsetX = center.x - areaWidth / 2;
+      areaOffsetY = center.y - areaHeight / 2;
+
+      for (let i = 0; i < particleCount; i++) {
+        let pX = 0, pY = 0;
+        let pSize = 1;
+        let pAlpha = dmStyle.alpha;
+
+        if (kineticSpectrum === 'Fluid') {
+          const streamProgress = (i / particleCount + t * 0.1) % 1;
+          pX = areaOffsetX + streamProgress * areaWidth;
+          pY = areaOffsetY + areaHeight / 2 + Math.sin(streamProgress * Math.PI * 3 + t * Math.PI) * areaHeight * 0.3;
+        } else if (kineticSpectrum === 'Balanced') {
+          const cols = Math.floor(Math.sqrt(particleCount * (areaWidth/areaHeight)));
+          const rows = Math.ceil(particleCount / cols);
+          const col = i % cols;
+          const row = Math.floor(i / cols);
+          if (row < rows) {
+             pX = areaOffsetX + (col / cols) * areaWidth + (row % 2 === 0 ? 5*Math.sin(t*Math.PI) : 0) ;
+             pY = areaOffsetY + (row / rows) * areaHeight;
+          } else continue;
+        } else { // Structured
+          const angle = (i / particleCount) * Math.PI * 2;
+          const radius = areaWidth * 0.3 * (0.8 + Math.sin(t*Math.PI*2 + i*0.1)*0.2);
+          pX = center.x + Math.cos(angle) * radius;
+          pY = center.y + Math.sin(angle) * radius;
+        }
+
+        if (heartState === 'Defined' && rootState === 'Defined') {
+          pX += Math.cos(t * Math.PI + i * 0.2) * 5;
+          pY += Math.sin(t * Math.PI + i * 0.3) * 5;
+        } else if (heartState === 'Defined' && rootState === 'Open') {
+          if (Math.sin(t * Math.PI * 10 + i) > 0.8) {
+            pSize = 3; pAlpha = Math.min(1, pAlpha * 1.5);
+          }
+          pX += (simpleHash(String(i)) % 10 - 5) * Math.sin(t*Math.PI*2 + i*0.5);
+          pY += (simpleHash(String(i)) % 10 - 5) * Math.cos(t*Math.PI*2 + i*0.5);
+        } else if (heartState === 'Open' && rootState === 'Defined') {
+          pX += t * 10 % areaWidth;
+          pY += Math.sin(t * Math.PI * 0.5 + i * 0.1) * 2;
+        } else {å
+          pX += (Math.random() - 0.5) * 10 * Math.sin(t*Math.PI*3 + i);
+          pY += (Math.random() - 0.5) * 10 * Math.cos(t*Math.PI*3 + i);
+        }
+
+        if (kineticSpectrum === 'Fluid' || (heartState === 'Open' && rootState === 'Defined')) {
+             pX = areaOffsetX + ((pX - areaOffsetX + areaWidth) % areaWidth);
+             pY = areaOffsetY + ((pY - areaOffsetY + areaHeight) % areaHeight);
+        }
+
+        if (motivation === 'Fear') { pSize = Math.max(1, pSize * 0.7); }
+        else if (motivation === 'Hope') { pSize = Math.min(3, pSize * 1.3); }
+        else if (motivation === 'Desire') {
+          pX += (center.x - pX) * 0.01;
+          pY += (center.y - pY) * 0.01;
+        }
+        else if (motivation === 'Need') {
+            pSize *= 1.1;
+        }
+        else if (motivation === 'Guilt') { pY += 1; pAlpha = Math.min(1, pAlpha *0.8); }
+        else if (motivation === 'Innocence') { pY -= 0.5; pSize *= 0.9; }
+
+        if (pX >= 0 && pX < PIXEL_RESOLUTION && pY >= 0 && pY < PIXEL_RESOLUTION) {
+          if (pSize > 1) {
+            drawPixelCircle(pixelData, pX, pY, pSize-1, particleColorHex, 'solid', Math.min(1, pAlpha));
+          } else {
+            setPixel(pixelData, pX, pY, ...colorToRGBA(particleColorHex, Math.min(1, pAlpha)));
+          }
+        }
+      }
+    }
+    
+    // Convert Uint8Array to an image using Skia v2 API
+    const skData = Skia.Data.fromBytes(pixelData);
+    return Skia.Image.MakeImage(
+      {
+        width: PIXEL_RESOLUTION,
+        height: PIXEL_RESOLUTION,
+        colorType: ColorType.RGBA_8888,
+        alphaType: AlphaType.Premul
+      },
+      skData,
+      PIXEL_RESOLUTION * 4 // rowBytes
+    );
+  }, [data, highlightedCategory, animationTime]);
+  
+  // ### DATA-DRIVEN PARTICLE CREATION ### (Commented out as per instruction for Drive Mechanics change)
+  /*
+  const particles = useMemo(() => {
+    if (!data) return [];
+    
+  //   const hash = simpleHash(data.motivation_color + data.perspective_variable);
+  //   const particleCountMap = { 'Fluid': 150, 'Balanced': 100, 'Structured': 50 };
+  //   const particleCount = particleCountMap[data.kinetic_drive_spectrum as keyof typeof particleCountMap] || 100;
+  //   const radiusMap = { 'Narrow': 0.15, 'Focused': 0.3, 'Wide': 0.45 };
+  //   const maxRadius = PIXEL_RESOLUTION * (radiusMap[data.resonance_field_spectrum as keyof typeof radiusMap] || 0.3);
+    
+  //   // Integrate Venus sign for directional bias
+  //   const venusSigns = ["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"];
+  //   const venusAngle = mapValue(venusSigns.indexOf(data.venus_sign), 0, 11, 0, Math.PI * 2);
+  //   const venusDriftX = Math.cos(venusAngle) * 0.05;
+  //   const venusDriftY = Math.sin(venusAngle) * 0.05;
+
+  //   // Integrate Heart/Root states for color and pattern
+  //   // Use Drive Mechanics base color, but can be overridden by state
+  //   let particleBaseColorHex = theme.colors.driveMechanics;
+  //   if (data.heart_state === 'Undefined') particleBaseColorHex = theme.colors.base2;
+  //   if (data.heart_state === 'Open') particleBaseColorHex = theme.colors.base1;
+
+  //   const ditherMap = { 'Defined': 1, 'Undefined': 2, 'Open': 3 };
+  //   const ditherPattern = ditherMap[data.root_state as keyof typeof ditherMap] || 2;
+
+  //   const newParticles: Particle[] = [];
+  //   for (let i = 0; i < particleCount; i++) {
+  //     const angle = Math.random() * Math.PI * 2;
+  //     const radius = Math.pow(Math.random(), 1.5) * maxRadius;
+  //     const position = { x: center.x + Math.cos(angle) * radius, y: center.y + Math.sin(angle) * radius };
+  //     const speed = (hash % 100 / 100 - 0.5) * 0.5 + Math.random() * 0.2;
+  //     const velocity = {
+  //       x: Math.cos(angle) * speed + venusDriftX,
+  //       y: Math.sin(angle) * speed + venusDriftY
+  //     };
+      
+  //     newParticles.push({
+  //       position,
+  //       velocity,
+  //       baseRadius: radius,
+  //       color: particleBaseColorHex, // Store hex color
+  //       ditherPattern
+  //     });
+  //   }
+    return newParticles;
+  }, [data]);
+  */
+
+  // Simplified draw function using Skia v2 declarative components
+  const renderVisualization = () => {
+    if (!data || !backgroundPaint || !primaryPaint || !accentPaint || !faintPaint) return null;
+    
+    const t = animationTime; // Use animation time from state
+    
+    // Call onCanvasReady when component mounts
+    React.useEffect(() => {
+      if (onCanvasReady) {
+        onCanvasReady();
+      }
+    }, []);
+
+    return (
+      <Group>
+        {/* Background */}
+        <Rect x={0} y={0} width={PIXEL_RESOLUTION} height={PIXEL_RESOLUTION} paint={backgroundPaint} />
+        
+        {/* Static Bitmap containing background elements */}
+        {staticBitmapImage && (
+          <Image 
+            image={staticBitmapImage} 
+            x={0} 
+            y={0} 
+            width={PIXEL_RESOLUTION} 
+            height={PIXEL_RESOLUTION}
+            fit="cover"
+            sampling={{ filter: FilterMode.Nearest, mipmap: MipmapMode.None }} // Crisp pixel art rendering
+          />
+        )}
+        
+        {/* Dynamic Bitmap containing animated elements */}
+        {dynamicBitmapImage && (
+          <Image 
+            image={dynamicBitmapImage} 
+            x={0} 
+            y={0} 
+            width={PIXEL_RESOLUTION} 
+            height={PIXEL_RESOLUTION}
+            fit="cover"
+            sampling={{ filter: FilterMode.Nearest, mipmap: MipmapMode.None }} // Crisp pixel art rendering
+          />
+        )}
+        
+        {/* Evolutionary Path - Spiral (Skia direct rendering part) */}
+        {Array.from({ length: 20 }, (_, i) => {
+          const progress = i / 20;
+          const angle = progress * Math.PI * 4 + t * Math.PI * 2;
+          const radius = 20 + progress * 80; // Example radius
+          const x = center.x + Math.cos(angle) * radius;
+          const y = center.y + Math.sin(angle) * radius;
+          
+          return (
+            <Circle
+              key={`skia-spiral-${i}`}
+              cx={x}
+              cy={y}
+              r={2}
+              color={getCategorySkiaColor('evolutionary', 'Evolutionary Path')}
+            />
+          );
+        })}
+        
+        {/* Particles for Drive Mechanics - Commented out as per instruction */}
+        {/* {(() => { ... })()} */}
+        
+        {/* Decision Growth Vector - Compass needle - Pixel version is in dynamicBitmapImage */}
+        {/* {(() => {
+          const dgvColor = getCategorySkiaColor('decisionVector', 'Decision Growth Vector');
+           // Only render if the category is visible
+          if (Skia.Color(dgvColor) >>> 24 === 0) return null;
+
+          const marsSigns = ["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"];
+          let targetAngle = mapValue(marsSigns.indexOf(data.astro_mars_sign), 0, 11, 0, Math.PI * 2);
+          targetAngle += t * Math.PI * 4; // Slow rotation
+          
+          const needleLength = PIXEL_RESOLUTION * 0.3; // This was for the main canvas, DGV pixel art is smaller
+          const compassX = center.x; // Original center for Skia version
+          const compassY = center.y; // Original center for Skia version
+
+          const endX = compassX + Math.cos(targetAngle) * needleLength;
+          const endY = compassY + Math.sin(targetAngle) * needleLength;
+          
+          return (
+            <Group key="skia-compass">
+              <Line
+                p1={vec(compassX, compassY)}
+                p2={vec(endX, endY)}
+                strokeWidth={2}
+                color={dgvColor}
+              />
+              <Circle
+                cx={endX}
+                cy={endY}
+                r={3}
+                color={dgvColor}
+              />
+            </Group>
+          );
+        })()} */}
+      </Group>
+    );
+  };
+
+  if (!data) {
+    return (
+      <View style={[styles.container, { width, height }]}>
+        <Text style={styles.placeholder}>Click "Generate New Blueprint"</Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={[styles.container, { width, height }]}>
+      <Canvas style={styles.canvas}>
+        <Group transform={[{ scale: width / PIXEL_RESOLUTION }]}>
+          {renderVisualization()}
+        </Group>
+      </Canvas>
+    </View>
+  );
+};
+// ### STYLES ###
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: theme.colors.bg, // Use theme
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  placeholder: {
+    fontFamily: 'monospace',
+    fontSize: 20,
+    color: theme.colors.accent, // Use theme
+    textAlign: 'center',
+  },
+  canvas: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+});
+
+export default BlueprintCanvas;

@@ -85,13 +85,11 @@ const blueprintVisualizerService = {
       return fallback;
     };
 
-    return {
-      profile_lines: safeGet(chartData, 'energy_family.profile_lines', "1/3"),
-      astro_sun_sign: safeGet(chartData, 'energy_family.astro_sun_sign', "Aries"),
+    const preparedData: VisualizationData = {
       profile_lines: safeGet(chartData, 'energy_family.profile_lines', "1/3"),
       astro_sun_sign: safeGet(chartData, 'energy_family.astro_sun_sign', "Aries"),
       astro_sun_house: safeGet(chartData, 'energy_family.astro_sun_house', "1st"),
-      astro_north_node_sign: safeGet(chartData, 'energy_family.astro_north_node_sign', "Aries"), // Assuming this is the correct source
+      astro_north_node_sign: safeGet(chartData, 'energy_family.astro_north_node_sign', "Aries"),
       astro_north_node_house: safeGet(chartData, 'energy_family.astro_north_node_house', undefined),
       ascendant_sign: safeGet(chartData, 'energy_class.ascendant_sign', "Aries"),
       chart_ruler_sign: safeGet(chartData, 'energy_class.chart_ruler_sign', "Aries"),
@@ -111,9 +109,13 @@ const blueprintVisualizerService = {
       authority: safeGet(chartData, 'decision_growth_vector.authority', "Emotional"),
       choice_navigation_spectrum: safeGet(chartData, 'decision_growth_vector.choice_navigation_spectrum', "Balanced"),
       astro_mars_sign: safeGet(chartData, 'decision_growth_vector.astro_mars_sign', "Aries"),
-      north_node_house: safeGet(chartData, 'evolutionary_path.astro_north_node_house', "1st"), // This is for Evolutionary Path
-      jupiter_placement: "Jupiter in Leo", // Placeholder, assuming it's handled elsewhere or static
+      north_node_house: safeGet(chartData, 'evolutionary_path.astro_north_node_house', "1st"),
+      jupiter_placement: "Jupiter in Leo",
       motivation_color: safeGet(chartData, 'drive_mechanics.motivation_color', "Fear"),
+      // Initialize new motivation fields, will be populated below
+      motivation_fear_hope: undefined,
+      motivation_desire_need: undefined,
+      motivation_guilt_innocence: undefined,
       heart_state: safeGet(chartData, 'drive_mechanics.heart_state', "Defined"),
       root_state: safeGet(chartData, 'drive_mechanics.root_state', "Defined"),
       venus_sign: safeGet(chartData, 'drive_mechanics.venus_sign', "Aries"),
@@ -135,22 +137,17 @@ const blueprintVisualizerService = {
       unconscious_line: safeGet(chartData, 'energy_family.unconscious_line', "3"),
       core_priorities: processArrayField(safeGet(chartData, 'evolutionary_path.core_priorities', []), "Self-love, Direction"),
       tension_planets: safeGet(chartData, 'tension_points.tension_planets', []),
-      // Initialize new motivation fields, will be populated below
-      motivation_fear_hope: undefined,
-      motivation_desire_need: undefined,
-      motivation_guilt_innocence: undefined,
     };
-
+    
     // Populate motivation fields based on motivation_color
     const motivationColor = preparedData.motivation_color;
     if (motivationColor === "Fear" || motivationColor === "Hope") {
-      preparedData.motivation_fear_hope = motivationColor as 'Fear' | 'Hope';
+      preparedData.motivation_fear_hope = motivationColor;
     } else if (motivationColor === "Desire" || motivationColor === "Need") {
-      preparedData.motivation_desire_need = motivationColor as 'Desire' | 'Need';
+      preparedData.motivation_desire_need = motivationColor;
     } else if (motivationColor === "Guilt" || motivationColor === "Innocence") {
-      preparedData.motivation_guilt_innocence = motivationColor as 'Guilt' | 'Innocence';
+      preparedData.motivation_guilt_innocence = motivationColor;
     }
-
     return preparedData;
   },
   
@@ -165,6 +162,7 @@ const blueprintVisualizerService = {
       astro_north_node_sign: "Aries",
       // astro_north_node_house will be undefined for placeholder
       ascendant_sign: "Aries",
+      chart_ruler_sign: "Aries",
       // chart_ruler_house will be undefined for placeholder
       incarnation_cross: "Right Angle Cross of The Sphinx",
       incarnation_cross_quarter: "Initiation",
@@ -347,10 +345,9 @@ const blueprintVisualizerService = {
       astro_sun_sign: getRandom(inputs.astro_signs),
       astro_sun_house: getRandom(inputs.houses),
       astro_north_node_sign: getRandom(inputs.astro_signs),
-      // astro_north_node_house can be undefined
       astro_north_node_house: Math.random() > 0.5 ? getRandom(inputs.houses) : undefined,
       ascendant_sign: getRandom(inputs.astro_signs),
-      // chart_ruler_house can be undefined
+      chart_ruler_sign: getRandom(inputs.astro_signs),
       chart_ruler_house: Math.random() > 0.5 ? getRandom(inputs.houses) : undefined,
       incarnation_cross: "Right Angle Cross of The Sphinx", // Placeholder
       incarnation_cross_quarter: "Initiation", // Placeholder

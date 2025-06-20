@@ -543,8 +543,8 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontFamily: fonts.display,
-    fontSize: typography.headingSmall.fontSize,
-    fontWeight: typography.headingSmall.fontWeight,
+    fontSize: typography.titleSmall.fontSize,
+    fontWeight: typography.titleSmall.fontWeight,
     color: colors.textPrimary,
     marginBottom: spacing.sm,
   },
