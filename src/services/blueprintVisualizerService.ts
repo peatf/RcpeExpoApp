@@ -8,14 +8,20 @@ import apiClient from './api';
 export interface VisualizationData {
   profile_lines: string;
   astro_sun_sign: string;
-  astro_sun_house: string;
+  astro_sun_house: string; // Already string
   astro_north_node_sign: string;
+  astro_north_node_house?: string; // Added from prompt (Energy Family)
+
   ascendant_sign: string;
   chart_ruler_sign: string;
-  incarnation_cross: string;
+  chart_ruler_house?: string; // Added
+  incarnation_cross: string; // Assuming this covers 'incarnation_cross_full'
   incarnation_cross_quarter: string;
+
   astro_moon_sign: string;
+  astro_moon_house?: string; // Added
   astro_mercury_sign: string;
+  astro_mercury_house?: string; // Added
   head_state: string;
   ajna_state: string;
   emotional_state: string;
@@ -25,9 +31,16 @@ export interface VisualizationData {
   authority: string;
   choice_navigation_spectrum: string;
   astro_mars_sign: string;
+  // north_node_house is already here, maps to decision_growth_vector.north_node_house
   north_node_house: string;
-  jupiter_placement: string;
-  motivation_color: string;
+  jupiter_placement: string; // Keep as is
+
+  motivation_color: string; // Keep original for direct mapping
+  // Add specific motivation fields as per prompt for Drive Mechanics
+  motivation_fear_hope?: 'Fear' | 'Hope';
+  motivation_desire_need?: 'Desire' | 'Need';
+  motivation_guilt_innocence?: 'Guilt' | 'Innocence';
+
   heart_state: string;
   root_state: string;
   venus_sign: string;
@@ -75,14 +88,20 @@ const blueprintVisualizerService = {
     return {
       profile_lines: safeGet(chartData, 'energy_family.profile_lines', "1/3"),
       astro_sun_sign: safeGet(chartData, 'energy_family.astro_sun_sign', "Aries"),
+      profile_lines: safeGet(chartData, 'energy_family.profile_lines', "1/3"),
+      astro_sun_sign: safeGet(chartData, 'energy_family.astro_sun_sign', "Aries"),
       astro_sun_house: safeGet(chartData, 'energy_family.astro_sun_house', "1st"),
-      astro_north_node_sign: safeGet(chartData, 'evolutionary_path.astro_north_node_sign', "Aries"),
+      astro_north_node_sign: safeGet(chartData, 'energy_family.astro_north_node_sign', "Aries"), // Assuming this is the correct source
+      astro_north_node_house: safeGet(chartData, 'energy_family.astro_north_node_house', undefined),
       ascendant_sign: safeGet(chartData, 'energy_class.ascendant_sign', "Aries"),
       chart_ruler_sign: safeGet(chartData, 'energy_class.chart_ruler_sign', "Aries"),
+      chart_ruler_house: safeGet(chartData, 'energy_class.chart_ruler_house', undefined),
       incarnation_cross: safeGet(chartData, 'evolutionary_path.incarnation_cross', "Right Angle Cross of The Sphinx"),
       incarnation_cross_quarter: safeGet(chartData, 'energy_class.incarnation_cross_quarter', "Initiation"),
       astro_moon_sign: safeGet(chartData, 'processing_core.astro_moon_sign', "Aries"),
+      astro_moon_house: safeGet(chartData, 'processing_core.astro_moon_house', undefined),
       astro_mercury_sign: safeGet(chartData, 'processing_core.astro_mercury_sign', "Aries"),
+      astro_mercury_house: safeGet(chartData, 'processing_core.astro_mercury_house', undefined),
       head_state: safeGet(chartData, 'processing_core.head_state', "Defined"),
       ajna_state: safeGet(chartData, 'processing_core.ajna_state', "Defined"),
       emotional_state: safeGet(chartData, 'processing_core.emotional_state', "Defined"),
@@ -92,8 +111,8 @@ const blueprintVisualizerService = {
       authority: safeGet(chartData, 'decision_growth_vector.authority', "Emotional"),
       choice_navigation_spectrum: safeGet(chartData, 'decision_growth_vector.choice_navigation_spectrum', "Balanced"),
       astro_mars_sign: safeGet(chartData, 'decision_growth_vector.astro_mars_sign', "Aries"),
-      north_node_house: safeGet(chartData, 'evolutionary_path.astro_north_node_house', "1st"),
-      jupiter_placement: "Jupiter in Leo",
+      north_node_house: safeGet(chartData, 'evolutionary_path.astro_north_node_house', "1st"), // This is for Evolutionary Path
+      jupiter_placement: "Jupiter in Leo", // Placeholder, assuming it's handled elsewhere or static
       motivation_color: safeGet(chartData, 'drive_mechanics.motivation_color', "Fear"),
       heart_state: safeGet(chartData, 'drive_mechanics.heart_state', "Defined"),
       root_state: safeGet(chartData, 'drive_mechanics.root_state', "Defined"),
@@ -116,7 +135,23 @@ const blueprintVisualizerService = {
       unconscious_line: safeGet(chartData, 'energy_family.unconscious_line', "3"),
       core_priorities: processArrayField(safeGet(chartData, 'evolutionary_path.core_priorities', []), "Self-love, Direction"),
       tension_planets: safeGet(chartData, 'tension_points.tension_planets', []),
+      // Initialize new motivation fields, will be populated below
+      motivation_fear_hope: undefined,
+      motivation_desire_need: undefined,
+      motivation_guilt_innocence: undefined,
     };
+
+    // Populate motivation fields based on motivation_color
+    const motivationColor = preparedData.motivation_color;
+    if (motivationColor === "Fear" || motivationColor === "Hope") {
+      preparedData.motivation_fear_hope = motivationColor as 'Fear' | 'Hope';
+    } else if (motivationColor === "Desire" || motivationColor === "Need") {
+      preparedData.motivation_desire_need = motivationColor as 'Desire' | 'Need';
+    } else if (motivationColor === "Guilt" || motivationColor === "Innocence") {
+      preparedData.motivation_guilt_innocence = motivationColor as 'Guilt' | 'Innocence';
+    }
+
+    return preparedData;
   },
   
   /**
@@ -128,12 +163,15 @@ const blueprintVisualizerService = {
       astro_sun_sign: "Aries",
       astro_sun_house: "1st",
       astro_north_node_sign: "Aries",
+      // astro_north_node_house will be undefined for placeholder
       ascendant_sign: "Aries",
-      chart_ruler_sign: "Aries",
+      // chart_ruler_house will be undefined for placeholder
       incarnation_cross: "Right Angle Cross of The Sphinx",
       incarnation_cross_quarter: "Initiation",
       astro_moon_sign: "Aries",
+      // astro_moon_house will be undefined for placeholder
       astro_mercury_sign: "Aries",
+      // astro_mercury_house will be undefined for placeholder
       head_state: "Defined",
       ajna_state: "Defined",
       emotional_state: "Defined",
@@ -145,7 +183,8 @@ const blueprintVisualizerService = {
       astro_mars_sign: "Aries",
       north_node_house: "1st",
       jupiter_placement: "Jupiter in Leo",
-      motivation_color: "Fear",
+      motivation_color: "Fear", // Default for placeholder
+      // motivation_fear_hope, motivation_desire_need, motivation_guilt_innocence will be set based on motivation_color
       heart_state: "Defined",
       root_state: "Defined",
       venus_sign: "Aries",
@@ -301,30 +340,38 @@ const blueprintVisualizerService = {
 
     const getRandom = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)];
     const profileLine = getRandom(inputs.profile_lines);
+    const motivationColor = getRandom(inputs.motivation_colors) as 'Fear' | 'Hope' | 'Desire' | 'Need' | 'Guilt' | 'Innocence';
 
-    return {
+    const randomData: VisualizationData = {
       profile_lines: profileLine,
       astro_sun_sign: getRandom(inputs.astro_signs),
       astro_sun_house: getRandom(inputs.houses),
       astro_north_node_sign: getRandom(inputs.astro_signs),
+      // astro_north_node_house can be undefined
+      astro_north_node_house: Math.random() > 0.5 ? getRandom(inputs.houses) : undefined,
       ascendant_sign: getRandom(inputs.astro_signs),
-      chart_ruler_sign: getRandom(inputs.astro_signs),
-      incarnation_cross: "Right Angle Cross of The Sphinx",
-      incarnation_cross_quarter: "Initiation",
+      // chart_ruler_house can be undefined
+      chart_ruler_house: Math.random() > 0.5 ? getRandom(inputs.houses) : undefined,
+      incarnation_cross: "Right Angle Cross of The Sphinx", // Placeholder
+      incarnation_cross_quarter: "Initiation", // Placeholder
       astro_moon_sign: getRandom(inputs.astro_signs),
+      // astro_moon_house can be undefined
+      astro_moon_house: Math.random() > 0.5 ? getRandom(inputs.houses) : undefined,
       astro_mercury_sign: getRandom(inputs.astro_signs),
+      // astro_mercury_house can be undefined
+      astro_mercury_house: Math.random() > 0.5 ? getRandom(inputs.houses) : undefined,
       head_state: getRandom(inputs.center_states),
       ajna_state: getRandom(inputs.center_states),
       emotional_state: getRandom(inputs.center_states),
-      cognition_variable: "Feeling",
-      chiron_gate: "Gate 57",
+      cognition_variable: "Feeling", // Placeholder
+      chiron_gate: "Gate 57", // Placeholder
       strategy: getRandom(inputs.strategies),
       authority: getRandom(inputs.authorities),
       choice_navigation_spectrum: getRandom(inputs.spectrums),
       astro_mars_sign: getRandom(inputs.astro_signs),
-      north_node_house: getRandom(inputs.houses),
-      jupiter_placement: "Jupiter in Leo",
-      motivation_color: getRandom(inputs.motivation_colors),
+      north_node_house: getRandom(inputs.houses), // For Evolutionary Path
+      jupiter_placement: "Jupiter in Leo", // Placeholder
+      motivation_color: motivationColor,
       heart_state: getRandom(inputs.center_states),
       root_state: getRandom(inputs.center_states),
       venus_sign: getRandom(inputs.astro_signs),
@@ -344,9 +391,23 @@ const blueprintVisualizerService = {
       g_center_access: "Consistent",
       conscious_line: profileLine.split('/')[0],
       unconscious_line: profileLine.split('/')[1],
-      core_priorities: "Self-love, Direction",
-      tension_planets: [],
+      core_priorities: "Self-love, Direction", // Placeholder
+      tension_planets: [], // Placeholder
+      motivation_fear_hope: undefined,
+      motivation_desire_need: undefined,
+      motivation_guilt_innocence: undefined,
     };
+
+    // Populate motivation fields for random data
+    if (motivationColor === "Fear" || motivationColor === "Hope") {
+      randomData.motivation_fear_hope = motivationColor as 'Fear' | 'Hope';
+    } else if (motivationColor === "Desire" || motivationColor === "Need") {
+      randomData.motivation_desire_need = motivationColor as 'Desire' | 'Need';
+    } else if (motivationColor === "Guilt" || motivationColor === "Innocence") {
+      randomData.motivation_guilt_innocence = motivationColor as 'Guilt' | 'Innocence';
+    }
+
+    return randomData;
   }
 };
 

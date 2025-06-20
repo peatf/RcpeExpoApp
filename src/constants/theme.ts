@@ -17,6 +17,23 @@ export const colors = {
   accentSecondary: '#c7d2fe',
   textPrimary: '#323230',
   textSecondary: '#7c7d76',
+  energyFamily: '#E8B86D',      // Warm gold
+  energyClass: '#7B9EA8',       // Cool blue
+  processingCore: '#A8A8D8',    // Soft purple
+  decisionVector: '#D8A8A8',    // Soft red
+  driveMechanics: '#A8D8A8',    // Soft green
+  manifestation: '#D8D8A8',     // Soft yellow
+  architecture: '#C8A8D8',      // Soft magenta
+  tensionPoints: '#D8C8A8',     // Soft orange
+  evolutionary: '#A8C8D8',      // Soft cyan
+
+  // Motivation colors
+  fear: '#4A4A4A',
+  hope: '#E8D4B8',
+  desire: '#D4A4A4',
+  need: '#A4D4A4',
+  guilt: '#8A8A8A',
+  innocence: '#F0F0E8',
 };
 
 export const fonts = {
