@@ -238,7 +238,8 @@ const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({ data, highlightedCate
     }
     
     const isHighlighted = !highlightedCategory;
-    const mainColor = isHighlighted ? THEME.primary : THEME.faint;
+    const isEnergyArchitectureHighlighted = isHighlighted || highlightedCategory === 'Energy Architecture';
+    const mainColor = isEnergyArchitectureHighlighted ? THEME.primary : THEME.faint;
     
     // Draw energy architecture (concentric circles)
     const numLayers = { 'Single': 5, 'Split': 4, 'Triple Split': 3, 'Quadruple Split': 2, 'No Definition': 6 }[data.definition_type] || 4;
@@ -397,6 +398,104 @@ const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({ data, highlightedCate
       }
     }
     
+    // Draw Energy Family (radiating sun pattern)
+    if (isHighlighted || highlightedCategory === 'Energy Family') {
+      const familyColor = isHighlighted ? THEME.primary : THEME.accent;
+      const sunHash = simpleHash(data.astro_sun_sign + data.astro_sun_house);
+      const rayCount = 12; // 12 houses
+      const rayLength = PIXEL_RESOLUTION * 0.15;
+      const coreRadius = 8;
+      
+      // Draw core sun
+      drawPixelCircle(pixelData, center.x, center.y, coreRadius, familyColor, 'solid');
+      
+      // Draw rays based on profile lines and sun position
+      const profileLines = parseInt(data.profile_lines?.charAt(0) || '1');
+      for (let i = 0; i < rayCount; i++) {
+        const angle = (i / rayCount) * Math.PI * 2 + sunHash * 0.01;
+        const rayOpacity = (i % profileLines === 0) ? 1 : 0.5;
+        const rayEnd = rayLength * (0.7 + Math.sin(t * Math.PI * 2 + i) * 0.3);
+        
+        const x1 = center.x + Math.cos(angle) * coreRadius;
+        const y1 = center.y + Math.sin(angle) * coreRadius; 
+        const x2 = center.x + Math.cos(angle) * rayEnd;
+        const y2 = center.y + Math.sin(angle) * rayEnd;
+        
+        if (rayOpacity > 0.7) {
+          drawPixelLine(pixelData, x1, y1, x2, y2, familyColor);
+        } else {
+          drawPixelLine(pixelData, x1, y1, x2, y2, familyColor, [2, 2]);
+        }
+      }
+    }
+    
+    // Draw Energy Class (aura field)
+    if (isHighlighted || highlightedCategory === 'Energy Class') {
+      const classColor = isHighlighted ? THEME.primary : THEME.accent;
+      const ascendantHash = simpleHash(data.ascendant_sign);
+      const fieldStrength = mapValue(ascendantHash % 1000, 0, 1000, 0.2, 0.5);
+      const fieldRadius = PIXEL_RESOLUTION * fieldStrength;
+      
+      // Draw aura field as concentric dashed circles
+      const ringCount = 4;
+      for (let ring = 1; ring <= ringCount; ring++) {
+        const radius = (fieldRadius / ringCount) * ring;
+        const dashPattern = ring % 2 === 0 ? [3, 2] as [number, number] : [1, 3] as [number, number];
+        
+        // Draw dashed circle by drawing short arcs
+        const segments = 24;
+        for (let seg = 0; seg < segments; seg++) {
+          const startAngle = (seg / segments) * Math.PI * 2;
+          const endAngle = ((seg + 0.5) / segments) * Math.PI * 2;
+          
+          if (seg % (dashPattern[0] + dashPattern[1]) < dashPattern[0]) {
+            const x1 = center.x + Math.cos(startAngle) * radius;
+            const y1 = center.y + Math.sin(startAngle) * radius;
+            const x2 = center.x + Math.cos(endAngle) * radius;
+            const y2 = center.y + Math.sin(endAngle) * radius;
+            drawPixelLine(pixelData, x1, y1, x2, y2, classColor);
+          }
+        }
+      }
+    }
+    
+    // Draw Manifestation Interface Rhythm (throat patterns)
+    if (isHighlighted || highlightedCategory === 'Manifestation Interface Rhythm') {
+      const rhythmColor = isHighlighted ? THEME.primary : THEME.accent;
+      const throatHash = simpleHash(data.throat_definition);
+      const rhythmType = data.manifestation_rhythm_spectrum;
+      const patternSize = 15;
+      
+      // Position near top of canvas (throat area)
+      const throatY = center.y - PIXEL_RESOLUTION * 0.25;
+      
+      // Draw different patterns based on rhythm spectrum
+      if (rhythmType === 'Consistent') {
+        // Regular grid pattern
+        for (let x = -patternSize; x <= patternSize; x += 3) {
+          for (let y = -patternSize/2; y <= patternSize/2; y += 3) {
+            setPixel(pixelData, center.x + x, throatY + y, ...colorToRGBA(rhythmColor));
+          }
+        }
+      } else if (rhythmType === 'Variable') {
+        // Wave pattern
+        for (let x = -patternSize; x <= patternSize; x++) {
+          const waveY = Math.sin((x + t * 20) * 0.3) * 5;
+          setPixel(pixelData, center.x + x, throatY + waveY, ...colorToRGBA(rhythmColor));
+        }
+      } else {
+        // Scattered pattern for undefined
+        const scatterCount = 20;
+        for (let i = 0; i < scatterCount; i++) {
+          const scatterX = center.x + (Math.random() - 0.5) * patternSize * 2;
+          const scatterY = throatY + (Math.random() - 0.5) * patternSize;
+          if (Math.random() > 0.5) { // Random visibility
+            setPixel(pixelData, scatterX, scatterY, ...colorToRGBA(rhythmColor));
+          }
+        }
+      }
+    }
+    
     // Convert Uint8Array to an image using Skia v2 API
     const skData = Skia.Data.fromBytes(pixelData);
     return Skia.Image.MakeImage(
@@ -507,6 +606,7 @@ const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({ data, highlightedCate
         
         {/* Evolutionary Path - Spiral */}
         {Array.from({ length: 20 }, (_, i) => {
+          const isEvolutionaryPathHighlighted = isHighlighted || highlightedCategory === 'Evolutionary Path';
           const progress = i / 20;
           const angle = progress * Math.PI * 4 + t * Math.PI * 2;
           const radius = 20 + progress * 80;
@@ -519,13 +619,15 @@ const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({ data, highlightedCate
               cx={x}
               cy={y}
               r={2}
-              color={isHighlighted ? THEME.primary : THEME.accent}
+              color={isEvolutionaryPathHighlighted ? THEME.primary : THEME.accent}
             />
           );
         })}
         
         {/* Particles for Drive Mechanics */}
         {particles.map((particle, index) => {
+          const isDriveMechanicsHighlighted = isHighlighted || highlightedCategory === 'Drive Mechanics';
+          
           // Simple particle animation
           let newX = particle.position.x;
           let newY = particle.position.y;
@@ -550,7 +652,7 @@ const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({ data, highlightedCate
                 cx={newX}
                 cy={newY}
                 r={1}
-                color={isHighlighted ? particle.color : THEME.faint}
+                color={isDriveMechanicsHighlighted ? particle.color : THEME.faint}
               />
             );
           }
@@ -559,6 +661,7 @@ const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({ data, highlightedCate
         
         {/* Decision Growth Vector - Compass needle */}
         {(() => {
+          const isDecisionGrowthVectorHighlighted = isHighlighted || highlightedCategory === 'Decision Growth Vector';
           const marsSigns = ["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"];
           let targetAngle = mapValue(marsSigns.indexOf(data.astro_mars_sign), 0, 11, 0, Math.PI * 2);
           targetAngle += t * Math.PI * 4; // Slow rotation
@@ -573,13 +676,13 @@ const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({ data, highlightedCate
                 p1={vec(center.x, center.y)}
                 p2={vec(endX, endY)}
                 strokeWidth={2}
-                color={isHighlighted ? THEME.primary : THEME.accent}
+                color={isDecisionGrowthVectorHighlighted ? THEME.primary : THEME.accent}
               />
               <Circle
                 cx={endX}
                 cy={endY}
                 r={3}
-                color={isHighlighted ? THEME.primary : THEME.accent}
+                color={isDecisionGrowthVectorHighlighted ? THEME.primary : THEME.accent}
               />
             </Group>
           );
