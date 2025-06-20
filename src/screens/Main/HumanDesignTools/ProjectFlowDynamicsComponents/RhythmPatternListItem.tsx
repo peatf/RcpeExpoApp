@@ -4,7 +4,8 @@
  */
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { RhythmPattern } from '../../../../types/humanDesignTools'; // Adjust path as needed
+import { RhythmPattern } from '../../../../types/humanDesignTools';
+import { theme } from '../../../../constants/theme'; // Import theme
 
 export interface RhythmPatternListItemProps {
   pattern: RhythmPattern;
@@ -37,59 +38,67 @@ const RhythmPatternListItem: React.FC<RhythmPatternListItemProps> = ({ pattern }
 };
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: '#fff',
-    padding: 12,
-    marginVertical: 6,
-    borderRadius: 6,
+  container: { // Styled as .input-panel
+    padding: theme.spacing.md,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: theme.colors.base1,
+    borderRadius: theme.borderRadius.sm,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    marginBottom: theme.spacing.md,
   },
   title: {
-    fontSize: 16,
+    fontFamily: theme.fonts.body, // Or mono if preferred for titles in lists
+    fontSize: theme.typography.bodyLarge.fontSize, // Prominent title
     fontWeight: 'bold',
-    color: '#28a745', // Green title for rhythm
-    marginBottom: 6,
+    color: theme.colors.accent, // Use accent for pattern titles
+    marginBottom: theme.spacing.sm,
   },
   detailText: {
-    fontSize: 13,
-    color: '#444',
-    marginBottom: 4,
-    lineHeight: 18,
+    fontFamily: theme.fonts.body,
+    fontSize: theme.typography.bodyMedium.fontSize,
+    color: theme.colors.textSecondary,
+    marginBottom: theme.spacing.xs,
+    lineHeight: theme.typography.bodyMedium.lineHeight,
   },
   effectivenessContainer: {
-    marginTop: 8,
-    paddingTop: 8,
+    marginTop: theme.spacing.sm,
+    paddingTop: theme.spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
+    borderTopColor: theme.colors.base2, // Use a subtle border
   },
   effectivenessTitle: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 3,
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.labelMedium.fontSize, // Consistent label style
+    fontWeight: 'bold',
+    color: theme.colors.textPrimary,
+    marginBottom: theme.spacing.xs,
   },
   effectivenessDetail: {
-    fontSize: 12,
-    color: '#555',
-    marginLeft: 10,
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.labelSmall.fontSize,
+    color: theme.colors.textSecondary,
+    marginLeft: theme.spacing.sm, // Indent details
+    lineHeight: theme.typography.labelSmall.lineHeight,
   },
   projectMatchContainer: {
-    marginTop: 8,
-    paddingTop: 8,
+    marginTop: theme.spacing.sm,
+    paddingTop: theme.spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
+    borderTopColor: theme.colors.base2,
   },
   projectMatchTitle: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 3,
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.labelMedium.fontSize,
+    fontWeight: 'bold',
+    color: theme.colors.textPrimary,
+    marginBottom: theme.spacing.xs,
   },
   projectMatchDetail: {
-    fontSize: 12,
-    color: '#555',
-    marginLeft: 10,
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.labelSmall.fontSize,
+    color: theme.colors.textSecondary,
+    marginLeft: theme.spacing.sm,
+    lineHeight: theme.typography.labelSmall.lineHeight,
   }
 });
 

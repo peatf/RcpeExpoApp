@@ -4,6 +4,7 @@
  */
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { theme } from '../../constants/theme'; // Import full theme
 
 /**
  * @interface InsightDisplayProps
@@ -23,15 +24,9 @@ export interface InsightDisplayProps {
  * @returns {JSX.Element} A view that highlights an insight.
  */
 const InsightDisplay: React.FC<InsightDisplayProps> = ({ insightText, source }) => {
-  // Dynamic styles based on props
-  const insightTextStyle = {
-    ...styles.insightText,
-    marginBottom: source ? 8 : 0, // Add margin only if source is present
-  };
-
   return (
     <View style={styles.container}>
-      <Text style={insightTextStyle}>{insightText}</Text>
+      <Text style={styles.insightText}>{insightText}</Text>
       {source && <Text style={styles.sourceText}>Source: {source}</Text>}
     </View>
   );
@@ -39,25 +34,23 @@ const InsightDisplay: React.FC<InsightDisplayProps> = ({ insightText, source }) 
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#e8f4fd', // A light blue, often used for informational messages
-    borderRadius: 8,
-    padding: 16,
-    marginVertical: 8,
-    marginHorizontal: 16,
-    borderColor: '#b0dcfb',
-    borderWidth: 1,
+    backgroundColor: 'transparent', // Let parent (InfoCard) handle background
+    paddingVertical: theme.spacing.sm, // Add some vertical padding
+    // marginHorizontal: theme.spacing.md, // InfoCard will handle horizontal padding
+    // marginVertical: theme.spacing.xs, // Spacing between multiple insights
   },
   insightText: {
-    fontSize: 16,
-    color: '#023e7d', // Darker blue for text
-    marginBottom: 8, // Standard bottom margin
-    lineHeight: 22,
+    fontFamily: theme.fonts.body,
+    fontSize: theme.typography.bodyMedium.fontSize,
+    lineHeight: theme.typography.bodyMedium.lineHeight,
+    color: theme.colors.textPrimary,
+    marginBottom: theme.spacing.xs, // Space if source is present
   },
   sourceText: {
-    fontSize: 12,
-    fontStyle: 'italic',
-    color: '#005a9c', // Slightly lighter blue for the source
-    textAlign: 'right',
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.labelSmall.fontSize,
+    color: theme.colors.textSecondary,
+    textAlign: 'right', // Align source to the right
   },
 });
 

@@ -19,6 +19,7 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useAuth } from '../../contexts/AuthContext';
 import { AuthStackParamList } from '../../navigation/AuthNavigator';
+import { theme } from '../../constants/theme'; // Import theme
 
 type SignUpScreenNavigationProp = StackNavigationProp<AuthStackParamList, 'SignUp'>;
 
@@ -30,6 +31,12 @@ export const SignUpScreen: React.FC = () => {
     confirmPassword: '',
   });
   const [loading, setLoading] = useState(false);
+  // Focus states for input panels
+  const [nameFocused, setNameFocused] = useState(false);
+  const [emailFocused, setEmailFocused] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
+  const [confirmPasswordFocused, setConfirmPasswordFocused] = useState(false);
+
   const { signUp } = useAuth();
   const navigation = useNavigation<SignUpScreenNavigationProp>();
 
@@ -92,51 +99,75 @@ export const SignUpScreen: React.FC = () => {
             </Text>
 
             <View style={styles.form}>
-              <View style={styles.inputContainer}>
+              {/* Full Name Input */}
+              <View style={styles.inputGroup}>
                 <Text style={styles.label}>Full Name</Text>
-                <TextInput
-                  style={styles.input}
-                  value={formData.name}
-                  onChangeText={(value) => updateFormData('name', value)}
-                  placeholder="Enter your full name"
-                  autoCapitalize="words"
-                  autoCorrect={false}
-                />
+                <View style={[styles.inputPanel, nameFocused && styles.inputPanelFocused]}>
+                  <TextInput
+                    style={styles.input}
+                    value={formData.name}
+                    onChangeText={(value) => updateFormData('name', value)}
+                    placeholder="Enter your full name"
+                    placeholderTextColor={theme.colors.textSecondary}
+                    autoCapitalize="words"
+                    autoCorrect={false}
+                    onFocus={() => setNameFocused(true)}
+                    onBlur={() => setNameFocused(false)}
+                  />
+                </View>
               </View>
 
-              <View style={styles.inputContainer}>
+              {/* Email Input */}
+              <View style={styles.inputGroup}>
                 <Text style={styles.label}>Email</Text>
-                <TextInput
-                  style={styles.input}
-                  value={formData.email}
-                  onChangeText={(value) => updateFormData('email', value)}
-                  placeholder="Enter your email"
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                />
+                <View style={[styles.inputPanel, emailFocused && styles.inputPanelFocused]}>
+                  <TextInput
+                    style={styles.input}
+                    value={formData.email}
+                    onChangeText={(value) => updateFormData('email', value)}
+                    placeholder="Enter your email"
+                    placeholderTextColor={theme.colors.textSecondary}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    onFocus={() => setEmailFocused(true)}
+                    onBlur={() => setEmailFocused(false)}
+                  />
+                </View>
               </View>
 
-              <View style={styles.inputContainer}>
+              {/* Password Input */}
+              <View style={styles.inputGroup}>
                 <Text style={styles.label}>Password</Text>
-                <TextInput
-                  style={styles.input}
-                  value={formData.password}
-                  onChangeText={(value) => updateFormData('password', value)}
-                  placeholder="Enter your password"
-                  secureTextEntry
-                />
+                <View style={[styles.inputPanel, passwordFocused && styles.inputPanelFocused]}>
+                  <TextInput
+                    style={styles.input}
+                    value={formData.password}
+                    onChangeText={(value) => updateFormData('password', value)}
+                    placeholder="Enter your password"
+                    placeholderTextColor={theme.colors.textSecondary}
+                    secureTextEntry
+                    onFocus={() => setPasswordFocused(true)}
+                    onBlur={() => setPasswordFocused(false)}
+                  />
+                </View>
               </View>
 
-              <View style={styles.inputContainer}>
+              {/* Confirm Password Input */}
+              <View style={styles.inputGroup}>
                 <Text style={styles.label}>Confirm Password</Text>
-                <TextInput
-                  style={styles.input}
-                  value={formData.confirmPassword}
-                  onChangeText={(value) => updateFormData('confirmPassword', value)}
-                  placeholder="Confirm your password"
-                  secureTextEntry
-                />
+                <View style={[styles.inputPanel, confirmPasswordFocused && styles.inputPanelFocused]}>
+                  <TextInput
+                    style={styles.input}
+                    value={formData.confirmPassword}
+                    onChangeText={(value) => updateFormData('confirmPassword', value)}
+                    placeholder="Confirm your password"
+                    placeholderTextColor={theme.colors.textSecondary}
+                    secureTextEntry
+                    onFocus={() => setConfirmPasswordFocused(true)}
+                    onBlur={() => setConfirmPasswordFocused(false)}
+                  />
+                </View>
               </View>
 
               <TouchableOpacity
@@ -166,84 +197,108 @@ export const SignUpScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'transparent',
+    backgroundColor: theme.colors.bg, // Use theme background
   },
   keyboardView: {
     flex: 1,
   },
-  scrollContainer: {
+  scrollContainer: { // For ScrollView
     flexGrow: 1,
     justifyContent: 'center',
   },
-  content: {
-    flex: 1,
+  content: { // Inner content View
+    // flex: 1, // Not needed if ScrollView's contentContainerStyle handles flexGrow
     justifyContent: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 40,
+    paddingHorizontal: theme.spacing.lg, // Use theme spacing
+    paddingVertical: theme.spacing.xl, // More vertical padding for scrollable content
   },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
+    fontFamily: theme.fonts.display,
+    fontSize: theme.typography.displayMedium.fontSize,
+    fontWeight: theme.typography.displayMedium.fontWeight,
+    color: theme.colors.textPrimary,
     textAlign: 'center',
-    marginBottom: 8,
-    color: '#333',
+    marginBottom: theme.spacing.sm,
   },
   subtitle: {
-    fontSize: 16,
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.bodyMedium.fontSize,
+    color: theme.colors.textSecondary,
     textAlign: 'center',
-    color: '#666',
-    marginBottom: 40,
+    marginBottom: theme.spacing.xl,
   },
   form: {
-    marginBottom: 30,
+    width: '100%', // Ensure form takes full width
+    marginBottom: theme.spacing.lg, // Space before footer
   },
-  inputContainer: {
-    marginBottom: 20,
+  inputGroup: { // Replaces inputContainer
+    marginBottom: theme.spacing.lg,
   },
   label: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 8,
-    color: '#333',
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.labelSmall.fontSize,
+    fontWeight: '500',
+    color: theme.colors.textSecondary,
+    marginBottom: theme.spacing.xs,
+  },
+  inputPanel: {
+    borderWidth: 1,
+    borderColor: theme.colors.base1,
+    borderRadius: theme.borderRadius.sm,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  inputPanelFocused: {
+    borderColor: theme.colors.accent,
+    shadowColor: theme.colors.accentGlow,
+    shadowOffset: { width: 0, height: 0 },
+    shadowRadius: 10,
+    shadowOpacity: 0.7,
+    elevation: 3,
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 16,
-    backgroundColor: '#fff',
+    backgroundColor: 'transparent',
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.md,
+    color: theme.colors.textPrimary,
+    fontSize: 15,
   },
   button: {
-    backgroundColor: '#007AFF',
-    paddingVertical: 16,
-    borderRadius: 8,
-    marginTop: 10,
+    backgroundColor: theme.colors.accent,
+    borderRadius: theme.borderRadius.md,
+    paddingVertical: theme.spacing.md,
+    marginTop: theme.spacing.md, // Space above button
+    width: '100%',
   },
   buttonDisabled: {
-    backgroundColor: '#ccc',
+    backgroundColor: theme.colors.base3,
   },
   buttonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
+    fontFamily: theme.fonts.display,
+    color: theme.colors.bg,
+    fontSize: theme.typography.headingMedium.fontSize,
+    fontWeight: 'bold',
     textAlign: 'center',
+    textShadowColor: 'rgba(0, 95, 247, 0.3)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8,
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
+    marginTop: theme.spacing.lg, // Consistent spacing
   },
   footerText: {
-    fontSize: 16,
-    color: '#666',
-    marginRight: 5,
+    fontFamily: theme.fonts.body,
+    fontSize: theme.typography.bodyMedium.fontSize,
+    color: theme.colors.textSecondary,
+    marginRight: theme.spacing.xs,
   },
   footerLink: {
-    fontSize: 16,
-    color: '#007AFF',
-    fontWeight: '600',
+    fontFamily: theme.fonts.body,
+    fontSize: theme.typography.bodyMedium.fontSize,
+    color: theme.colors.accent,
+    fontWeight: 'bold',
   },
 });
 

@@ -3,8 +3,10 @@
  * @description Component to display a single Impulse.
  */
 import React from 'react';
-import { View, Text, StyleSheet, Button } from 'react-native';
-import { Impulse } from '../../../../types/humanDesignTools'; // Adjusted path
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'; // Replaced Button with TouchableOpacity
+import { Impulse } from '../../../../types/humanDesignTools';
+import { theme } from '../../../../constants/theme'; // Import theme
+import { Ionicons } from '@expo/vector-icons'; // For potential icons on actions
 
 export interface ImpulseListItemProps {
   impulse: Impulse;
@@ -55,90 +57,111 @@ const ImpulseListItem: React.FC<ImpulseListItemProps> = ({ impulse, onEvaluate, 
 
       <View style={styles.actionsContainer}>
         {impulse.status === 'new' && onEvaluate && (
-          <Button title="Evaluate" onPress={() => onEvaluate(impulse.id)} color="#007bff" />
+          <TouchableOpacity onPress={() => onEvaluate(impulse.id)} style={styles.actionButton}>
+            <Ionicons name="checkmark-circle-outline" size={20} color={theme.colors.accent} />
+            <Text style={[styles.actionText, {color: theme.colors.accent}]}>Evaluate</Text>
+          </TouchableOpacity>
         )}
         {impulse.status === 'evaluated' && onInform && (
-          <Button title="Record Informing" onPress={() => onInform(impulse.id)} color="#28a745" />
+          <TouchableOpacity onPress={() => onInform(impulse.id)} style={styles.actionButton}>
+            <Ionicons name="megaphone-outline" size={20} color={theme.colors.accent} />
+            <Text style={[styles.actionText, {color: theme.colors.accent}]}>Inform</Text>
+          </TouchableOpacity>
         )}
-        {/* Add more actions as needed, e.g., for implemented, abandoned */}
+        {/* Add more actions as needed */}
       </View>
     </View>
   );
 };
 
-// Add missing import for TouchableOpacity
-import { TouchableOpacity } from 'react-native-gesture-handler';
-
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: '#ffffff',
-    borderRadius: 8,
-    padding: 15,
-    marginVertical: 8,
-    marginHorizontal: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
+  container: { // Styled as .input-panel
+    padding: theme.spacing.md,
+    borderWidth: 1,
+    borderColor: theme.colors.base1,
+    borderRadius: theme.borderRadius.sm,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    marginBottom: theme.spacing.md,
   },
   descriptionText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 10,
+    fontFamily: theme.fonts.body,
+    fontSize: theme.typography.bodyLarge.fontSize, // More prominent
+    fontWeight: 'bold', // Keep bold for emphasis
+    color: theme.colors.textPrimary,
+    marginBottom: theme.spacing.sm,
   },
   row: {
     flexDirection: 'row',
-    marginBottom: 4,
+    marginBottom: theme.spacing.xs,
     alignItems: 'flex-start',
   },
   detailLabel: {
-    fontSize: 13,
-    color: '#555',
-    fontWeight: '600',
-    marginRight: 5,
-    width: 100, // For alignment
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.labelSmall.fontSize,
+    color: theme.colors.textSecondary,
+    fontWeight: '500', // Match other labels
+    marginRight: theme.spacing.xs,
+    width: 110, // Adjust for alignment if needed
   },
   detailValue: {
-    fontSize: 13,
-    color: '#444',
-    flexShrink: 1, // Wrap text
+    fontFamily: theme.fonts.body, // Use body font for values for better readability
+    fontSize: theme.typography.labelSmall.fontSize, // Consistent size with label
+    color: theme.colors.textPrimary,
+    flexShrink: 1,
   },
-  statusText: {
-    fontSize: 13,
+  statusText: { // Style for the status text itself
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.labelSmall.fontSize,
     fontWeight: 'bold',
-    paddingHorizontal: 5,
-    paddingVertical: 1,
-    borderRadius: 3,
-    color: 'white',
-    overflow: 'hidden', // Ensure border radius clips background on some Android versions
+    paddingHorizontal: theme.spacing.xs,
+    paddingVertical: 2,
+    borderRadius: theme.borderRadius.xs,
+    color: theme.colors.bg, // White text on colored background
+    overflow: 'hidden',
+    textTransform: 'uppercase',
   },
-  status_new: { backgroundColor: '#007bff' /* Blue */ },
-  status_evaluated: { backgroundColor: '#ffc107' /* Yellow */, color: '#333'},
-  status_informed: { backgroundColor: '#17a2b8' /* Teal */ },
-  status_implemented: { backgroundColor: '#28a745' /* Green */ },
-  status_abandoned: { backgroundColor: '#6c757d' /* Gray */ },
+  // Specific status background colors using theme
+  status_new: { backgroundColor: theme.colors.accent }, // Example: Blue
+  status_evaluated: { backgroundColor: theme.colors.accentSecondary, color: theme.colors.textPrimary }, // Example: Yellowish/Orange, ensure text contrast
+  status_informed: { backgroundColor: theme.colors.base4 }, // Example: Teal/Info Blue
+  status_implemented: { backgroundColor: theme.colors.base5 }, // Example: Green (Success)
+  status_abandoned: { backgroundColor: theme.colors.base3 },   // Example: Gray
   section: {
-    marginTop: 10,
-    paddingTop: 10,
+    marginTop: theme.spacing.sm,
+    paddingTop: theme.spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: '#eee',
+    borderTopColor: theme.colors.base2, // Use theme border color
   },
   sectionTitle: {
-    fontSize: 14,
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.labelMedium.fontSize, // Slightly larger for section titles
     fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 5,
+    color: theme.colors.textPrimary,
+    marginBottom: theme.spacing.xs,
   },
   actionsContainer: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    paddingTop: 10,
-    marginTop: 10,
+    paddingTop: theme.spacing.sm,
+    marginTop: theme.spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: '#eee',
+    borderTopColor: theme.colors.base2, // Use theme border color
+    gap: theme.spacing.md,
   },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.sm,
+    borderRadius: theme.borderRadius.xs,
+    // backgroundColor: theme.colors.base1, // Subtle background for action buttons
+  },
+  actionText: {
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.labelSmall.fontSize,
+    marginLeft: theme.spacing.xs,
+    fontWeight: 'bold',
+  }
 });
 
 export default ImpulseListItem;

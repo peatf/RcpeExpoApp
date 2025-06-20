@@ -4,11 +4,11 @@
  */
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, FlatList, ActivityIndicator, RefreshControl, TouchableOpacity } from 'react-native';
-import OnboardingBanner from '../../../components/OnboardingBanner'; // Import Banner
-import useOnboardingBanner from '../../../hooks/useOnboardingBanner'; // Import Hook
+import OnboardingBanner from '../../../components/OnboardingBanner';
+import useOnboardingBanner from '../../../hooks/useOnboardingBanner';
 import StackedButton from '../../../components/StackedButton';
-import { colors, typography, spacing } from '../../../constants/theme';
-import { InfoCard, LogInput, InsightDisplay } from '../../../components/HumanDesignTools'; // Adjusted path
+import { theme } from '../../../constants/theme'; // Import full theme
+import { InfoCard, LogInput, InsightDisplay } from '../../../components/HumanDesignTools';
 import * as livingLogService from '../../../services/livingLogService'; // Adjusted path
 import { LogEntry, LivingLogPattern, AuthorityType } from '../../../types/humanDesignTools'; // Adjusted path
 import LogListItem from './LivingLogComponents/LogListItem'; // Import the new LogListItem
@@ -18,8 +18,8 @@ import LogListItem from './LivingLogComponents/LogListItem'; // Import the new L
 const MOCK_USER_AUTHORITY = AuthorityType.Sacral; // Example, replace with actual source
 
 const LivingLogScreen: React.FC = () => {
-  const { showBanner, dismissBanner, isLoadingBanner } = useOnboardingBanner('Living Log'); // Use Hook
-  const [newEntryText, setNewEntryText] = useState(''); // Not used directly by LogInput but for other potential inputs
+  const { showBanner, dismissBanner, isLoadingBanner } = useOnboardingBanner('Living Log');
+  // newEntryText state removed as LogInput manages its own state.
   const [logEntries, setLogEntries] = useState<LogEntry[]>([]);
   const [patterns, setPatterns] = useState<LivingLogPattern[]>([]);
   const [insights, setInsights] = useState<string[]>([]);
@@ -121,10 +121,10 @@ const LivingLogScreen: React.FC = () => {
   );
 
 
-  if (isLoading && !isRefreshing && logEntries.length === 0 && !showBanner) { // Consider banner loading state
+  if (isLoading && !isRefreshing && logEntries.length === 0 && !showBanner) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.accent} />
+        <ActivityIndicator size="large" color={theme.colors.accent} />
         <Text style={styles.loadingText}>Loading your living log...</Text>
       </View>
     );
@@ -132,7 +132,7 @@ const LivingLogScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      {!isLoadingBanner && showBanner && ( // Render Banner if not loading and showBanner is true
+      {!isLoadingBanner && showBanner && (
         <OnboardingBanner
           toolName="Living Log"
           description="Welcome to your Living Log! Track experiences and discover patterns related to your Human Design."
@@ -148,7 +148,7 @@ const LivingLogScreen: React.FC = () => {
         <ScrollView 
           style={styles.scrollView} 
           contentContainerStyle={styles.scrollContent}
-          refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />}
+          refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={theme.colors.accent} />}
         >
           <View style={styles.logContent}>
             <InfoCard title="New Log Entry">
@@ -156,32 +156,37 @@ const LivingLogScreen: React.FC = () => {
             </InfoCard>
 
             <InfoCard title="Patterns & Insights">
-              {patterns.length === 0 && insights.length === 0 && (
+              {(patterns.length === 0 && insights.length === 0 && !isLoading) && (
                 <Text style={styles.emptyText}>No patterns or insights detected yet.</Text>
               )}
+              {isLoading && (patterns.length === 0 && insights.length === 0) && <ActivityIndicator color={theme.colors.accent}/>}
               {patterns.map(renderPattern)}
               {insights.map(renderInsight)}
             </InfoCard>
 
             <InfoCard title="Recent Log Entries">
-              {logEntries.length === 0 && !isLoading && (
+              {(logEntries.length === 0 && !isLoading) && (
                 <Text style={styles.emptyText}>No log entries yet. Add one above!</Text>
               )}
+              {isLoading && logEntries.length === 0 && <ActivityIndicator color={theme.colors.accent}/>}
               <FlatList
                 data={logEntries}
                 renderItem={renderLogEntry}
                 keyExtractor={(item) => item.id}
-                scrollEnabled={false} // Disable FlatList scrolling, ScrollView handles it
+                scrollEnabled={false}
               />
             </InfoCard>
 
+            {/* Redundant "ADD NEW ENTRY" button removed as LogInput has its own submit button */}
+            {/*
             <View style={styles.logActions}>
               <StackedButton
                 type="rect"
                 text="ADD NEW ENTRY"
-                onPress={() => {/* Could focus input or show modal */}}
+                onPress={() => {}}
               />
             </View>
+            */}
           </View>
         </ScrollView>
       </View>
@@ -192,31 +197,31 @@ const LivingLogScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'transparent',
+    backgroundColor: theme.colors.bg, // Use theme background
   },
   contentWrapper: {
     flex: 1,
-    padding: spacing.lg,
+    padding: theme.spacing.lg, // Use theme spacing
   },
   titleSection: {
     alignItems: 'center',
-    marginBottom: spacing.xl,
+    marginBottom: theme.spacing.xl, // Use theme spacing
     flexShrink: 0,
   },
-  pageTitle: {
-    ...typography.displayMedium,
-    fontFamily: 'System',
-    fontWeight: '700',
-    color: colors.textPrimary,
+  pageTitle: { // "LIVING LOG"
+    fontFamily: theme.fonts.display,
+    fontSize: theme.typography.displayMedium.fontSize,
+    fontWeight: theme.typography.displayMedium.fontWeight,
+    color: theme.colors.textPrimary,
     textAlign: 'center',
     letterSpacing: 2,
   },
-  pageSubtitle: {
-    ...typography.labelSmall,
-    fontFamily: 'monospace',
-    color: colors.textSecondary,
+  pageSubtitle: { // "A chronicle of experiences"
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.labelSmall.fontSize,
+    color: theme.colors.textSecondary,
     textAlign: 'center',
-    marginTop: spacing.xs,
+    marginTop: theme.spacing.xs, // Use theme spacing
   },
   scrollView: {
     flex: 1,
@@ -224,33 +229,37 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
   },
-  logContent: {
+  logContent: { // Container for all InfoCards
     flex: 1,
-    gap: spacing.lg,
+    gap: theme.spacing.xl, // Use theme spacing for gap between InfoCards
   },
-  logActions: {
-    marginTop: spacing.lg,
+  logActions: { // This style might be unused now
+    marginTop: theme.spacing.lg,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: spacing.xl,
+    padding: theme.spacing.xl, // Use theme spacing
   },
   loadingText: {
-    ...typography.bodyMedium,
-    color: colors.textSecondary,
-    marginTop: spacing.md,
+    fontFamily: theme.fonts.body, // Use theme font
+    fontSize: theme.typography.bodyMedium.fontSize,
+    color: theme.colors.textSecondary,
+    marginTop: theme.spacing.md, // Use theme spacing
     textAlign: 'center',
   },
   emptyText: {
-    ...typography.bodyMedium,
-    color: colors.textSecondary,
+    fontFamily: theme.fonts.body, // Use theme font
+    fontSize: theme.typography.bodyMedium.fontSize,
+    color: theme.colors.textSecondary,
     textAlign: 'center',
     fontStyle: 'italic',
+    padding: theme.spacing.md, // Add some padding
   },
-  header: {
-    fontSize: 26,
+  // Removed unused styles: header, loader, entryContent, entryTags, entryAuthority, modal styles
+  // Kept only relevant styles for LivingLogScreen structure and feedback text.
+});
     fontWeight: 'bold',
     color: '#2c3e50',
     paddingHorizontal: 16,

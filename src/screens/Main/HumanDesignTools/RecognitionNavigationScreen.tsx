@@ -3,10 +3,12 @@
  * @description Screen for the Recognition Navigation tool, for Projectors.
  */
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, Button, ActivityIndicator, Alert, FlatList } from 'react-native'; // Removed TextInput, Added FlatList
-import OnboardingBanner from '../../../components/OnboardingBanner'; // Import Banner
-import useOnboardingBanner from '../../../hooks/useOnboardingBanner'; // Import Hook
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert, FlatList, RefreshControl } from 'react-native'; // Added RefreshControl, Removed Button
+import OnboardingBanner from '../../../components/OnboardingBanner';
+import useOnboardingBanner from '../../../hooks/useOnboardingBanner';
 import { InfoCard, InsightDisplay, LogInput } from '../../../components/HumanDesignTools';
+import StackedButton from '../../../components/StackedButton'; // Import StackedButton
+import { theme } from '../../../constants/theme'; // Import theme
 import * as recognitionNavigationService from '../../../services/recognitionNavigationService';
 import * as authorityService from '../../../services/authorityService';
 import { AuthorityType, Invitation, InvitationPattern, EnvironmentAssessment, RecognitionStrategy, Practice } from '../../../types/humanDesignTools';
@@ -24,7 +26,14 @@ const RecognitionNavigationScreen: React.FC = () => {
   const [practices, setPractices] = useState<Practice[]>([]);
 
   const [isLoadingData, setIsLoadingData] = useState(false);
-  const [newInvitationText, setNewInvitationText] = useState('');
+  const [newInvitationText, setNewInvitationText] = useState(''); // Used by LogInput's onSubmit
+  const [isRefreshing, setIsRefreshing] = useState(false); // For pull-to-refresh
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await loadProjectorData();
+    setIsRefreshing(false);
+  }, [loadProjectorData]);
 
   useEffect(() => {
     const fetchAuthority = async () => {
@@ -119,7 +128,7 @@ const RecognitionNavigationScreen: React.FC = () => {
 
 
   if (isLoadingAuthority) {
-    return <View style={styles.centered}><ActivityIndicator size="large" /><Text>Loading authority...</Text></View>;
+    return <View style={styles.loadingContainer}><ActivityIndicator size="large" color={theme.colors.accent} /><Text style={styles.loadingText}>Loading authority...</Text></View>;
   }
 
   const isProjectorAuthority = userAuthority &&
@@ -127,17 +136,22 @@ const RecognitionNavigationScreen: React.FC = () => {
 
   if (!isProjectorAuthority) {
     return (
-      <View style={styles.centered}>
-        <InfoCard title="Recognition Navigation">
-          <Text style={styles.messageText}>This tool is designed for Projector types (Emotional, Self-Projected, Splenic, or Mental Authority).</Text>
-          <Text style={styles.messageText}>Your detected authority is: {userAuthority || 'Not yet determined'}</Text>
-        </InfoCard>
+      <View style={styles.container}>
+        <View style={styles.contentWrapper}>
+          <View style={styles.titleSection}>
+            <Text style={styles.pageTitle}>RECOGNITION NAVIGATION</Text>
+          </View>
+          <InfoCard title="Information">
+            <Text style={styles.messageText}>This tool is designed for Projector types.</Text>
+            <Text style={styles.messageText}>Your detected authority is: {userAuthority || 'Not yet determined'}</Text>
+          </InfoCard>
+        </View>
       </View>
     );
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
       {!isLoadingBanner && showBanner && (
         <OnboardingBanner
           toolName="Invitation Tracker"
@@ -145,122 +159,164 @@ const RecognitionNavigationScreen: React.FC = () => {
           onDismiss={dismissBanner}
         />
       )}
-      <Text style={styles.header}>Recognition Navigation</Text>
-      <Text style={styles.subHeader}>Authority: {userAuthority}</Text>
+      <View style={styles.contentWrapper}>
+        <View style={styles.titleSection}>
+          <Text style={styles.pageTitle}>RECOGNITION NAVIGATION</Text>
+          <Text style={styles.pageSubtitle}>Authority: {userAuthority}</Text>
+        </View>
 
-      <InfoCard title="Record New Invitation">
-        <LogInput onSubmit={setNewInvitationText} placeholder="Describe the invitation..." />
-        <Button title="Record Invitation" onPress={handleRecordInvitation} />
-      </InfoCard>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={theme.colors.accent}/>}
+        >
+          <View style={styles.mainContent}>
+            <InfoCard title="Record New Invitation">
+              <LogInput onSubmit={setNewInvitationText} placeholder="Describe the invitation..." />
+              <View style={styles.actionButtonContainer}>
+                <StackedButton text="Record Invitation" onPress={handleRecordInvitation} type="rect" />
+              </View>
+            </InfoCard>
 
-      {isLoadingData && <ActivityIndicator style={styles.loader} />}
+            {isLoadingData && !isRefreshing && <ActivityIndicator style={styles.loader} color={theme.colors.accent} />}
 
-      <InfoCard title="Invitations">
-        {invitations.length > 0 ? (
-          <FlatList
-            data={invitations}
-            renderItem={({item}) => (
-              <InvitationListItem
-                invitation={item}
-                onEvaluate={handleEvaluateInvitation}
-                // onViewDetails={(id) => Alert.alert("View Details", `Invitation ID: ${id}`)} // Example
-              />
-            )}
-            keyExtractor={item => item.id}
-            scrollEnabled={false} // As it's inside a ScrollView
-          />
-        ) : (<Text style={styles.emptyStateText}>No invitations recorded yet.</Text>)}
-      </InfoCard>
+            <InfoCard title="Invitations">
+              {invitations.length > 0 ? (
+                <FlatList
+                  data={invitations}
+                  renderItem={({item}) => (
+                    <InvitationListItem
+                      invitation={item}
+                      onEvaluate={handleEvaluateInvitation}
+                    />
+                  )}
+                  keyExtractor={item => item.id}
+                  scrollEnabled={false}
+                />
+              ) : (<Text style={styles.emptyStateText}>No invitations recorded yet.</Text>)}
+            </InfoCard>
 
-      <InfoCard title="Environment Energy & Recognition">
-        {environments.slice(0,3).map(env => (
-            <View key={env.id} style={styles.listItem}>
-                <Text style={styles.itemTitle}>{env.name} ({env.type})</Text>
-                <Text>Recognition Quality: {(env.metrics.recognitionQuality * 100).toFixed(0)}% | Energy Impact: {env.metrics.energyImpact}</Text>
-            </View>
-        ))}
-        {environments.length === 0 && <Text>No environment analytics yet.</Text>}
-      </InfoCard>
+            <InfoCard title="Environment Energy & Recognition">
+              {environments.slice(0,3).map(env => (
+                  <View key={env.id} style={styles.dataPanelItem}>
+                      <Text style={styles.itemTitle}>{env.name} ({env.type})</Text>
+                      <Text style={styles.itemText}>Recognition Quality: {(env.metrics.recognitionQuality * 100).toFixed(0)}% | Energy Impact: {env.metrics.energyImpact}</Text>
+                  </View>
+              ))}
+              {environments.length === 0 && !isLoadingData &&<Text style={styles.emptyStateText}>No environment analytics yet.</Text>}
+            </InfoCard>
 
-      <InfoCard title="Recognition Strategies & Practices">
-        {strategies.map(s => <InsightDisplay key={s.id} insightText={s.name +": "+ s.description} source={`Energy: ${s.energyRequirement}/10`} />)}
-        {practices.map(p => (
-            <View key={p.id} style={styles.listItem}>
-                <Text style={styles.itemTitle}>{p.name} ({p.category})</Text>
-                <Text>Duration: {p.duration} mins, {p.frequency}</Text>
-            </View>
-        ))}
-        {strategies.length === 0 && practices.length === 0 &&<Text>No strategies or practices loaded.</Text>}
-      </InfoCard>
+            <InfoCard title="Recognition Strategies & Practices">
+              {strategies.map(s => <InsightDisplay key={s.id} insightText={s.name +": "+ s.description} source={`Energy: ${s.energyRequirement}/10`} />)}
+              {practices.map(p => (
+                  <View key={p.id} style={styles.dataPanelItem}>
+                      <Text style={styles.itemTitle}>{p.name} ({p.category})</Text>
+                      <Text style={styles.itemText}>Duration: {p.duration} mins, {p.frequency}</Text>
+                  </View>
+              ))}
+              {strategies.length === 0 && practices.length === 0 && !isLoadingData && <Text style={styles.emptyStateText}>No strategies or practices loaded.</Text>}
+            </InfoCard>
 
-       <InfoCard title="Invitation Patterns">
-        {invitationPatterns.map(p => <InsightDisplay key={p.id} insightText={p.description} source={`Confidence: ${p.confidence.toFixed(2)}`} />)}
-        {invitationPatterns.length === 0 && <Text>No invitation patterns detected yet.</Text>}
-      </InfoCard>
-
-    </ScrollView>
+            <InfoCard title="Invitation Patterns">
+              {invitationPatterns.map(p => <InsightDisplay key={p.id} insightText={p.description} source={`Confidence: ${p.confidence.toFixed(2)}`} />)}
+              {invitationPatterns.length === 0 && !isLoadingData && <Text style={styles.emptyStateText}>No invitation patterns detected yet.</Text>}
+            </InfoCard>
+          </View>
+        </ScrollView>
+      </View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  centered: {
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.bg,
+  },
+  contentWrapper: {
+    flex: 1,
+    padding: theme.spacing.lg,
+  },
+  titleSection: {
+    alignItems: 'center',
+    marginBottom: theme.spacing.xl,
+    flexShrink: 0,
+  },
+  pageTitle: {
+    fontFamily: theme.fonts.display,
+    fontSize: theme.typography.displayMedium.fontSize,
+    fontWeight: theme.typography.displayMedium.fontWeight,
+    color: theme.colors.textPrimary,
+    textAlign: 'center',
+    letterSpacing: 2,
+  },
+  pageSubtitle: {
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.labelSmall.fontSize,
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
+    marginTop: theme.spacing.xs,
+  },
+  scrollView: { flex: 1 },
+  scrollContent: { flexGrow: 1, paddingBottom: theme.spacing.lg },
+  mainContent: { gap: theme.spacing.xl },
+
+  actionButtonContainer: { // For the button after LogInput
+    marginTop: theme.spacing.md,
+  },
+  loader: {
+    marginVertical: theme.spacing.md,
+  },
+  loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
-    backgroundColor: '#fcfdff', // Very light blue/off-white
+    padding: theme.spacing.xl,
+    backgroundColor: theme.colors.bg,
   },
-  container: {
-    flex: 1,
-    backgroundColor: '#fcfdff',
-  },
-  loader: {
-    marginVertical: 20,
-  },
-  header: {
-    fontSize: 26,
-    fontWeight: 'bold',
-    paddingHorizontal: 16,
-    paddingTop: 20,
-    paddingBottom: 5,
-    color: '#334d6e', // Projector blue/gray
-  },
-  subHeader: {
-    fontSize: 18,
-    fontWeight: '600',
-    paddingHorizontal: 16,
-    paddingBottom: 15,
-    color: '#5c6ac4', // Projector accent purple/blue
+  loadingText: {
+    fontFamily: theme.fonts.body,
+    fontSize: theme.typography.bodyMedium.fontSize,
+    color: theme.colors.textSecondary,
+    marginTop: theme.spacing.md,
   },
   messageText: {
-    fontSize: 16,
+    fontFamily: theme.fonts.body,
+    fontSize: theme.typography.bodyMedium.fontSize,
+    lineHeight: theme.typography.bodyMedium.lineHeight,
+    color: theme.colors.textSecondary,
     textAlign: 'center',
-    marginVertical: 10,
-    lineHeight: 24,
-    color: '#333',
+    marginBottom: theme.spacing.sm,
   },
-  listItem: {
-    paddingVertical: 12,
-    paddingHorizontal: 8, // Kept for other list items
-    borderBottomWidth: 1,
-    borderBottomColor: '#eef2f7',
+  dataPanelItem: { // For Environment & Practices list items
+    padding: theme.spacing.md,
+    borderWidth: 1,
+    borderColor: theme.colors.base1,
+    borderRadius: theme.borderRadius.sm,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    marginBottom: theme.spacing.sm,
   },
-  itemTitle: { // Kept for other list items
-      fontWeight: 'bold',
-      fontSize: 16,
-      marginBottom: 5,
-      color: '#334d6e',
+  itemTitle: {
+    fontFamily: theme.fonts.mono,
+    fontSize: theme.typography.bodyMedium.fontSize,
+    fontWeight: 'bold',
+    color: theme.colors.textPrimary,
+    marginBottom: theme.spacing.xs,
   },
-  actions: { // This style is now within InvitationListItem
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    marginTop: 8,
+  itemText: {
+    fontFamily: theme.fonts.body,
+    fontSize: theme.typography.bodySmall.fontSize,
+    color: theme.colors.textSecondary,
   },
   emptyStateText: {
+    fontFamily: theme.fonts.body,
+    fontSize: theme.typography.bodyMedium.fontSize,
+    color: theme.colors.textSecondary,
     textAlign: 'center',
-    paddingVertical: 10,
-    color: '#6c757d',
+    padding: theme.spacing.md,
+    fontStyle: 'italic',
   },
+  // Removed old 'centered', 'header', 'subHeader', 'listItem', 'actions' styles.
 });
 
 export default RecognitionNavigationScreen;
