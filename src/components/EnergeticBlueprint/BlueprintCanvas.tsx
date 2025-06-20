@@ -270,6 +270,27 @@ const drawPixelNumber = (pixelData: Uint8Array, num: number, cx: number, cy: num
 
 const MOTOR_GATES: ReadonlySet<number> = new Set([12, 20, 22, 35, 45, 21, 34, 40, 59]); // Example list, verify if possible
 
+// Helper to get a symbol for a core priority string (simplified)
+const getPrioritySymbol = (priority: string, cx: number, cy: number, color: string, alpha: number, pixelData: Uint8Array) => {
+  const hash = simpleHash(priority.toLowerCase()); // Ensure simpleHash is available
+  const size = 2;
+  if (priority.toLowerCase().includes('love') || priority.toLowerCase().includes('heart')) { // Heart-like
+    setPixel(pixelData, cx-1, cy, ...colorToRGBA(color,alpha)); setPixel(pixelData, cx+1, cy, ...colorToRGBA(color,alpha));
+    setPixel(pixelData, cx, cy+1, ...colorToRGBA(color,alpha));
+    setPixel(pixelData, cx-2, cy-1, ...colorToRGBA(color,alpha));setPixel(pixelData, cx+2, cy-1, ...colorToRGBA(color,alpha));
+    setPixel(pixelData, cx-1, cy-2, ...colorToRGBA(color,alpha));setPixel(pixelData, cx+1, cy-2, ...colorToRGBA(color,alpha));
+  } else if (priority.toLowerCase().includes('direction') || priority.toLowerCase().includes('path')) { // Arrow-like
+    drawPixelLine(pixelData, cx, cy - size, cx, cy + size, color, undefined, alpha);
+    drawPixelLine(pixelData, cx, cy - size, cx - size, cy, color, undefined, alpha);
+    drawPixelLine(pixelData, cx, cy - size, cx + size, cy, color, undefined, alpha);
+  } else { // Default: small square
+    drawPixelLine(pixelData, cx - size/2, cy - size/2, cx + size/2, cy - size/2, color, undefined, alpha);
+    drawPixelLine(pixelData, cx + size/2, cy - size/2, cx + size/2, cy + size/2, color, undefined, alpha);
+    drawPixelLine(pixelData, cx + size/2, cy + size/2, cx - size/2, cy + size/2, color, undefined, alpha);
+    drawPixelLine(pixelData, cx - size/2, cy + size/2, cx - size/2, cy - size/2, color, undefined, alpha);
+  }
+};
+
 
 // ### PIXEL ART HELPER FUNCTIONS ###
 // These functions draw to a pixel buffer that will be used to create a bitmap
@@ -484,28 +505,40 @@ const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({ data, highlightedCate
     // Draw energy architecture (concentric circles)
     const numLayers = { 'Single': 5, 'Split': 4, 'Triple Split': 3, 'Quadruple Split': 2, 'No Definition': 6 }[data.definition_type] || 4;
     const maxRadius = PIXEL_RESOLUTION * 0.45;
-    const splitBridgeCount = data.split_bridges?.length || 0;
-    const hash = simpleHash(data.definition_type + data.channel_list);
+
+    const parsedChannels = parseGateChannelString(data.channel_list);
+    const numActiveChannels = parsedChannels.length;
+    const hash = simpleHash(data.definition_type + (data.channel_list || "")); // Added fallback for channel_list
+
 
     for (let i = 0; i < numLayers; i++) {
       const radius = (maxRadius / numLayers) * (i + 1);
       const isSplit = data.definition_type.includes('Split') && i === Math.floor(numLayers / 2);
       
-      // Draw pixelated circle with a gap for splits
       const breakAngle = mapValue(hash % 1000, 0, 1000, 0, Math.PI * 2);
-      const breakSize = isSplit ? Math.PI / 4 : 0;
+      // breakSize is not directly used for drawing the gap in circle, but it's conceptual for bridge placement
       
-      drawPixelCircle(pixelData, center.x, center.y, radius, archStyle.hexColor, 'none', archStyle.alpha);
+      const dashPattern = numActiveChannels > 5 && i % 2 === 0 ? [2,1] : (numActiveChannels > 10 ? [1,1] : undefined);
+      drawPixelCircle(pixelData, center.x, center.y, radius, archStyle.hexColor, 'none', archStyle.alpha, dashPattern);
       
       // Add split bridges
-      if (isSplit && splitBridgeCount > 0) {
+      if (isSplit) {
+        const parsedSplitBridges = parseGateChannelString(data.split_bridges);
+        const numSplitBridges = parsedSplitBridges.length;
         const bridgeLength = (maxRadius / numLayers);
+
+        const bridgeColor = numSplitBridges > 2 ? darkenColor(theme.colors.base1, -0.2) : theme.colors.base1; // Brighter if many bridges
+        const bridgeDash = numSplitBridges > 1 ? [3,1] : [2,2];
+
+        // Draw a symbolic bridge. If there are multiple, this representation is simplified.
+        // The breakAngle determines where this symbolic bridge is drawn.
         const x1 = center.x + Math.cos(breakAngle) * radius;
         const y1 = center.y + Math.sin(breakAngle) * radius;
         const x2 = center.x + Math.cos(breakAngle) * (radius + bridgeLength);
         const y2 = center.y + Math.sin(breakAngle) * (radius + bridgeLength);
-        // Assuming bridges fade with the parent category, using base1 for faint lines
-        drawPixelLine(pixelData, x1, y1, x2, y2, theme.colors.base1, [2,2], archStyle.alpha);
+        if (numSplitBridges > 0) { // Only draw if there's at least one bridge
+            drawPixelLine(pixelData, x1, y1, x2, y2, bridgeColor, bridgeDash, archStyle.alpha);
+        }
       }
     }
     
@@ -542,11 +575,10 @@ const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({ data, highlightedCate
       const endRadius = PIXEL_RESOLUTION * 0.4;
       const startAngle = mapValue(pathHash % 1000, 0, 1000, 0, Math.PI * 2);
       
-      // Integrate G-center access and core priorities
+      // Integrate G-center access
       const lineStyle = data.g_center_access === 'Consistent' ? undefined : 
                         (data.g_center_access === 'Projected' ? [3,2] as [number, number] : 
-                                                               [1,3] as [number, number]);
-      const priorityCount = data.core_priorities?.length || 0;
+                                                               [1,3] as [number, number]); // Fallback to [1,3] for 'Fluid Identity' or others
       
       let lastX = center.x + Math.cos(startAngle) * startRadius;
       let lastY = center.y + Math.sin(startAngle) * startRadius;
@@ -564,10 +596,23 @@ const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({ data, highlightedCate
         drawPixelLine(pixelData, lastX, lastY, currentX, currentY, evoStyle.hexColor, lineStyle, evoStyle.alpha);
         lastX = currentX;
         lastY = currentY;
-        
-        // Draw glyphs for core priorities along the path
-        if (priorityCount > 0 && i % Math.floor(pathLength / priorityCount) === 0) {
-          drawPixelCircle(pixelData, currentX, currentY, 2, evoStyle.hexColor, 'dither', evoStyle.alpha);
+      }
+
+      // Core Priority Visualization
+      const priorities = (data.core_priorities || "").split(',').map(p => p.trim()).filter(p => p.length > 0); // Ensure non-empty priorities
+      const numPrioritiesToShow = priorities.length;
+      if (numPrioritiesToShow > 0) {
+        for (let k = 0; k < numPrioritiesToShow; k++) {
+          const priorityProgress = (k + 0.5) / numPrioritiesToShow;
+          const priorityRadius = startRadius + priorityProgress * (endRadius - startRadius);
+          const consciousLineNum = parseInt(data.conscious_line || '1') || 1; // Ensure it's at least 1 to avoid NaN issues
+          const unconsciousLineNum = parseInt(data.unconscious_line || '1') || 1;
+          // Angle calculation based on conscious/unconscious lines and path progress
+          const priorityAngle = startAngle + priorityProgress * (consciousLineNum + unconsciousLineNum) * 0.5 * (Math.PI / 6); // Modest angle change
+
+          const priorityX = center.x + Math.cos(priorityAngle) * priorityRadius;
+          const priorityY = center.y + Math.sin(priorityAngle) * priorityRadius;
+          getPrioritySymbol(priorities[k], priorityX, priorityY, evoStyle.hexColor, evoStyle.alpha, pixelData);
         }
       }
     }
@@ -681,8 +726,18 @@ const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({ data, highlightedCate
         for (let i = 0; i < glitchCount; i++) {
           const x = glitchCenterX + (Math.random() - 0.5) * glitchAreaSize;
           const y = glitchCenterY + (Math.random() - 0.5) * glitchAreaSize;
-          const glitchColor = (i % 2 === 0) ? theme.colors.accent : theme.colors.base1;
-          const [r, g, b] = hexToRgb(glitchColor);
+
+          let primaryTensionColor = theme.colors.tensionPoints; // Default to category color
+          if (data.tension_planets && data.tension_planets.length > 0 && data.tension_planets[0]?.name) {
+            const firstPlanetName = data.tension_planets[0].name.toLowerCase();
+            if (firstPlanetName === 'saturn') primaryTensionColor = '#5A5A8A';
+            else if (firstPlanetName === 'mars') primaryTensionColor = '#D46A6A';
+            else if (firstPlanetName === 'chiron') primaryTensionColor = '#8FBC8F'; // Example for Chiron
+            // Add more planet color mappings here or use a helper
+          }
+          const colorForGlitch = (i % 3 === 0) ? primaryTensionColor
+                               : (i % 3 === 1 ? theme.colors.accent : theme.colors.base1); // Mix with theme accent/base
+          const [r, g, b] = hexToRgb(colorForGlitch);
           setPixel(pixelData, x, y, r, g, b, Math.floor(tensionStyle.alpha * 255));
         }
       }
@@ -721,7 +776,7 @@ const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({ data, highlightedCate
 
       for (let i = 0; i < 12; i++) { // Keep 12 fixed positions for rays for consistent astrological mapping
         const angle = (i / 12) * Math.PI * 2 + (sunHash % 1000 / 1000) * (Math.PI / 6); // Offset by sun sign hash slightly
-        
+
         // Determine if this ray is a "primary" ray based on profile line count
         const isPrimaryRay = i < rayCount;
         const currentDashPattern = isPrimaryRay ? mainRayDashPattern : secondaryRayDashPattern;
@@ -1293,8 +1348,8 @@ const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({ data, highlightedCate
         {/* Particles for Drive Mechanics - Commented out as per instruction */}
         {/* {(() => { ... })()} */}
         
-        {/* Decision Growth Vector - Compass needle */}
-        {(() => {
+        {/* Decision Growth Vector - Compass needle - Pixel version is in dynamicBitmapImage */}
+        {/* {(() => {
           const dgvColor = getCategorySkiaColor('decisionVector', 'Decision Growth Vector');
            // Only render if the category is visible
           if (Skia.Color(dgvColor) >>> 24 === 0) return null;
@@ -1303,14 +1358,17 @@ const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({ data, highlightedCate
           let targetAngle = mapValue(marsSigns.indexOf(data.astro_mars_sign), 0, 11, 0, Math.PI * 2);
           targetAngle += t * Math.PI * 4; // Slow rotation
           
-          const needleLength = PIXEL_RESOLUTION * 0.3;
-          const endX = center.x + Math.cos(targetAngle) * needleLength;
-          const endY = center.y + Math.sin(targetAngle) * needleLength;
+          const needleLength = PIXEL_RESOLUTION * 0.3; // This was for the main canvas, DGV pixel art is smaller
+          const compassX = center.x; // Original center for Skia version
+          const compassY = center.y; // Original center for Skia version
+
+          const endX = compassX + Math.cos(targetAngle) * needleLength;
+          const endY = compassY + Math.sin(targetAngle) * needleLength;
           
           return (
-            <Group key="compass">
+            <Group key="skia-compass">
               <Line
-                p1={vec(center.x, center.y)}
+                p1={vec(compassX, compassY)}
                 p2={vec(endX, endY)}
                 strokeWidth={2}
                 color={dgvColor}
@@ -1323,7 +1381,7 @@ const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({ data, highlightedCate
               />
             </Group>
           );
-        })()}
+        })()} */}
       </Group>
     );
   };
