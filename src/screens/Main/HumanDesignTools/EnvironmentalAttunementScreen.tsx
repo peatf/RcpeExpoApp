@@ -32,6 +32,7 @@ const EnvironmentalAttunementScreen: React.FC = () => {
   const [decisionTimingRecs, setDecisionTimingRecs] = useState<TimingWindow[]>([]);
 
   const [isLoadingData, setIsLoadingData] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   // Check-in form state is now managed by LunarCheckInForm.tsx
   // const [checkInWellbeing, setCheckInWellbeing] = useState('7');
   // const [checkInClarity, setCheckInClarity] = useState('7');
@@ -52,7 +53,9 @@ const EnvironmentalAttunementScreen: React.FC = () => {
     if (userAuthority !== AuthorityType.Lunar) {
       return;
     }
-    setIsLoadingData(true);
+    if (!isRefreshing) {
+      setIsLoadingData(true);
+    }
     try {
       // For a real app, cycleStart would be calculated based on user's first entry or current moon.
       const cycleStartDate = new Date();
@@ -79,7 +82,8 @@ const EnvironmentalAttunementScreen: React.FC = () => {
       Alert.alert("Error", "Could not load Environmental Attunement data.");
     }
     setIsLoadingData(false);
-  }, [userAuthority]);
+    setIsRefreshing(false);
+  }, [userAuthority, isRefreshing]);
 
   useEffect(() => {
     if (userAuthority === AuthorityType.Lunar) {

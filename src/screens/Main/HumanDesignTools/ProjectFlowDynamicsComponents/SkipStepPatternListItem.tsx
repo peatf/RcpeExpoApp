@@ -77,13 +77,13 @@ const styles = StyleSheet.create({
   effectivenessChip: { // Wrapper for the text for padding and borderRadius
     marginBottom: theme.spacing.sm,
     paddingVertical: theme.spacing.xs / 2,
-    paddingHorizontal: theme.spacing.xs,
-    borderRadius: theme.borderRadius.xs,
+    paddingHorizontal: 4,
+    borderRadius: theme.borderRadius.sm,
     alignSelf: 'flex-start',
   },
   effectivenessText: {
     fontFamily: theme.fonts.mono,
-    fontSize: theme.typography.labelXSmall.fontSize, // Smaller for chip
+    fontSize: theme.typography.labelSmall.fontSize - 2, // Smaller for chip
     fontWeight: 'bold',
     // Color is set by specific effect styles
   },
@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: { // Reusable for Impact, Recommendations, Cautions titles
     fontFamily: theme.fonts.mono,
-    fontSize: theme.typography.labelMedium.fontSize,
+    fontSize: theme.typography.labelSmall.fontSize + 2,
     fontWeight: 'bold',
     color: theme.colors.textPrimary,
     marginTop: theme.spacing.sm, // Add top margin for sections

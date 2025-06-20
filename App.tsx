@@ -1,5 +1,6 @@
 import React from 'react';
 import { ActivityIndicator, View, StyleSheet } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider } from './src/contexts/AuthContext';
 import AppNavigator from './src/navigation/AppNavigator';
 import AppBackground from './src/components/AppBackground';
@@ -57,13 +58,15 @@ export default function App() {
   }
 
   return (
-    <View style={styles.rootContainer}>
-      <AppBackground>
-        <AuthProvider>
-          <AppNavigator />
-        </AuthProvider>
-      </AppBackground>
-    </View>
+    <SafeAreaProvider>
+      <View style={styles.rootContainer}>
+        <AppBackground>
+          <AuthProvider>
+            <AppNavigator />
+          </AuthProvider>
+        </AppBackground>
+      </View>
+    </SafeAreaProvider>
   );
 }
 

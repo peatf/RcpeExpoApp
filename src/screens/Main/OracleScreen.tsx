@@ -71,6 +71,7 @@ const OracleScreen: React.FC<OracleScreenProps> = ({navigation, route}) => {
   const [oracleQuestion, setOracleQuestion] = useState<string>('');
   const [isThinking, setIsThinking] = useState<boolean>(false);
   const [oracleMessages, setOracleMessages] = useState<any[]>([]);
+  const [isInputFocused, setIsInputFocused] = useState<boolean>(false);
 
   // Initialize Oracle on mount
   useEffect(() => {
@@ -609,9 +610,6 @@ const OracleScreen: React.FC<OracleScreenProps> = ({navigation, route}) => {
   const renderOracleWisdom = () => {
     // Pulse animation related state would go here if not already global
     // For now, pulseAnim from component scope will be used.
-
-    // Focus state for input panel
-    const [isInputFocused, setIsInputFocused] = useState(false);
 
     return (
       // This View replaces styles.wisdomContainer and styles.contentWrapper from old structure

@@ -27,22 +27,6 @@ const PatternRecognitionEngineScreen: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [isRefreshing, setIsRefreshing] = useState(false); // For pull-to-refresh
 
-  const handleRefresh = useCallback(async () => {
-    setIsRefreshing(true);
-    await loadPatterns();
-    setIsRefreshing(false);
-  }, [loadPatterns]);
-
-  useEffect(() => {
-    const fetchAuthority = async () => {
-      setIsLoadingAuthority(true);
-      const authority = await authorityService.detectUserAuthority();
-      setUserAuthority(authority);
-      setIsLoadingAuthority(false);
-    };
-    fetchAuthority();
-  }, []);
-
   const loadPatterns = useCallback(async () => {
     setIsLoadingData(true);
     try {
@@ -160,7 +144,7 @@ const PatternRecognitionEngineScreen: React.FC = () => {
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
-          refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={theme.colors.accent} />}
+          refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={loadPatterns} tintColor={theme.colors.accent} />}
         >
           <View style={styles.mainContent}>
             {/* Filters */}
@@ -294,6 +278,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.bg,
   },
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   contentWrapper: {
     flex: 1,
     padding: theme.spacing.lg,
@@ -415,8 +404,8 @@ const styles = StyleSheet.create({
     color: theme.colors.accent,
     backgroundColor: theme.colors.accentGlow, // Use accentGlow or a very light accent
     paddingHorizontal: theme.spacing.sm,
-    paddingVertical: theme.spacing.xs,
-    borderRadius: theme.borderRadius.xs,
+    paddingVertical: 4,
+    borderRadius: theme.borderRadius.sm,
   },
   patternDescription: {
     fontFamily: theme.fonts.body,
@@ -427,7 +416,7 @@ const styles = StyleSheet.create({
   },
   patternMeta: {
     fontFamily: theme.fonts.mono,
-    fontSize: theme.typography.labelXSmall.fontSize, // Even smaller for meta
+    fontSize: theme.typography.labelSmall.fontSize - 2, // Even smaller for meta
     color: theme.colors.textSecondary,
     marginBottom: theme.spacing.sm,
   },
@@ -496,7 +485,7 @@ const styles = StyleSheet.create({
   recommendationsContainer: {
     backgroundColor: theme.colors.base1, // Subtle background for this section
     padding: theme.spacing.sm,
-    borderRadius: theme.borderRadius.xs,
+    borderRadius: theme.borderRadius.sm,
     marginTop: theme.spacing.sm,
   },
   recommendationsTitle: {

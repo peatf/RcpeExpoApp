@@ -29,22 +29,6 @@ const RecognitionNavigationScreen: React.FC = () => {
   const [newInvitationText, setNewInvitationText] = useState(''); // Used by LogInput's onSubmit
   const [isRefreshing, setIsRefreshing] = useState(false); // For pull-to-refresh
 
-  const handleRefresh = useCallback(async () => {
-    setIsRefreshing(true);
-    await loadProjectorData();
-    setIsRefreshing(false);
-  }, [loadProjectorData]);
-
-  useEffect(() => {
-    const fetchAuthority = async () => {
-      setIsLoadingAuthority(true);
-      const authority = await authorityService.detectUserAuthority();
-      setUserAuthority(authority);
-      setIsLoadingAuthority(false);
-    };
-    fetchAuthority();
-  }, []);
-
   const loadProjectorData = useCallback(async () => {
     if (!userAuthority || ![AuthorityType.Emotional, AuthorityType.SelfProjected, AuthorityType.Splenic, AuthorityType.Mental].includes(userAuthority)) {
       return;
@@ -72,6 +56,22 @@ const RecognitionNavigationScreen: React.FC = () => {
     }
     setIsLoadingData(false);
   }, [userAuthority]);
+  
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await loadProjectorData();
+    setIsRefreshing(false);
+  }, [loadProjectorData]);
+
+  useEffect(() => {
+    const fetchAuthority = async () => {
+      setIsLoadingAuthority(true);
+      const authority = await authorityService.detectUserAuthority();
+      setUserAuthority(authority);
+      setIsLoadingAuthority(false);
+    };
+    fetchAuthority();
+  }, []);
 
   useEffect(() => {
     if (userAuthority) {
@@ -305,7 +305,7 @@ const styles = StyleSheet.create({
   },
   itemText: {
     fontFamily: theme.fonts.body,
-    fontSize: theme.typography.bodySmall.fontSize,
+    fontSize: theme.typography.bodyMedium.fontSize - 2, // Using bodyMedium size but smaller
     color: theme.colors.textSecondary,
   },
   emptyStateText: {

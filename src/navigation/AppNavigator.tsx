@@ -21,7 +21,35 @@ const AppNavigator: React.FC = () => {
   }
 
   return (
-    <NavigationContainer theme={{colors: {background: 'transparent'}}}>
+    <NavigationContainer theme={{
+      dark: false,
+      colors: {
+        background: 'transparent',
+        primary: 'rgb(0, 122, 255)',
+        card: 'transparent',
+        text: 'rgb(28, 28, 30)',
+        border: 'rgb(216, 216, 216)',
+        notification: 'rgb(255, 59, 48)'
+      },
+      fonts: {
+        regular: {
+          fontFamily: 'Inter',
+          fontWeight: 'normal',
+        },
+        medium: {
+          fontFamily: 'Inter',
+          fontWeight: '500',
+        },
+        bold: {
+          fontFamily: 'Inter',
+          fontWeight: 'bold',
+        },
+        heavy: {
+          fontFamily: 'Syne',
+          fontWeight: '800',
+        }
+      }
+    }}>
       <Stack.Navigator screenOptions={{headerShown: false, cardStyle: {backgroundColor: 'transparent'}}}>
         {isAuthenticated ? (
           <Stack.Screen name="Main" component={MainTabNavigator} />

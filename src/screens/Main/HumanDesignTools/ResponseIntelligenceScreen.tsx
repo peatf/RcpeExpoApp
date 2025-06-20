@@ -28,22 +28,6 @@ const ResponseIntelligenceScreen: React.FC = () => {
   const [questionForFraming, setQuestionForFraming] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false); // For pull-to-refresh
 
-  const handleRefresh = useCallback(async () => {
-    setIsRefreshing(true);
-    await loadGeneratorData();
-    setIsRefreshing(false);
-  }, [loadGeneratorData]);
-
-  useEffect(() => {
-    const fetchAuthority = async () => {
-      setIsLoadingAuthority(true);
-      const authority = await authorityService.detectUserAuthority();
-      setUserAuthority(authority);
-      setIsLoadingAuthority(false);
-    };
-    fetchAuthority();
-  }, []);
-
   const loadGeneratorData = useCallback(async () => {
     if (userAuthority !== AuthorityType.Sacral && userAuthority !== AuthorityType.Emotional && userAuthority !== AuthorityType.SelfProjected ) {
         // Simplified check: Sacral, Emotional (for EGs), SelfProjected (for SPGs) might use this.
@@ -68,6 +52,22 @@ const ResponseIntelligenceScreen: React.FC = () => {
     }
     setIsLoadingData(false);
   }, [userAuthority]);
+  
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await loadGeneratorData();
+    setIsRefreshing(false);
+  }, [loadGeneratorData]);
+
+  useEffect(() => {
+    const fetchAuthority = async () => {
+      setIsLoadingAuthority(true);
+      const authority = await authorityService.detectUserAuthority();
+      setUserAuthority(authority);
+      setIsLoadingAuthority(false);
+    };
+    fetchAuthority();
+  }, []);
 
   useEffect(() => {
     if (userAuthority) {

@@ -257,9 +257,7 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     padding: theme.spacing.md, // Add some padding
   },
-  // Removed unused styles: header, loader, entryContent, entryTags, entryAuthority, modal styles
-  // Kept only relevant styles for LivingLogScreen structure and feedback text.
-});
+  header: {
     fontWeight: 'bold',
     color: '#2c3e50',
     paddingHorizontal: 16,

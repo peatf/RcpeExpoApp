@@ -3,6 +3,7 @@
  * @description Theme constants and design system for RCPE app based on mockup
  */
 
+// Define and export each theme component individually
 export const colors = {
   bg: '#fafaf2',
   base1: '#e1e1d7',
@@ -85,15 +86,21 @@ export const typography = {
   },
   headingLarge: {
     fontFamily: fonts.display,
-    fontSize: 20, // Adjusted from 24px to better reflect h2 usage
-    fontWeight: '600' as const,
+    fontSize: 20,
+    fontWeight: '700' as const, // Corrected from 600
     lineHeight: 28,
   },
   headingMedium: {
     fontFamily: fonts.display,
-    fontSize: 18, // Adjusted from 20px
-    fontWeight: '600' as const,
+    fontSize: 18,
+    fontWeight: '700' as const, // Corrected from 600
     lineHeight: 24,
+  },
+  headingSmall: {
+    fontFamily: fonts.display,
+    fontSize: 16,
+    fontWeight: '700' as const,
+    lineHeight: 22,
   },
   bodyLarge: {
     fontFamily: fonts.body,
@@ -107,24 +114,47 @@ export const typography = {
     fontWeight: '400' as const,
     lineHeight: 20,
   },
+  bodySmall: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    fontWeight: '400' as const,
+    lineHeight: 18,
+  },
   labelLarge: {
-    fontFamily: fonts.mono, // Changed to mono
+    fontFamily: fonts.mono,
     fontSize: 14,
     fontWeight: '500' as const,
     lineHeight: 20,
     letterSpacing: 0.1,
-    textTransform: 'uppercase' as const, // Added textTransform
+    textTransform: 'uppercase' as const,
+  },
+  labelMedium: {
+    fontFamily: fonts.mono,
+    fontSize: 12,
+    fontWeight: '500' as const,
+    lineHeight: 18,
+    letterSpacing: 0.3,
+    textTransform: 'uppercase' as const,
   },
   labelSmall: {
-    fontFamily: fonts.mono, // Changed to mono
+    fontFamily: fonts.mono,
     fontSize: 11,
     fontWeight: '500' as const,
     lineHeight: 16,
     letterSpacing: 0.5,
     textTransform: 'uppercase' as const,
   },
+  labelXSmall: {
+    fontFamily: fonts.mono,
+    fontSize: 9,
+    fontWeight: '500' as const,
+    lineHeight: 12,
+    letterSpacing: 0.7,
+    textTransform: 'uppercase' as const,
+  },
 };
 
+// Export the combined theme object
 export const theme = {
   colors,
   fonts,

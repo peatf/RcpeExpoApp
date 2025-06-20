@@ -1,5 +1,4 @@
-// Inside src/screens/Main/UserBaseChartScreen.tsx
-import React, {useState, useEffect, useCallback} from 'react';
+import React, {useState, useEffect, useCallback, useMemo} from 'react';
 import {
   View,
   Text,
@@ -10,11 +9,55 @@ import {
 } from 'react-native';
 import {useAuth} from '../../contexts/AuthContext';
 import StackedButton from '../../components/StackedButton';
-import { theme } from '../../constants/theme'; // Import full theme
+import { colors, spacing, typography, shadows, borderRadius, fonts } from '../../constants/theme';
 import baseChartService, {BaseChartData} from '../../services/baseChartService';
-import blueprintVisualizerService from '../../services/blueprintVisualizerService';
+import blueprintVisualizerService, { VisualizationData } from '../../services/blueprintVisualizerService';
 import BlueprintCanvas from '../../components/EnergeticBlueprint/BlueprintCanvas';
 import BlueprintDescription from '../../components/EnergeticBlueprint/BlueprintDescription';
+
+// Helper functions for extracting data remain unchanged
+const extractDisplayData = (data: BaseChartData) => {
+  return {
+    design_authority: data.hd_type || 'Unknown',
+    strategy: data.decision_growth_vector?.strategy || 'Unknown',
+    inner_authority: data.decision_growth_vector?.authority || 'Unknown',
+    profile: data.energy_family?.profile_lines || 'Unknown',
+    defined_centers: getDefinedCenters(data),
+    undefined_centers: getUndefinedCenters(data),
+    active_gates: getActiveGates(data),
+  };
+};
+
+// Helper functions remain unchanged
+const getDefinedCenters = (data: BaseChartData) => {
+  const centers = [];
+  
+  if (data.processing_core?.head_state === 'defined') centers.push('Head');
+  if (data.processing_core?.ajna_state === 'defined') centers.push('Ajna');
+  if (data.processing_core?.emotional_state === 'defined') centers.push('Solar Plexus');
+  if (data.drive_mechanics?.heart_state === 'defined') centers.push('Heart');
+  if (data.manifestation_interface_rhythm?.throat_definition === 'defined') centers.push('Throat');
+  // Add more centers as needed
+  
+  return centers;
+};
+
+const getUndefinedCenters = (data: BaseChartData) => {
+  const centers = [];
+  
+  if (data.processing_core?.head_state === 'undefined') centers.push('Head');
+  if (data.processing_core?.ajna_state === 'undefined') centers.push('Ajna');
+  if (data.processing_core?.emotional_state === 'undefined') centers.push('Solar Plexus');
+  if (data.drive_mechanics?.heart_state === 'undefined') centers.push('Heart');
+  if (data.manifestation_interface_rhythm?.throat_definition === 'undefined') centers.push('Throat');
+  // Add more centers as needed
+  
+  return centers;
+};
+
+const getActiveGates = (data: BaseChartData) => {
+  return data.manifestation_interface_rhythm?.throat_gates || [];
+};
 
 const UserBaseChartScreen: React.FC<{navigation: any}> = ({navigation}) => {
   // Original state
@@ -28,6 +71,60 @@ const UserBaseChartScreen: React.FC<{navigation: any}> = ({navigation}) => {
   const [viewMode, setViewMode] = useState<'text' | 'visualization'>('text');
   const [highlightedCategory, setHighlightedCategory] = useState<string | null>(null);
   const [canvasReady, setCanvasReady] = useState(false);
+  
+  // Derived state for display data
+  const displayData = useMemo(() => chartData ? extractDisplayData(chartData) : null, [chartData]);
+  
+  // Create visualization data for BlueprintCanvas
+  const visualizationData = useMemo(() => {
+    if (!chartData) return null;
+    
+    // Transform BaseChartData to VisualizationData format expected by BlueprintCanvas
+    return {
+      profile_lines: chartData.energy_family?.profile_lines || '',
+      astro_sun_sign: chartData.energy_family?.astro_sun_sign || '',
+      astro_sun_house: String(chartData.energy_family?.astro_sun_house || ''),
+      astro_north_node_sign: chartData.energy_family?.astro_north_node_sign || '',
+      ascendant_sign: chartData.energy_class?.ascendant_sign || '',
+      chart_ruler_sign: chartData.energy_class?.chart_ruler_sign || '',
+      incarnation_cross: chartData.energy_class?.incarnation_cross || '',
+      incarnation_cross_quarter: chartData.energy_class?.incarnation_cross_quarter || '',
+      astro_moon_sign: chartData.processing_core?.astro_moon_sign || '',
+      astro_mercury_sign: chartData.processing_core?.astro_mercury_sign || '',
+      head_state: chartData.processing_core?.head_state || '',
+      ajna_state: chartData.processing_core?.ajna_state || '',
+      emotional_state: chartData.processing_core?.emotional_state || '',
+      cognition_variable: chartData.processing_core?.cognition_variable || '',
+      chiron_gate: String(chartData.processing_core?.chiron_gate || ''),
+      strategy: chartData.decision_growth_vector?.strategy || '',
+      authority: chartData.decision_growth_vector?.authority || '',
+      choice_navigation_spectrum: chartData.decision_growth_vector?.choice_navigation_spectrum || '',
+      astro_mars_sign: chartData.decision_growth_vector?.astro_mars_sign || '',
+      north_node_house: String(chartData.decision_growth_vector?.north_node_house || ''),
+      jupiter_placement: '', // Add if available in BaseChartData
+      motivation_color: chartData.drive_mechanics?.motivation_color || '',
+      heart_state: chartData.drive_mechanics?.heart_state || '',
+      root_state: chartData.drive_mechanics?.root_state || '',
+      venus_sign: chartData.drive_mechanics?.venus_sign || '',
+      kinetic_drive_spectrum: chartData.drive_mechanics?.kinetic_drive_spectrum || '',
+      resonance_field_spectrum: chartData.drive_mechanics?.resonance_field_spectrum || '',
+      perspective_variable: chartData.drive_mechanics?.perspective_variable || '',
+      saturn_placement: '', // Add if available in BaseChartData
+      throat_definition: chartData.manifestation_interface_rhythm?.throat_definition || '',
+      throat_gates: String(chartData.manifestation_interface_rhythm?.throat_gates || ''),
+      throat_channels: chartData.manifestation_interface_rhythm?.throat_channels?.join(',') || '',
+      manifestation_rhythm_spectrum: chartData.manifestation_interface_rhythm?.manifestation_rhythm_spectrum || '',
+      mars_aspects: '', // Add if available in BaseChartData
+      channel_list: chartData.energy_architecture?.channel_list?.join(',') || '',
+      definition_type: chartData.energy_architecture?.definition_type || '',
+      split_bridges: chartData.energy_architecture?.split_bridges?.join(',') || '',
+      soft_aspects: '', // Add if available in BaseChartData
+      g_center_access: chartData.evolutionary_path?.g_center_access || '',
+      conscious_line: String(chartData.evolutionary_path?.conscious_line || ''),
+      unconscious_line: String(chartData.evolutionary_path?.unconscious_line || ''),
+      core_priorities: chartData.evolutionary_path?.core_priorities?.join(',') || '',
+    } as VisualizationData;
+  }, [chartData]);
   
   // Get screen dimensions for canvas
   const screenWidth = Dimensions.get('window').width;
@@ -85,68 +182,84 @@ const UserBaseChartScreen: React.FC<{navigation: any}> = ({navigation}) => {
   // Handle view mode toggle
   const toggleViewMode = () => {
     setViewMode(viewMode === 'text' ? 'visualization' : 'text');
+    // Reset highlighted category when switching view modes
+    setHighlightedCategory(null);
   };
   
   // Handle category highlight for visualization
   const handleHighlight = (category: string) => {
+    console.log('Highlighting category:', category); // Add debug logging
+    console.log('Current highlightedCategory:', highlightedCategory); // Debug current state
+    // Toggle highlight - if current category is already highlighted, clear it
     setHighlightedCategory(category === highlightedCategory ? null : category);
   };
   
-  // Get blueprint descriptions for visualization mode
+  // Get blueprint descriptions for visualization mode using all 9 synthesis categories
   const getBlueprintDescriptions = useCallback(() => {
     if (!chartData) return [];
     
     return [
       {
-        category: 'Type & Strategy',
-        description: `${chartData.design_authority} with ${chartData.strategy} strategy`,
-        isHighlighted: highlightedCategory === 'Type & Strategy'
+        category: "Energy Family",
+        description: `Core identity shaped by a ${chartData.energy_family?.profile_lines || 'Unknown'} profile, radiating from the ${chartData.energy_family?.astro_sun_sign || 'Unknown'} frequency in the ${chartData.energy_family?.astro_sun_house || 'Unknown'} house.`
       },
       {
-        category: 'Authority',
-        description: `Inner Authority: ${chartData.inner_authority}`,
-        isHighlighted: highlightedCategory === 'Authority'
+        category: "Energy Class",
+        description: `Interface with the world, projecting a ${chartData.energy_class?.ascendant_sign || 'Unknown'} aura, guided by the ${chartData.energy_class?.incarnation_cross_quarter || 'Unknown'} quarter.`
       },
       {
-        category: 'Profile',
-        description: `Profile: ${chartData.profile}`,
-        isHighlighted: highlightedCategory === 'Profile'
+        category: "Processing Core",
+        description: `Mental processing through ${chartData.processing_core?.head_state || 'Unknown'} head center and ${chartData.processing_core?.ajna_state || 'Unknown'} ajna center, with ${chartData.processing_core?.cognition_variable || 'Unknown'} cognition.`
       },
       {
-        category: 'Defined Centers',
-        description: `Defined: ${chartData.defined_centers?.join(', ') || 'None'}`,
-        isHighlighted: highlightedCategory === 'Defined Centers'
+        category: "Decision Growth Vector",
+        description: `Operates with ${chartData.decision_growth_vector?.strategy || 'Unknown'} strategy and ${chartData.decision_growth_vector?.authority || 'Unknown'} authority for decision making.`
       },
       {
-        category: 'Undefined Centers',
-        description: `Undefined: ${chartData.undefined_centers?.join(', ') || 'None'}`,
-        isHighlighted: highlightedCategory === 'Undefined Centers'
+        category: "Drive Mechanics",
+        description: `Motivated by ${chartData.drive_mechanics?.motivation_color || 'Unknown'} with ${chartData.drive_mechanics?.heart_state || 'Unknown'} heart center driving action.`
+      },
+      {
+        category: "Manifestation Interface Rhythm",
+        description: `Throat ${chartData.manifestation_interface_rhythm?.throat_definition || 'Unknown'} with ${chartData.manifestation_interface_rhythm?.manifestation_rhythm_spectrum || 'Unknown'} rhythm spectrum.`
+      },
+      {
+        category: "Energy Architecture", 
+        description: `${chartData.energy_architecture?.definition_type || 'Unknown'} definition with ${chartData.energy_architecture?.channel_list?.length || 0} channels connecting centers.`
+      },
+      {
+        category: "Tension Points",
+        description: `Growth catalyst through Chiron Gate ${chartData.processing_core?.chiron_gate || 'Unknown'} and key tension dynamics.`
+      },
+      {
+        category: "Evolutionary Path",
+        description: `${chartData.evolutionary_path?.g_center_access || 'Unknown'} G-center access with conscious line ${chartData.evolutionary_path?.conscious_line || 'Unknown'}.`
       }
     ];
-  }, [chartData, highlightedCategory]);
+  }, [chartData]);
 
   // Original text view rendering
   const renderTextView = () => (
     <View>
-      {chartData && (
+      {chartData && displayData && (
         <>
           <View style={styles.sectionCard}>
             <Text style={styles.sectionTitle}>Basic Information</Text>
             <View style={styles.dataRow}>
               <Text style={styles.dataLabel}>Type:</Text>
-              <Text style={styles.dataValue}>{chartData.design_authority}</Text>
+              <Text style={styles.dataValue}>{displayData.design_authority}</Text>
             </View>
             <View style={styles.dataRow}>
               <Text style={styles.dataLabel}>Strategy:</Text>
-              <Text style={styles.dataValue}>{chartData.strategy}</Text>
+              <Text style={styles.dataValue}>{displayData.strategy}</Text>
             </View>
             <View style={styles.dataRow}>
               <Text style={styles.dataLabel}>Authority:</Text>
-              <Text style={styles.dataValue}>{chartData.inner_authority}</Text>
+              <Text style={styles.dataValue}>{displayData.inner_authority}</Text>
             </View>
             <View style={styles.dataRow}>
               <Text style={styles.dataLabel}>Profile:</Text>
-              <Text style={styles.dataValue}>{chartData.profile}</Text>
+              <Text style={styles.dataValue}>{displayData.profile}</Text>
             </View>
           </View>
 
@@ -154,19 +267,19 @@ const UserBaseChartScreen: React.FC<{navigation: any}> = ({navigation}) => {
             <Text style={styles.sectionTitle}>Centers</Text>
             <View style={styles.dataRow}>
               <Text style={styles.dataLabel}>Defined:</Text>
-              <Text style={styles.dataValue}>{chartData.defined_centers?.join(', ') || 'None'}</Text>
+              <Text style={styles.dataValue}>{displayData.defined_centers?.join(', ') || 'None'}</Text>
             </View>
             <View style={styles.dataRow}>
               <Text style={styles.dataLabel}>Undefined:</Text>
-              <Text style={styles.dataValue}>{chartData.undefined_centers?.join(', ') || 'None'}</Text>
+              <Text style={styles.dataValue}>{displayData.undefined_centers?.join(', ') || 'None'}</Text>
             </View>
           </View>
 
-          {chartData.active_gates && chartData.active_gates.length > 0 && (
+          {displayData.active_gates && displayData.active_gates.length > 0 && (
             <View style={styles.sectionCard}>
               <Text style={styles.sectionTitle}>Active Gates</Text>
               {/* Assuming active_gates is an array of numbers or strings that can be joined */}
-              <Text style={styles.dataValue}>{String(chartData.active_gates.join(', '))}</Text>
+              <Text style={styles.dataValue}>{String(displayData.active_gates.join(', '))}</Text>
             </View>
           )}
         </>
@@ -174,56 +287,46 @@ const UserBaseChartScreen: React.FC<{navigation: any}> = ({navigation}) => {
     </View>
   );
 
-  // New visualization view rendering  
+  // New visualization view rendering with interactive highlighting  
   const renderVisualizationView = () => {
+    if (!chartData) return null;
+    
+    const visualizationData = blueprintVisualizerService.prepareVisualizationData(chartData);
     const descriptions = getBlueprintDescriptions();
     
     return (
       <View style={styles.visualizationContainer}>
-        <View style={styles.canvasContainer}>
-          {chartData && ( // Ensure chartData is available before rendering BlueprintCanvas
-            <BlueprintCanvas
-              width={canvasSize}
-              height={canvasSize}
-              chartData={chartData}
-              highlightedCategory={highlightedCategory}
-              onCategoryPress={handleHighlight}
-              onReady={() => setCanvasReady(true)}
-              // Pass theme colors to BlueprintCanvas - assuming these props exist
-              accentColor={theme.colors.accent}
-              baseColor={theme.colors.base2} // For lines and less prominent elements
-              textColor={theme.colors.textPrimary}
-              backgroundColor={theme.colors.bg} // Or a specific chart background like base0
-              // fontFamily={theme.fonts.mono} // If BlueprintCanvas supports custom fonts for SVG text
-            />
+        {/* Blueprint Canvas Container */}
+        <View style={[styles.canvasContainer, {width: canvasSize, height: canvasSize}]}>
+          <BlueprintCanvas 
+            data={visualizationData} 
+            highlightedCategory={highlightedCategory} 
+            width={canvasSize} 
+            height={canvasSize} 
+            onCanvasReady={() => setCanvasReady(true)}
+          />
+          {!canvasReady && (
+            <View style={styles.canvasOverlay}>
+              <ActivityIndicator size="large" color={colors.accent} />
+            </View>
           )}
         </View>
         
-        {/* Info Panel Section */}
-        <View style={styles.infoPanelContainer}>
-          {descriptions.map((desc, index) => (
-            // Wrap BlueprintDescription in a View styled as infoPanel
-            // Or, if BlueprintDescription can take style prop for its root, that's an alternative.
-            // For now, wrapping it.
-            <View key={index} style={styles.infoPanel}>
-              <Text style={styles.infoPanelTextLine}>
-                <Text style={styles.infoPanelLabel}>{desc.category}: </Text>
-                <Text style={styles.infoPanelValue}>{desc.description}</Text>
-              </Text>
-              {/*
-                BlueprintDescription component might render its own content.
-                The goal is to make each item look like:
-                <View style={styles.infoPanel}>
-                  <Text style={styles.infoPanelLabel}>Profile:</Text>
-                  <Text style={styles.infoPanelValue}>6/2</Text>
-                </View>
-                If BlueprintDescription renders category and description with its own styles,
-                we might need to adjust or pass props to it.
-                Forcing the style here by reconstructing the Text:
-              */}
-            </View>
+        {/* Blueprint Descriptions with Interactive Highlighting */}
+        <ScrollView 
+          style={styles.descriptionsScroll} 
+          contentContainerStyle={styles.descriptionsContainer}
+        >
+          {descriptions.map((item, index) => (
+            <BlueprintDescription 
+              key={`desc-${index}`}
+              category={item.category}
+              description={item.description}
+              isHighlighted={highlightedCategory === item.category}
+              onPress={() => handleHighlight(item.category)}
+            />
           ))}
-        </View>
+        </ScrollView>
       </View>
     );
   };
@@ -247,7 +350,7 @@ const UserBaseChartScreen: React.FC<{navigation: any}> = ({navigation}) => {
             <View style={styles.messageContainer}>
               <Text style={styles.messageText}>Please log in to access your base chart</Text>
               <StackedButton
-                type="rect"
+                shape="rectangle"
                 text="GO TO LOGIN"
                 onPress={() => navigation.navigate('Login')}
               />
@@ -261,7 +364,7 @@ const UserBaseChartScreen: React.FC<{navigation: any}> = ({navigation}) => {
             <View style={styles.messageContainer}>
               <Text style={styles.messageText}>{error}</Text>
               <StackedButton
-                type="rect"
+                shape="rectangle"
                 text="RETRY"
                 onPress={() => loadBaseChart()}
               />
@@ -271,19 +374,35 @@ const UserBaseChartScreen: React.FC<{navigation: any}> = ({navigation}) => {
               <View style={styles.chartContent}>
                 {viewMode === 'text' ? renderTextView() : renderVisualizationView()}
               </View>
+              
               <View style={styles.chartActions}>
                 <StackedButton
-                  type="rect"
+                  shape="rectangle"
                   text={viewMode === 'text' ? 'SHOW VISUALIZATION' : 'SHOW TEXT VIEW'}
                   onPress={toggleViewMode}
                 />
+                
+                {fromCache && (
+                  <View style={styles.cacheNotice}>
+                    <Text style={styles.cacheText}>
+                      Using cached data. Tap to refresh for the latest information.
+                    </Text>
+                    <View style={styles.refreshButtonContainer}>
+                      <StackedButton
+                        shape="rectangle"
+                        text="REFRESH DATA"
+                        onPress={handleRefresh}
+                      />
+                    </View>
+                  </View>
+                )}
               </View>
             </>
           ) : (
             <View style={styles.messageContainer}>
               <Text style={styles.messageText}>No base chart data available</Text>
               <StackedButton
-                type="rect"
+                shape="rectangle"
                 text="LOAD CHART"
                 onPress={() => loadBaseChart()}
               />
@@ -298,31 +417,31 @@ const UserBaseChartScreen: React.FC<{navigation: any}> = ({navigation}) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.bg, // Apply theme background
+    backgroundColor: colors.bg, 
   },
   contentWrapper: {
     flex: 1,
-    padding: theme.spacing.lg, // Use theme spacing
+    padding: spacing.lg,
   },
   titleSection: {
     alignItems: 'center',
-    marginBottom: theme.spacing.xl, // Use theme spacing
+    marginBottom: spacing.xl,
     flexShrink: 0,
   },
-  pageTitle: { // "BASE CHART"
-    fontFamily: theme.fonts.display,
-    fontSize: theme.typography.displayMedium.fontSize,
-    fontWeight: theme.typography.displayMedium.fontWeight,
-    color: theme.colors.textPrimary,
+  pageTitle: {
+    fontFamily: fonts.display,
+    fontSize: typography.displayMedium.fontSize,
+    fontWeight: typography.displayMedium.fontWeight,
+    color: colors.textPrimary,
     textAlign: 'center',
     letterSpacing: 2,
   },
-  pageSubtitle: { // "Your energetic foundation"
-    fontFamily: theme.fonts.mono,
-    fontSize: theme.typography.labelSmall.fontSize,
-    color: theme.colors.textSecondary,
+  pageSubtitle: {
+    fontFamily: fonts.mono,
+    fontSize: typography.labelSmall.fontSize,
+    color: colors.textSecondary,
     textAlign: 'center',
-    marginTop: theme.spacing.xs, // Use theme spacing
+    marginTop: spacing.xs,
   },
   scrollView: {
     flex: 1,
@@ -336,118 +455,150 @@ const styles = StyleSheet.create({
   },
   chartActions: {
     marginTop: spacing.lg,
+    alignItems: 'center',
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: theme.spacing.xl,
+    padding: spacing.xl,
   },
   loadingText: {
-    fontFamily: theme.fonts.body, // Use theme font
-    fontSize: theme.typography.bodyMedium.fontSize,
-    color: theme.colors.textSecondary,
-    marginTop: theme.spacing.md,
+    fontFamily: fonts.body,
+    fontSize: typography.bodyMedium.fontSize,
+    color: colors.textSecondary,
+    marginTop: spacing.md,
     textAlign: 'center',
   },
   messageContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: theme.spacing.xl,
-    gap: theme.spacing.lg,
+    padding: spacing.xl,
+    gap: spacing.lg,
   },
   messageText: {
-    fontFamily: theme.fonts.body, // Use theme font
-    fontSize: theme.typography.bodyLarge.fontSize,
-    color: theme.colors.textSecondary,
+    fontFamily: fonts.body,
+    fontSize: typography.bodyLarge.fontSize,
+    color: colors.textSecondary,
     textAlign: 'center',
-    lineHeight: theme.typography.bodyLarge.lineHeight,
+    lineHeight: typography.bodyLarge.lineHeight,
+  },
+  cacheNotice: {
+    marginTop: spacing.md,
+    alignItems: 'center',
+    padding: spacing.sm,
+  },
+  cacheText: {
+    fontFamily: fonts.body,
+    fontSize: typography.labelSmall.fontSize,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: spacing.sm,
+  },
+  refreshButtonContainer: {
+    marginTop: spacing.xs,
   },
   // Styles for text view mode
   sectionCard: {
-    marginBottom: theme.spacing.lg,
-    padding: theme.spacing.md,
-    backgroundColor: theme.colors.bg, // Or a slightly different shade like base0 or base0.5 if defined
-    borderRadius: theme.borderRadius.md, // Use theme border radius
+    marginBottom: spacing.lg,
+    padding: spacing.md,
+    backgroundColor: colors.bg,
+    borderRadius: borderRadius.md,
     borderWidth: 1,
-    borderColor: theme.colors.base1,
+    borderColor: colors.base1,
+    ...shadows.small,
   },
   sectionTitle: {
-    fontFamily: theme.fonts.display, // Or a suitable heading font from theme
-    fontSize: theme.typography.headingMedium.fontSize, // Use theme typography
-    fontWeight: theme.typography.headingMedium.fontWeight,
-    color: theme.colors.textPrimary,
-    marginBottom: theme.spacing.md,
+    fontFamily: fonts.display,
+    fontSize: typography.headingMedium.fontSize,
+    fontWeight: typography.headingMedium.fontWeight,
+    color: colors.textPrimary,
+    marginBottom: spacing.md,
   },
   dataRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: theme.spacing.sm, // Use theme spacing
+    paddingVertical: spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.base2, // Use a slightly lighter border for rows
+    borderBottomColor: colors.base2,
   },
   dataLabel: {
-    fontFamily: theme.fonts.mono,
-    fontSize: theme.typography.bodyMedium.fontSize,
-    color: theme.colors.textSecondary,
+    fontFamily: fonts.mono,
+    fontSize: typography.bodyMedium.fontSize,
+    color: colors.textSecondary,
   },
   dataValue: {
-    fontFamily: theme.fonts.mono,
-    fontSize: theme.typography.bodyMedium.fontSize,
-    color: theme.colors.textPrimary,
-    backgroundColor: theme.colors.base1, // Use a subtle background for value
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: theme.spacing.xs,
-    borderRadius: theme.borderRadius.sm,
+    fontFamily: fonts.mono,
+    fontSize: typography.bodyMedium.fontSize,
+    color: colors.textPrimary,
+    backgroundColor: colors.base1,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.sm,
   },
+  
   // Styles for visualization view mode
-  visualizationContainer: { // Container for SVG and descriptions
+  visualizationContainer: {
     alignItems: 'center',
-    // padding: theme.spacing.md, // Padding for the whole viz section if needed
-  },
-  canvasContainer: { // Wrapper for BlueprintCanvas
     width: '100%',
-    aspectRatio: 1, // Make it square
+  },
+  canvasContainer: {
     borderWidth: 1,
-    borderColor: theme.colors.base1,
-    borderRadius: theme.borderRadius.md, // Consistent border radius
-    marginBottom: theme.spacing.lg, // mb-6 from HTML
-    backgroundColor: theme.colors.bg, // Or base0 if different from screen bg
-    // maxWidth: 500, // Already present, keep if needed
+    borderColor: colors.base1,
+    borderRadius: borderRadius.md,
+    marginBottom: spacing.lg,
+    backgroundColor: colors.bg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    ...shadows.small,
   },
-  infoPanelContainer: { // Wrapper for multiple info panels if needed, or apply to BlueprintDescription directly
-    width: '100%', // Panels take full width
-    gap: theme.spacing.md, // Space between info panels
+  canvasOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
   },
-  infoPanel: { // Style for each "Profile: 6/2" type of panel
-    padding: theme.spacing.md, // p-4
+  infoPanelContainer: {
+    width: '100%',
+    maxHeight: 300, // Limit height so it doesn't push other elements off-screen
+  },
+  infoPanelContent: {
+    padding: spacing.sm,
+  },
+  infoPanel: {
+    padding: spacing.md,
+    marginBottom: spacing.sm,
     borderWidth: 1,
-    borderColor: theme.colors.base1,
-    borderRadius: theme.borderRadius.sm, // rounded-lg (8px)
-    backgroundColor: 'rgba(255, 255, 255, 0.1)', // transparent white
-    // marginBottom: theme.spacing.md, // If not using gap in parent
+    borderColor: colors.base1,
+    borderRadius: borderRadius.sm,
+    backgroundColor: colors.bg,
+    ...shadows.small,
   },
-  infoPanelTextLine: { // For each line like "Profile: 6/2"
-    flexDirection: 'row',
-    justifyContent: 'space-between', // If label and value are separate Text components
-    // If single Text component, these are not needed here.
+  infoPanelHighlighted: {
+    borderColor: colors.accent,
+    backgroundColor: colors.base1,
   },
   infoPanelLabel: {
-    fontFamily: theme.fonts.mono,
-    fontSize: theme.typography.bodyMedium.fontSize, // text-sm
-    color: theme.colors.textSecondary,
+    fontFamily: fonts.display,
+    fontSize: typography.labelMedium.fontSize,
+    fontWeight: 'bold',
+    color: colors.textPrimary,
+    marginBottom: spacing.xs,
   },
   infoPanelValue: {
-    fontFamily: theme.fonts.mono,
-    fontSize: theme.typography.bodyMedium.fontSize, // text-sm
-    color: theme.colors.textPrimary,
+    fontFamily: fonts.mono,
+    fontSize: typography.bodySmall.fontSize,
+    color: colors.textSecondary,
   },
-  // descriptionsContainer is from old code, might be replaced by infoPanelContainer logic
+  descriptionsScroll: {
+    width: '100%',
+    maxWidth: 500,
+  },
   descriptionsContainer: {
-    // padding: theme.spacing.sm, // This was for ScrollView of BlueprintDescription items
-    width: '100%', // Ensure it takes full width
+    padding: spacing.sm,
   },
 });
 

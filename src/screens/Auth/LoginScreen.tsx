@@ -18,7 +18,7 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useAuth } from '../../contexts/AuthContext';
 import { AuthStackParamList } from '../../navigation/AuthNavigator';
-import { theme } from '../../constants/theme'; // Import theme
+import { colors, spacing, typography, shadows, borderRadius, fonts } from '../../constants/theme'; // Import individual theme constants
 
 type LoginScreenNavigationProp = StackNavigationProp<AuthStackParamList, 'Login'>;
 
@@ -28,95 +28,124 @@ const LoginScreen: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [emailFocused, setEmailFocused] = useState(false); // Focus state for email
   const [passwordFocused, setPasswordFocused] = useState(false); // Focus state for password
-  
-  const { login } = useAuth();
   const navigation = useNavigation<LoginScreenNavigationProp>();
+  const { login } = useAuth();
 
   const handleLogin = async () => {
-    if (!email.trim() || !password.trim()) {
-      Alert.alert('Error', 'Please enter both email and password');
+    // Input validation
+    if (!email.trim()) {
+      Alert.alert('Error', 'Please enter your email.');
+      return;
+    }
+    
+    if (!password.trim()) {
+      Alert.alert('Error', 'Please enter your password.');
+      return;
+    }
+    
+    // Regex for basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      Alert.alert('Error', 'Please enter a valid email address.');
       return;
     }
 
+    // Login logic with loading state
     setIsLoading(true);
     try {
-      const result = await login({email: email.trim(), password});
+      // Simulate API request with delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const result = await login({ email, password });
       
       if (!result.success) {
-        Alert.alert('Login Failed', result.error || 'Invalid credentials');
+        Alert.alert('Login Failed', result.error || 'Invalid email or password. Please try again.');
       }
-      // If successful, navigation will be handled by auth state change
-    } catch (error: any) {
-      Alert.alert('Error', error.message || 'Login failed');
+      
+    } catch (error) {
+      Alert.alert('Login Error', 'An error occurred during login. Please try again.');
+      console.error('Login error:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    <SafeAreaView style={styles.safeArea}>
+      <KeyboardAvoidingView 
         style={styles.keyboardView}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <View style={styles.content}>
-          <Text style={styles.title}>RCPE Mobile</Text>
-          <Text style={styles.subtitle}>Reality Creation Profile Engine</Text>
+          <Text style={styles.title}>Welcome</Text>
+          <Text style={styles.subtitle}>Sign in to access your profile</Text>
           
-          <View style={styles.form}>
-            {/* Email Input */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Email</Text>
-              <View style={[styles.inputPanel, emailFocused && styles.inputPanelFocused]}>
-                <TextInput
-                  style={styles.input}
-                  value={email}
-                  onChangeText={setEmail}
-                  placeholder="Enter your email"
-                  placeholderTextColor={theme.colors.textSecondary}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  onFocus={() => setEmailFocused(true)}
-                  onBlur={() => setEmailFocused(false)}
-                />
+          <View style={styles.panel}>
+            <View style={styles.form}>
+              {/* Email Input */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Email</Text>
+                <View style={[styles.inputPanel, emailFocused && styles.inputPanelFocused]}>
+                  <TextInput
+                    style={styles.input}
+                    value={email}
+                    onChangeText={setEmail}
+                    placeholder="Enter your email"
+                    placeholderTextColor={colors.textSecondary}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    onFocus={() => setEmailFocused(true)}
+                    onBlur={() => setEmailFocused(false)}
+                  />
+                </View>
+              </View>
+              
+              {/* Password Input */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Password</Text>
+                <View style={[styles.inputPanel, passwordFocused && styles.inputPanelFocused]}>
+                  <TextInput
+                    style={styles.input}
+                    value={password}
+                    onChangeText={setPassword}
+                    placeholder="Enter your password"
+                    placeholderTextColor={colors.textSecondary}
+                    secureTextEntry
+                    onFocus={() => setPasswordFocused(true)}
+                    onBlur={() => setPasswordFocused(false)}
+                  />
+                </View>
+              </View>
+              
+              {/* Forgot Password Link */}
+              <TouchableOpacity 
+                style={styles.forgotPassword}
+                onPress={() => Alert.alert('Password Reset', 'Password reset functionality is not implemented yet.')}
+              >
+                <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+              </TouchableOpacity>
+              
+              {/* Login Button */}
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity 
+                  style={styles.button}
+                  onPress={handleLogin}
+                  disabled={isLoading}
+                >
+                  <Text style={styles.buttonText}>
+                    {isLoading ? 'Signing In...' : 'Sign In'}
+                  </Text>
+                </TouchableOpacity>
               </View>
             </View>
-            
-            {/* Password Input */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Password</Text>
-              <View style={[styles.inputPanel, passwordFocused && styles.inputPanelFocused]}>
-                <TextInput
-                  style={styles.input}
-                  value={password}
-                  onChangeText={setPassword}
-                  placeholder="Enter your password"
-                  placeholderTextColor={theme.colors.textSecondary}
-                  secureTextEntry
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  onFocus={() => setPasswordFocused(true)}
-                  onBlur={() => setPasswordFocused(false)}
-                />
-              </View>
-            </View>
-            
-            <TouchableOpacity
-              style={[styles.button, isLoading && styles.buttonDisabled]}
-              onPress={handleLogin}
-              disabled={isLoading}
-            >
-              <Text style={styles.buttonText}>
-                {isLoading ? 'Logging in...' : 'Login'}
-              </Text>
-            </TouchableOpacity>
           </View>
-
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>Don't have an account?</Text>
+          
+          {/* Sign Up Link */}
+          <View style={styles.signupContainer}>
+            <Text style={styles.signupText}>Don't have an account?</Text>
             <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
-              <Text style={styles.footerLink}>Sign Up</Text>
+              <Text style={styles.signupLink}>Sign Up</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -126,9 +155,9 @@ const LoginScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
-    backgroundColor: theme.colors.bg, // Use theme background
+    backgroundColor: colors.bg,
   },
   keyboardView: {
     flex: 1,
@@ -136,96 +165,103 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     justifyContent: 'center',
-    paddingHorizontal: theme.spacing.lg, // Use theme spacing
+    paddingHorizontal: spacing.lg,
   },
   title: {
-    fontFamily: theme.fonts.display, // Or system prominent if display is too much
-    fontSize: theme.typography.displayMedium.fontSize, // Adjusted from displayLarge
-    fontWeight: theme.typography.displayMedium.fontWeight, // Use themed weight
-    color: theme.colors.textPrimary,
+    fontFamily: fonts.display,
+    fontSize: typography.displayMedium.fontSize,
+    fontWeight: typography.displayMedium.fontWeight,
+    color: colors.textPrimary,
     textAlign: 'center',
-    marginBottom: theme.spacing.sm, // Adjusted spacing
+    marginBottom: spacing.sm,
   },
   subtitle: {
-    fontFamily: theme.fonts.mono,
-    fontSize: theme.typography.bodyMedium.fontSize, // Adjusted from labelLarge
-    color: theme.colors.textSecondary,
+    fontFamily: fonts.mono,
+    fontSize: typography.bodyMedium.fontSize,
+    color: colors.textSecondary,
     textAlign: 'center',
-    marginBottom: theme.spacing.xl, // Increased spacing before form
+    marginBottom: spacing.xl,
   },
   form: {
     width: '100%',
   },
-  inputGroup: { // Replaces inputContainer
-    marginBottom: theme.spacing.lg, // Consistent spacing
+  inputGroup: {
+    marginBottom: spacing.lg,
   },
   label: {
-    fontFamily: theme.fonts.mono, // Or theme.fonts.body
-    fontSize: theme.typography.labelSmall.fontSize, // Themed label size
+    fontFamily: fonts.mono,
+    fontSize: typography.labelSmall.fontSize,
     fontWeight: '500',
-    color: theme.colors.textSecondary,
-    marginBottom: theme.spacing.xs,
+    color: colors.textSecondary,
+    marginBottom: spacing.xs,
   },
-  inputPanel: { // New style for the input wrapper
+  inputPanel: {
     borderWidth: 1,
-    borderColor: theme.colors.base1,
-    borderRadius: theme.borderRadius.sm,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    // Padding is applied to TextInput now for better control with label
+    borderColor: colors.base1,
+    borderRadius: borderRadius.sm,
+    backgroundColor: '#fff',
   },
   inputPanelFocused: {
-    borderColor: theme.colors.accent,
-    shadowColor: theme.colors.accentGlow,
-    shadowOffset: { width: 0, height: 0 },
-    shadowRadius: 10,
-    shadowOpacity: 0.7,
-    elevation: 3, // For Android
+    borderColor: colors.accent,
+    ...shadows.small,
   },
   input: {
-    backgroundColor: 'transparent',
-    paddingHorizontal: theme.spacing.md, // Horizontal padding inside panel
-    paddingVertical: theme.spacing.md,   // Vertical padding inside panel
-    color: theme.colors.textPrimary,
-    fontSize: 15, // As per spec
-    // No border/borderRadius here, it's on inputPanel
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    fontFamily: fonts.body,
+    color: colors.textPrimary,
+  },
+  forgotPassword: {
+    alignSelf: 'flex-end',
+    marginTop: spacing.xs,
+    marginBottom: spacing.lg,
+  },
+  forgotPasswordText: {
+    fontFamily: fonts.mono,
+    fontSize: typography.labelMedium.fontSize,
+    color: colors.accent,
+  },
+  panel: {
+    backgroundColor: '#fff',
+    borderRadius: borderRadius.md,
+    ...shadows.medium,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    marginVertical: 16,
+    width: '100%',
+  },
+  buttonContainer: {
+    marginTop: 0,
   },
   button: {
-    backgroundColor: theme.colors.accent,
-    borderRadius: theme.borderRadius.md, // Use theme border radius
-    paddingVertical: theme.spacing.md, // Use theme spacing
-    marginTop: theme.spacing.md, // Adjusted from 16
-    width: '100%', // Ensure button is full width
-  },
-  buttonDisabled: {
-    backgroundColor: theme.colors.base3, // Use theme color for disabled state
+    backgroundColor: colors.accent,
+    borderRadius: borderRadius.md,
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: spacing.md,
   },
   buttonText: {
-    fontFamily: theme.fonts.display, // Use display font for button
-    color: theme.colors.bg, // White text
-    fontSize: theme.typography.headingMedium.fontSize, // Themed font size
-    fontWeight: 'bold',
-    textAlign: 'center',
-    textShadowColor: 'rgba(0, 95, 247, 0.3)', // Accent color with opacity for glow
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 8,
+    color: '#fff',
+    fontFamily: fonts.mono,
+    fontSize: 16,
+    fontWeight: '700',
   },
-  footer: {
+  signupContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: theme.spacing.xl, // Increased spacing
+    marginTop: spacing.xl,
   },
-  footerText: {
-    fontFamily: theme.fonts.body,
-    fontSize: theme.typography.bodyMedium.fontSize, // Consistent body size
-    color: theme.colors.textSecondary,
-    marginRight: theme.spacing.xs,
+  signupText: {
+    color: colors.textSecondary,
+    marginRight: spacing.xs,
+    fontFamily: fonts.body,
   },
-  footerLink: {
-    fontFamily: theme.fonts.body,
-    fontSize: theme.typography.bodyMedium.fontSize, // Consistent body size
-    color: theme.colors.accent,
-    fontWeight: 'bold',
+  signupLink: {
+    color: colors.accent,
+    fontWeight: '600',
+    fontFamily: fonts.body,
   },
 });
 

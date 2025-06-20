@@ -14,12 +14,12 @@ const AppBackground: React.FC<AppBackgroundProps> = ({ children }) => {
   return (
     <View style={styles.container}>
       <ImageBackground
-        source={require('../../assets/InOSBkimg72x.png')}
+        source={require('../../assets/inoskimg72x.png')}
         style={StyleSheet.absoluteFill} // Ensure it covers the entire screen
         resizeMode="cover"
         imageStyle={{ opacity: 1 }} // Ensure image is fully opaque
         onError={(error) => console.log('Background image failed to load:', error.nativeEvent.error)}
-        // onLoad={() => console.log('Background image loaded successfully')} // Optional: for debugging
+        onLoad={() => console.log('Background image loaded successfully')} // Optional: for debugging
       >
         <View style={styles.overlay}>
           {children}

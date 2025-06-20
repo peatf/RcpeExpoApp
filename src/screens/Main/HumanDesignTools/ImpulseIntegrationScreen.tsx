@@ -25,22 +25,6 @@ const ImpulseIntegrationScreen: React.FC = () => {
   const [newImpulseText, setNewImpulseText] = useState(''); // This is used by LogInput's onSubmit callback
   const [isRefreshing, setIsRefreshing] = useState(false); // For pull-to-refresh
 
-  const handleRefresh = useCallback(async () => {
-    setIsRefreshing(true);
-    await loadManifestorData();
-    setIsRefreshing(false);
-  }, [loadManifestorData]);
-
-  useEffect(() => {
-    const fetchAuthority = async () => {
-      setIsLoadingAuthority(true);
-      const authority = await authorityService.detectUserAuthority();
-      setUserAuthority(authority);
-      setIsLoadingAuthority(false);
-    };
-    fetchAuthority();
-  }, []);
-
   const loadManifestorData = useCallback(async () => {
     if (!userAuthority || ![AuthorityType.Emotional, AuthorityType.Ego, AuthorityType.Splenic].includes(userAuthority)) {
       return;
@@ -73,6 +57,22 @@ const ImpulseIntegrationScreen: React.FC = () => {
       loadManifestorData();
     }
   }, [userAuthority, loadManifestorData]);
+  
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await loadManifestorData();
+    setIsRefreshing(false);
+  }, [loadManifestorData]);
+
+  useEffect(() => {
+    const fetchAuthority = async () => {
+      setIsLoadingAuthority(true);
+      const authority = await authorityService.detectUserAuthority();
+      setUserAuthority(authority);
+      setIsLoadingAuthority(false);
+    };
+    fetchAuthority();
+  }, []);
 
   const handleCaptureImpulse = async () => {
     if (!newImpulseText.trim()) {

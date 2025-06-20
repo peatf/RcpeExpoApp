@@ -1,10 +1,8 @@
 /**
- * @file FrequencyMapperScreen.tsx
+ * @file FrequencyMapperScreen/index.tsx
  * @description Dynamic, Drive Mechanics-personalized Desire Refinement Experience
- * 
- * This file contains the implementation of the FrequencyMapper screen.
  */
-import React, {useState, useEffect} from 'react';
+import React, {useState} from 'react';
 import {
   View,
   Text,
@@ -14,12 +12,11 @@ import {
   TextInput,
   ActivityIndicator,
 } from 'react-native';
-import StepTracker from '../../components/StepTracker';
-import { STEP_LABELS, FLOW_STEPS } from '../../constants/flowSteps';
-import ScreenExplainer from '../../components/ScreenExplainer';
-import { SCREEN_EXPLAINERS } from '../../constants/screenExplainers';
-// Import the individual constants directly instead of the theme object
-import { colors, spacing } from '../../constants/theme';
+import StepTracker from '../../../components/StepTracker';
+import { STEP_LABELS, FLOW_STEPS } from '../../../constants/flowSteps';
+import ScreenExplainer from '../../../components/ScreenExplainer';
+import { SCREEN_EXPLAINERS } from '../../../constants/screenExplainers';
+import { colors, spacing } from '../../../constants/theme';
 
 /**
  * FrequencyMapperScreen component
@@ -30,12 +27,6 @@ const FrequencyMapperScreen: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [desireInput, setDesireInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  
-  // Debug spacing and colors
-  useEffect(() => {
-    console.log('Colors:', colors);
-    console.log('Spacing:', spacing);
-  }, []);
   
   // Define our steps 
   const stepLabels = STEP_LABELS.FREQUENCY_MAPPER;

@@ -32,12 +32,7 @@ const ProjectFlowDynamicsScreen: React.FC = () => {
   // Focus states for new inputs
   const [projectStepFocused, setProjectStepFocused] = useState(false);
   const [frustrationNoteFocused, setFrustrationNoteFocused] = useState(false);
-
-  const handleRefresh = useCallback(async () => {
-    setIsRefreshing(true);
-    await loadMGData();
-    setIsRefreshing(false);
-  }, [loadMGData]);
+  
 
   useEffect(() => {
     const fetchAuthority = async () => {
@@ -74,6 +69,12 @@ const ProjectFlowDynamicsScreen: React.FC = () => {
     }
     setIsLoadingData(false);
   }, [userAuthority]);
+  
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await loadMGData();
+    setIsRefreshing(false);
+  }, [loadMGData]);
 
   useEffect(() => {
     if (userAuthority) {

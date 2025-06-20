@@ -19,7 +19,7 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useAuth } from '../../contexts/AuthContext';
 import { AuthStackParamList } from '../../navigation/AuthNavigator';
-import { theme } from '../../constants/theme'; // Import theme
+import { colors, spacing, typography, shadows, borderRadius, fonts } from '../../constants/theme'; // Import individual theme constants
 
 type SignUpScreenNavigationProp = StackNavigationProp<AuthStackParamList, 'SignUp'>;
 
@@ -108,7 +108,7 @@ export const SignUpScreen: React.FC = () => {
                     value={formData.name}
                     onChangeText={(value) => updateFormData('name', value)}
                     placeholder="Enter your full name"
-                    placeholderTextColor={theme.colors.textSecondary}
+                    placeholderTextColor={colors.textSecondary}
                     autoCapitalize="words"
                     autoCorrect={false}
                     onFocus={() => setNameFocused(true)}
@@ -126,7 +126,7 @@ export const SignUpScreen: React.FC = () => {
                     value={formData.email}
                     onChangeText={(value) => updateFormData('email', value)}
                     placeholder="Enter your email"
-                    placeholderTextColor={theme.colors.textSecondary}
+                    placeholderTextColor={colors.textSecondary}
                     keyboardType="email-address"
                     autoCapitalize="none"
                     autoCorrect={false}
@@ -145,7 +145,7 @@ export const SignUpScreen: React.FC = () => {
                     value={formData.password}
                     onChangeText={(value) => updateFormData('password', value)}
                     placeholder="Enter your password"
-                    placeholderTextColor={theme.colors.textSecondary}
+                    placeholderTextColor={colors.textSecondary}
                     secureTextEntry
                     onFocus={() => setPasswordFocused(true)}
                     onBlur={() => setPasswordFocused(false)}
@@ -162,7 +162,7 @@ export const SignUpScreen: React.FC = () => {
                     value={formData.confirmPassword}
                     onChangeText={(value) => updateFormData('confirmPassword', value)}
                     placeholder="Confirm your password"
-                    placeholderTextColor={theme.colors.textSecondary}
+                    placeholderTextColor={colors.textSecondary}
                     secureTextEntry
                     onFocus={() => setConfirmPasswordFocused(true)}
                     onBlur={() => setConfirmPasswordFocused(false)}
@@ -197,7 +197,7 @@ export const SignUpScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.bg, // Use theme background
+    backgroundColor: colors.bg, // Use theme background
   },
   keyboardView: {
     flex: 1,
@@ -209,47 +209,47 @@ const styles = StyleSheet.create({
   content: { // Inner content View
     // flex: 1, // Not needed if ScrollView's contentContainerStyle handles flexGrow
     justifyContent: 'center',
-    paddingHorizontal: theme.spacing.lg, // Use theme spacing
-    paddingVertical: theme.spacing.xl, // More vertical padding for scrollable content
+    paddingHorizontal: spacing.lg, // Use theme spacing
+    paddingVertical: spacing.xl, // More vertical padding for scrollable content
   },
   title: {
-    fontFamily: theme.fonts.display,
-    fontSize: theme.typography.displayMedium.fontSize,
-    fontWeight: theme.typography.displayMedium.fontWeight,
-    color: theme.colors.textPrimary,
+    fontFamily: fonts.display,
+    fontSize: typography.displayMedium.fontSize,
+    fontWeight: typography.displayMedium.fontWeight,
+    color: colors.textPrimary,
     textAlign: 'center',
-    marginBottom: theme.spacing.sm,
+    marginBottom: spacing.sm,
   },
   subtitle: {
-    fontFamily: theme.fonts.mono,
-    fontSize: theme.typography.bodyMedium.fontSize,
-    color: theme.colors.textSecondary,
+    fontFamily: fonts.mono,
+    fontSize: typography.bodyMedium.fontSize,
+    color: colors.textSecondary,
     textAlign: 'center',
-    marginBottom: theme.spacing.xl,
+    marginBottom: spacing.xl,
   },
   form: {
     width: '100%', // Ensure form takes full width
-    marginBottom: theme.spacing.lg, // Space before footer
+    marginBottom: spacing.lg, // Space before footer
   },
   inputGroup: { // Replaces inputContainer
-    marginBottom: theme.spacing.lg,
+    marginBottom: spacing.lg,
   },
   label: {
-    fontFamily: theme.fonts.mono,
-    fontSize: theme.typography.labelSmall.fontSize,
+    fontFamily: fonts.mono,
+    fontSize: typography.labelSmall.fontSize,
     fontWeight: '500',
-    color: theme.colors.textSecondary,
-    marginBottom: theme.spacing.xs,
+    color: colors.textSecondary,
+    marginBottom: spacing.xs,
   },
   inputPanel: {
     borderWidth: 1,
-    borderColor: theme.colors.base1,
-    borderRadius: theme.borderRadius.sm,
+    borderColor: colors.base1,
+    borderRadius: borderRadius.sm,
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
   inputPanelFocused: {
-    borderColor: theme.colors.accent,
-    shadowColor: theme.colors.accentGlow,
+    borderColor: colors.accent,
+    shadowColor: colors.accentGlow,
     shadowOffset: { width: 0, height: 0 },
     shadowRadius: 10,
     shadowOpacity: 0.7,
@@ -257,25 +257,25 @@ const styles = StyleSheet.create({
   },
   input: {
     backgroundColor: 'transparent',
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.md,
-    color: theme.colors.textPrimary,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    color: colors.textPrimary,
     fontSize: 15,
   },
   button: {
-    backgroundColor: theme.colors.accent,
-    borderRadius: theme.borderRadius.md,
-    paddingVertical: theme.spacing.md,
-    marginTop: theme.spacing.md, // Space above button
+    backgroundColor: colors.accent,
+    borderRadius: borderRadius.md,
+    paddingVertical: spacing.md,
+    marginTop: spacing.md, // Space above button
     width: '100%',
   },
   buttonDisabled: {
-    backgroundColor: theme.colors.base3,
+    backgroundColor: colors.base3,
   },
   buttonText: {
-    fontFamily: theme.fonts.display,
-    color: theme.colors.bg,
-    fontSize: theme.typography.headingMedium.fontSize,
+    fontFamily: fonts.display,
+    color: colors.bg,
+    fontSize: typography.headingMedium.fontSize,
     fontWeight: 'bold',
     textAlign: 'center',
     textShadowColor: 'rgba(0, 95, 247, 0.3)',
@@ -286,18 +286,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: theme.spacing.lg, // Consistent spacing
+    marginTop: spacing.lg, // Consistent spacing
   },
   footerText: {
-    fontFamily: theme.fonts.body,
-    fontSize: theme.typography.bodyMedium.fontSize,
-    color: theme.colors.textSecondary,
-    marginRight: theme.spacing.xs,
+    fontFamily: fonts.body,
+    fontSize: typography.bodyMedium.fontSize,
+    color: colors.textSecondary,
+    marginRight: spacing.xs,
   },
   footerLink: {
-    fontFamily: theme.fonts.body,
-    fontSize: theme.typography.bodyMedium.fontSize,
-    color: theme.colors.accent,
+    fontFamily: fonts.body,
+    fontSize: typography.bodyMedium.fontSize,
+    color: colors.accent,
     fontWeight: 'bold',
   },
 });

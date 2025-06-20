@@ -10,6 +10,9 @@
     "dev": "zsh dev-start.sh"
   },
   "dependencies": {
+    "@expo-google-fonts/ibm-plex-mono": "*",
+    "@expo-google-fonts/inter": "^0.4.1",
+    "@expo-google-fonts/syne": "*",
     "@expo/metro-runtime": "~5.0.4",
     "@expo/vector-icons": "^14.1.0",
     "@react-native-async-storage/async-storage": "^2.1.2",
@@ -22,12 +25,9 @@
     "axios": "^1.9.0",
     "cors": "^2.8.5",
     "expo": "53.0.11",
-    "@expo-google-fonts/ibm-plex-mono": "*",
-    "@expo-google-fonts/inter": "*",
-    "@expo-google-fonts/syne": "*",
-    "expo-font": "*",
     "expo-clipboard": "~7.1.4",
     "expo-constants": "^17.1.6",
+    "expo-font": "*",
     "expo-status-bar": "~2.2.3",
     "express": "^5.1.0",
     "node-fetch": "^3.3.2",

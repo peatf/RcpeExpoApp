@@ -3,10 +3,11 @@
  * @description Main app layout with side navigation matching mockup design
  */
 import React, { useState, useRef } from 'react'; // Added useRef
-import { View, StyleSheet, Text, ScrollView, Animated } from 'react-native'; // Added Text, ScrollView, Animated
+import { View, StyleSheet, ScrollView, Animated } from 'react-native'; // Added ScrollView, Animated
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import StackedButton from '../components/StackedButton';
-import { theme } from '../constants/theme'; // Import full theme
+import { colors, fonts, spacing, borderRadius } from '../constants/theme'; // Import individual constants
 import WelcomeScreen from '../screens/Main/WelcomeScreen';
 import FrequencyMapperScreen from '../screens/Main/FrequencyMapperScreen';
 import OracleScreen from '../screens/Main/OracleScreen';
@@ -21,6 +22,7 @@ const MainTabNavigator: React.FC = () => {
   const [isNavCollapsed, setIsNavCollapsed] = useState<boolean>(false);
   // Animated value for navigation panel width
   const navPanelWidth = useRef(new Animated.Value(72)).current;
+  const insets = useSafeAreaInsets();
 
   const navigationItems = [
     {
@@ -65,12 +67,31 @@ const MainTabNavigator: React.FC = () => {
     const currentItem = navigationItems.find(item => item.id === currentScreen);
     if (currentItem) {
       const Component = currentItem.component;
-      if (Component === WelcomeScreen) {
-        return <Component onBeginSession={() => setCurrentScreen('frequencyMapper')} />;
+      
+      // Safely render different component types with appropriate props
+      switch (currentItem.id) {
+        case 'welcome':
+          return <WelcomeScreen onBeginSession={() => setCurrentScreen('frequencyMapper')} />;
+        case 'frequencyMapper':
+          // @ts-ignore - FrequencyMapperScreen doesn't need navigation prop in our simplified implementation
+          return <FrequencyMapperScreen />;
+        case 'oracle':
+          // @ts-ignore - OracleScreen may have different prop requirements
+          return <OracleScreen />;
+        case 'baseChart':
+          // @ts-ignore - UserBaseChartScreen may have different prop requirements  
+          return <UserBaseChartScreen />;
+        case 'livingLog':
+          // @ts-ignore - LivingLogScreen may have different prop requirements
+          return <LivingLogScreen />;
+        case 'decisionMaker':
+          // @ts-ignore - DecisionMakerScreen may have different prop requirements
+          return <DecisionMakerScreen />;
+        default:
+          return <WelcomeScreen onBeginSession={() => setCurrentScreen('frequencyMapper')} />;
       }
-      // @ts-ignore - These components don't expect props but have different interfaces
-      return <Component />;
     }
+    // Fallback to welcome screen
     return <WelcomeScreen onBeginSession={() => setCurrentScreen('frequencyMapper')} />;
   };
 
@@ -88,13 +109,7 @@ const MainTabNavigator: React.FC = () => {
   // This diff focuses on the main structure.
 
   return (
-    <View style={styles.appShell}>
-      {/* Header */}
-      <View style={styles.headerContainer}>
-        <Text style={styles.headerTitle}>RCPE_OS</Text>
-        <Text style={styles.headerUserText}>USER: peathefeary</Text>
-      </View>
-
+    <View style={[styles.appShell, { paddingTop: insets.top }]}>
       {/* Main Body (Nav Panel + Content Area) */}
       <View style={styles.mainBodyContainer}>
         {/* Navigation Panel */}
@@ -102,14 +117,14 @@ const MainTabNavigator: React.FC = () => {
           {/* Collapse/Expand Button - to be styled correctly */}
           <View style={styles.navButtonWrapper}>
             <StackedButton
-              type="nav"
+              shape="circle"
               onPress={toggleNavCollapse}
-              isActive={false} // Or some other visual cue
+              isActive={false}
             >
               <Ionicons
                 name={isNavCollapsed ? 'chevron-forward' : 'chevron-back'}
-                size={20} // Adjusted size
-                // Color will be handled by StackedButton's cloneElement
+                size={20}
+                color="#fafaf2"
               />
             </StackedButton>
           </View>
@@ -118,14 +133,14 @@ const MainTabNavigator: React.FC = () => {
           {navigationItems.map((item) => (
             <View key={item.id} style={styles.navButtonWrapper}>
               <StackedButton
-                type="nav"
+                shape="circle"
                 onPress={() => setCurrentScreen(item.id as ScreenName)}
                 isActive={currentScreen === item.id}
               >
                 <Ionicons 
                   name={item.icon as keyof typeof Ionicons.glyphMap}
                   size={20}
-                  // Color handled by StackedButton
+                  color="#fafaf2"
                 />
               </StackedButton>
             </View>
@@ -150,29 +165,7 @@ const MainTabNavigator: React.FC = () => {
 const styles = StyleSheet.create({
   appShell: {
     flex: 1,
-    backgroundColor: theme.colors.bg, // Base background for the entire app shell
-  },
-  headerContainer: {
-    height: 64, // As per spec
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: theme.spacing.lg,
-    backgroundColor: theme.colors.bg,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.base1,
-  },
-  headerTitle: {
-    fontFamily: theme.fonts.mono,
-    fontSize: 18, // Example size
-    fontWeight: 'bold', // Example weight
-    color: theme.colors.textPrimary,
-    letterSpacing: 1.5, // Wider spacing
-  },
-  headerUserText: {
-    fontFamily: theme.fonts.mono,
-    fontSize: 12, // Example size
-    color: theme.colors.textSecondary,
+    backgroundColor: 'transparent', // Allow AppBackground to show through
   },
   mainBodyContainer: {
     flex: 1,
@@ -180,19 +173,19 @@ const styles = StyleSheet.create({
   },
   navigationPanel: {
     // width: 72, // Initial width, now controlled by Animated.Value
-    backgroundColor: theme.colors.bg, // Or a slight variant if needed
+    backgroundColor: 'rgba(250, 250, 242, 0.9)', // Semi-transparent nav panel
     borderRightWidth: 1,
-    borderRightColor: theme.colors.base1,
-    paddingVertical: theme.spacing.md,
+    borderRightColor: colors.base1,
+    paddingVertical: spacing.md,
     alignItems: 'center', // Center buttons
     // justifyContent: 'flex-start', // Align buttons to top
   },
   navButtonWrapper: { // Wrapper for each nav button for spacing
-    marginBottom: theme.spacing.md, // Space between nav buttons
+    marginBottom: spacing.md, // Space between nav buttons
   },
   contentArea: {
     flex: 1,
-    backgroundColor: theme.colors.bg, // Ensure content area bg matches
+    backgroundColor: 'transparent', // Allow background to show through
     overflow: 'hidden', // For x-axis, ScrollView handles y-axis
   },
   scrollView: {

@@ -1,0 +1,10 @@
+/**
+ * @file FrequencyMapperScreen.tsx
+ * @description Dynamic, Drive Mechanics-personalized Desire Refinement Experience
+ * 
+ * This file re-exports the implementation from ./FrequencyMapperScreen/index.tsx
+ * to maintain compatibility with imports in the codebase.
+ */
+import FrequencyMapperScreen from './FrequencyMapperScreen/index';
+
+export default FrequencyMapperScreen;
