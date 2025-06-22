@@ -8,7 +8,7 @@ export const getMotivationLanguage = (motivationColor?: string) => {
   switch(motivationColor) {
     case 'Need':
       return {
-        insight: "I sense an urgent calling that needs your attention.",
+        insight: "I sense an important calling that needs your attention.",
         outcome_type: "necessity",
         verb: "requires"
       };
