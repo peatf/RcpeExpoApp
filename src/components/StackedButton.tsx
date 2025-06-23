@@ -47,12 +47,12 @@ const StackedButton: React.FC<StackedButtonProps> = ({
 
     // Layer definitions based on shape - Rectangles are much wider
     const rectLayers: LayerStyle[] = [
-        { width: 240, height: 80, backgroundColor: colors.base1, zIndex: 1 },
-        { width: 210, height: 68, backgroundColor: colors.base2, zIndex: 2, shadowColor: colors.base2 },
-        { width: 180, height: 56, backgroundColor: colors.base3, zIndex: 3, shadowColor: colors.base3 },
-        { width: 150, height: 44, backgroundColor: colors.base4, zIndex: 4, shadowColor: colors.base4 },
-        { width: 120, height: 32, backgroundColor: colors.base5, zIndex: 5, shadowColor: colors.base5 },
-        { width: 90, height: 20, backgroundColor: colors.base6, zIndex: 6, shadowColor: colors.base6 },
+        { width: 240, height: 80, backgroundColor: colors.base1, zIndex: 1 }, // 3:1 aspect ratio
+        { width: 210, height: 70, backgroundColor: colors.base2, zIndex: 2, shadowColor: colors.base2 }, // 3:1
+        { width: 180, height: 60, backgroundColor: colors.base3, zIndex: 3, shadowColor: colors.base3 }, // 3:1
+        { width: 150, height: 50, backgroundColor: colors.base4, zIndex: 4, shadowColor: colors.base4 }, // 3:1
+        { width: 120, height: 40, backgroundColor: colors.base5, zIndex: 5, shadowColor: colors.base5 }, // 3:1
+        { width: 90,  height: 30, backgroundColor: colors.base6, zIndex: 6, shadowColor: colors.base6 }, // 3:1
     ];
 
     const circleLayers: LayerStyle[] = [

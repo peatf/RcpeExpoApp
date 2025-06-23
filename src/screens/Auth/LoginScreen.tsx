@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.base1,
     borderRadius: borderRadius.sm,
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)', // Consistent with SignUpScreen
   },
   inputPanelFocused: {
     borderColor: colors.accent,

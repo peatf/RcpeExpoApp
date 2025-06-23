@@ -20,9 +20,9 @@ type ScreenName = 'welcome' | 'frequencyMapper' | 'oracle' | 'baseChart' | 'livi
 
 const MainTabNavigator: React.FC = () => {
   const [currentScreen, setCurrentScreen] = useState<ScreenName>('welcome');
-  const [isNavCollapsed, setIsNavCollapsed] = useState<boolean>(false);
+  const [isNavCollapsed, setIsNavCollapsed] = useState<boolean>(true); // Start collapsed
   // Animated value for navigation panel width
-  const navPanelWidth = useRef(new Animated.Value(72)).current;
+  const navPanelWidth = useRef(new Animated.Value(0)).current; // Start with 0 width
   const insets = useSafeAreaInsets();
 
   const navigationItems = [
@@ -106,7 +106,7 @@ const MainTabNavigator: React.FC = () => {
   };
 
   const toggleNavCollapse = () => {
-    const newWidth = isNavCollapsed ? 72 : 50; // Collapsed width to 50px
+    const newWidth = isNavCollapsed ? 72 : 0; // 0 width when collapsed
     Animated.timing(navPanelWidth, {
       toValue: newWidth,
       duration: 300, // Animation duration
@@ -123,31 +123,52 @@ const MainTabNavigator: React.FC = () => {
       {/* Main Body (Nav Panel + Content Area) */}
       <View style={styles.mainBodyContainer}>
         {/* Navigation Panel */}
-        <Animated.View style={[styles.navigationPanel, { width: navPanelWidth }]}>
-          {/* Collapse/Expand Button - to be styled correctly */}
-          <View style={styles.navButtonWrapper}>
+        {isNavCollapsed && (
+          <View style={styles.openButtonWrapper}>
             <StackedButton
               shape="circle"
               onPress={toggleNavCollapse}
               isActive={false}
             >
               <Ionicons
-                name={isNavCollapsed ? 'chevron-forward' : 'chevron-back'}
-                size={20}
-                color="#fafaf2"
+                name="menu" // Icon for opening the sidebar
+                size={24} // Slightly larger for visibility
+                color={colors.text} // Use theme text color
               />
             </StackedButton>
           </View>
+        )}
+        <Animated.View style={[styles.navigationPanel, { width: navPanelWidth }]}>
+          {/* Collapse/Expand Button - to be styled correctly */}
+          {!isNavCollapsed && (
+            <View style={styles.navButtonWrapper}>
+              <StackedButton
+                shape="circle"
+                onPress={toggleNavCollapse}
+                isActive={false}
+              >
+                <Ionicons
+                  name={'chevron-back'} // Always back when panel is open
+                  size={20}
+                  color="#fafaf2"
+                />
+              </StackedButton>
+            </View>
+          )}
 
-          {/* Navigation Items - Always map, StackedButton will handle icon-only view if panel is narrow */}
-          {navigationItems.map((item) => (
+          {/* Navigation Items - Render only if not collapsed */}
+          {!isNavCollapsed && navigationItems.map((item) => (
             <View key={item.id} style={styles.navButtonWrapper}>
               <StackedButton
                 shape="circle"
-                onPress={() => setCurrentScreen(item.id as ScreenName)}
+                onPress={() => {
+                  setCurrentScreen(item.id as ScreenName);
+                  // Optionally collapse after selection, if desired UX
+                  // toggleNavCollapse();
+                }}
                 isActive={currentScreen === item.id}
               >
-                <Ionicons 
+                <Ionicons
                   name={item.icon as keyof typeof Ionicons.glyphMap}
                   size={20}
                   color="#fafaf2"
@@ -183,15 +204,22 @@ const styles = StyleSheet.create({
   },
   navigationPanel: {
     // width: 72, // Initial width, now controlled by Animated.Value
-    backgroundColor: 'rgba(250, 250, 242, 0.9)', // Semi-transparent nav panel
+    backgroundColor: 'transparent', // Fully transparent nav panel
     borderRightWidth: 1,
-    borderRightColor: colors.base1,
+    borderRightColor: colors.base1, // Keep border for definition if needed, or remove
     paddingVertical: spacing.md,
     alignItems: 'center', // Center buttons
     // justifyContent: 'flex-start', // Align buttons to top
+    overflow: 'hidden', // Hide content when collapsed
   },
   navButtonWrapper: { // Wrapper for each nav button for spacing
     marginBottom: spacing.md, // Space between nav buttons
+  },
+  openButtonWrapper: { // Style for the open button when sidebar is collapsed
+    position: 'absolute', // Position it over the content or fixed
+    top: spacing.md, // Adjust as needed
+    left: spacing.md, // Adjust as needed
+    zIndex: 10, // Ensure it's above other content
   },
   contentArea: {
     flex: 1,

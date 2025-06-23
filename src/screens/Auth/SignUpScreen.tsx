@@ -249,11 +249,7 @@ const styles = StyleSheet.create({
   },
   inputPanelFocused: {
     borderColor: colors.accent,
-    shadowColor: colors.accentGlow,
-    shadowOffset: { width: 0, height: 0 },
-    shadowRadius: 10,
-    shadowOpacity: 0.7,
-    elevation: 3,
+    ...shadows.small, // Consistent with LoginScreen and theme
   },
   input: {
     backgroundColor: 'transparent',

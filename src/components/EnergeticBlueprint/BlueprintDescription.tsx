@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { colors, fonts, spacing, typography, borderRadius } from '../../constants/theme';
 
 interface BlueprintDescriptionProps {
   category: string;
@@ -29,25 +30,29 @@ const styles = StyleSheet.create({
   card: {
     borderLeftWidth: 3,
     borderLeftColor: 'transparent',
-    padding: 16,
-    marginBottom: 8,
-    backgroundColor: '#F8F4E9',
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+    backgroundColor: colors.base1, // Theme color for card background
+    borderRadius: borderRadius.sm, // Added for consistency
   },
   highlighted: {
-    backgroundColor: '#EFEAE0',
-    borderLeftColor: '#212121',
+    backgroundColor: colors.accentSecondary, // Theme color for highlighted card
+    borderLeftColor: colors.accent, // Theme color for highlight accent
   },
   title: {
-    fontFamily: 'monospace',
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 4,
-    color: '#212121',
+    fontFamily: fonts.mono,
+    fontSize: typography.labelLarge.fontSize,
+    fontWeight: typography.labelLarge.fontWeight,
+    color: colors.textPrimary,
+    marginBottom: spacing.xs,
+    textTransform: typography.labelLarge.textTransform,
+    letterSpacing: typography.labelLarge.letterSpacing,
   },
   description: {
-    fontSize: 14,
-    color: '#555',
-    lineHeight: 20,
+    fontFamily: fonts.body,
+    fontSize: typography.bodyMedium.fontSize,
+    color: colors.textSecondary,
+    lineHeight: typography.bodyMedium.lineHeight,
   }
 });
 
