@@ -441,7 +441,7 @@ const UserBaseChartScreen: React.FC<{navigation: any}> = ({navigation}) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.bg, 
+    backgroundColor: 'transparent', // Allow AppBackground to show through
   },
   contentWrapper: {
     flex: 1,

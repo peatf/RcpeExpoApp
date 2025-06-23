@@ -1147,20 +1147,22 @@ const FrequencyMapperScreen: React.FC = () => {
         <Text style={styles.calibrationText}>{crystallizationOutput.calibration_preparation}</Text>
 
         <View style={styles.buttonRow}>
-          <TouchableOpacity
-            style={styles.resetButton}
+          <StackedButton
+            shape="rectangle"
+            text="Start Over"
             onPress={handleReset}
-          >
-            <Text style={styles.resetButtonText}>Start Over</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.calibrateButton}
+            buttonStyle={styles.resetButton}
+            textStyle={styles.resetButtonText}
+          />
+          <StackedButton
+            shape="rectangle"
+            text="Calibrate Alignment"
             onPress={handleNavigateToCalibration}
+            buttonStyle={styles.calibrateButton}
+            textStyle={styles.buttonText}
           >
-            <Text style={styles.buttonText}>Calibrate Alignment</Text>
             <Ionicons name="arrow-forward" size={18} color="#fff" style={{marginLeft: 8}} />
-          </TouchableOpacity>
+          </StackedButton>
         </View>
       </View>
     );
