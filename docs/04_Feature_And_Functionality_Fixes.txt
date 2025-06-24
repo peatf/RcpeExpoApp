@@ -1,0 +1,54 @@
+# Prompt: Implement Missing Features and Restore Broken Functionality
+
+As an AI developer, your task is to address missing features and broken functionality throughout the app. This includes implementing onboarding banners, restoring legacy features, fixing data visualizations, and adding developer-centric tools.
+
+---
+
+### **Onboarding & Explanations**
+
+- **Issue 12, 21, 33: On-boarding Banner Not Visible**
+  - **Description:** The `useOnboardingBanner` hook and `OnboardingBanner` component exist but are not rendered on the Frequency Mapper, Oracle, or Living Log screens.
+  - **File / Location:** `src/screens/Main/FrequencyMapperScreen/index.tsx`, `src/screens/Main/OracleScreen.tsx`, `src/screens/Main/HumanDesignTools/LivingLogScreen.tsx`
+  - **Suggestion:** In each file, import and render the `<OnboardingBanner>` component, ensuring it is displayed when the `showBanner` flag from the hook is true.
+- **Issue 14: Choice Screens Lack Explanation**
+  - **File / Location:** `src/components/FrequencyMapper/ChoiceCard.tsx` (or locally in the screen)
+  - **Suggestion:** Add a `description` prop to the component or create a separate `<ScreenExplainer>` component to provide users with helper text for the "Essence / Density / etc." options.
+- **Issue 37: On-boarding Banners Unused Across App**
+  - **Description:** The onboarding banner system is underutilized.
+  - **File / Location:** `src/hooks/useOnboardingBanner.ts`, `src/components/OnboardingBanner.tsx`
+  - **Suggestion:** Add the banner to the initial step of each tool. Ensure the `dismissBanner` function is called correctly when the user closes it.
+
+---
+
+### **Oracle**
+
+- **Issue 16: Missing Legacy Features**
+  - **File / Location:** `src/screens/Main/OracleScreen.tsx`
+  - **Suggestion:** Re-integrate the logic for the prompt/answer history and the hint modal from a previous version of the component.
+
+
+---
+
+### **Base Chart Visualization**
+
+- **Issue 25: Wrong Initial Tab**
+  - **File / Location:** `src/screens/Main/UserBaseChartScreen.tsx`
+  - **Suggestion:** Set the component's default state to open on the "visualization" tab instead of the "Basic Info" tab.
+- **Issue 27: Non-Selected Layers Disappear**
+  - **File / Location:** `src/components/BaseChart/ChartCanvas.tsx` (or `BlueprintCanvas.tsx`), in the `renderSlice()` method.
+  - **Suggestion:** When a chart slice is not selected, change its style to `opacity: 0.3` instead of hiding it completely.
+- **Issue 28: Drive Mechanics & Tension Points Hidden**
+  - **File / Location:** The data pipeline for `ChartCanvas.tsx` or `BlueprintCanvas.tsx`.
+  - **Suggestion:** Verify that the props for these data points are being passed correctly and that there are no faulty conditional renders preventing them from displaying.
+- **Issue 29: Synthesis Cards Show Full Text on Load**
+  - **File / Location:** `src/screens/Main/UserBaseChartScreen.tsx` (in the card rendering loop)
+  - **Suggestion:** Refactor the synthesis cards to be collapsed by default, showing only the title. Implement an `onPress` handler to expand the card and reveal the full description.
+
+---
+
+### **Developer Tools**
+
+- **Issue 36: Need Dev Override for Type**
+  - **Description:** It is difficult to test flows for Human Design types other than Generator.
+  - **File / Location:** `src/screens/Main/DecisionMakerScreen.tsx` (related to the `useUserHDType` hook)
+  - **Suggestion:** Implement a developer override. This could be an environment variable or a query-string parameter that allows a developer to spoof any Human Design type for testing purposes.
