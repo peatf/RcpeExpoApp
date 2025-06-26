@@ -54,7 +54,7 @@ const LogInput: React.FC<LogInputProps> = ({ onSubmit, placeholder = "What's on 
         />
       </View>
       <StackedButton
-        type="rect" // Default styling from StackedButton will apply
+        shape="rectangle" // Changed from type="rect"
         text="LOG ENTRY"
         onPress={handleSubmit}
       />

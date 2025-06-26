@@ -22,9 +22,13 @@ const extractDisplayData = (data: BaseChartData) => {
     strategy: data.decision_growth_vector?.strategy || 'Unknown',
     inner_authority: data.decision_growth_vector?.authority || 'Unknown',
     profile: data.energy_family?.profile_lines || 'Unknown',
-    defined_centers: getDefinedCenters(data),
-    undefined_centers: getUndefinedCenters(data),
-    active_gates: getActiveGates(data),
+    // defined_centers: getDefinedCenters(data), // Related to removed cards
+    // undefined_centers: getUndefinedCenters(data), // Related to removed cards
+    // active_gates: getActiveGates(data), // Related to removed cards
+    sun_sign: data.energy_family?.astro_sun_sign || 'Unknown',
+    moon_sign: data.processing_core?.astro_moon_sign || 'Unknown',
+    rising_sign: data.energy_class?.ascendant_sign || 'Unknown',
+    chart_ruler: data.energy_class?.chart_ruler_sign || 'Unknown',
   };
 };
 
@@ -69,7 +73,7 @@ const UserBaseChartScreen: React.FC<{navigation: any}> = ({navigation}) => {
   const [isMockData, setIsMockData] = useState(false);
   
   // Blueprint visualization state
-  const [viewMode, setViewMode] = useState<'text' | 'visualization'>('text');
+  const [viewMode, setViewMode] = useState<'text' | 'visualization'>('visualization'); // Updated initial state
   const [highlightedCategory, setHighlightedCategory] = useState<string | null>(null);
   const [canvasReady, setCanvasReady] = useState(false);
   
@@ -124,6 +128,11 @@ const UserBaseChartScreen: React.FC<{navigation: any}> = ({navigation}) => {
       conscious_line: String(chartData.evolutionary_path?.conscious_line || ''),
       unconscious_line: String(chartData.evolutionary_path?.unconscious_line || ''),
       core_priorities: chartData.evolutionary_path?.core_priorities?.join(',') || '',
+      // For Issue 28: Ensure tension_planets is passed if available in BaseChartData
+      // Assuming BaseChartData might have a structure like: chartData.tension_points_details?.planets
+      // For now, let's add a placeholder or use a direct field if known.
+      // If chartData.tension_planets exists directly:
+      tension_planets: chartData.tension_planets || [], // Assuming it's an array of strings
     } as VisualizationData;
   }, [chartData]);
   
@@ -271,8 +280,26 @@ const UserBaseChartScreen: React.FC<{navigation: any}> = ({navigation}) => {
               <Text style={styles.dataLabel}>Profile:</Text>
               <Text style={styles.dataValue}>{displayData.profile}</Text>
             </View>
+            <View style={styles.dataRow}>
+              <Text style={styles.dataLabel}>Sun Sign:</Text>
+              <Text style={styles.dataValue}>{displayData.sun_sign}</Text>
+            </View>
+            <View style={styles.dataRow}>
+              <Text style={styles.dataLabel}>Moon Sign:</Text>
+              <Text style={styles.dataValue}>{displayData.moon_sign}</Text>
+            </View>
+            <View style={styles.dataRow}>
+              <Text style={styles.dataLabel}>Rising Sign:</Text>
+              <Text style={styles.dataValue}>{displayData.rising_sign}</Text>
+            </View>
+            <View style={styles.dataRow}>
+              <Text style={styles.dataLabel}>Chart Ruler:</Text>
+              <Text style={styles.dataValue}>{displayData.chart_ruler}</Text>
+            </View>
           </View>
 
+          {/* Issue 22: Removed Centers and Active Gates cards */}
+          {/*
           <View style={styles.sectionCard}>
             <Text style={styles.sectionTitle}>Centers</Text>
             <View style={styles.dataRow}>
@@ -291,6 +318,7 @@ const UserBaseChartScreen: React.FC<{navigation: any}> = ({navigation}) => {
               <Text style={styles.dataValue}>{String(displayData.active_gates.join(', '))}</Text>
             </View>
           )}
+          */}
         </>
       )}
     </View>
@@ -391,6 +419,7 @@ const UserBaseChartScreen: React.FC<{navigation: any}> = ({navigation}) => {
                   onPress={toggleViewMode}
                 />
                 
+                {/* Issue 24: Removed "REFRESH DATA" button
                 {fromCache && (
                   <View style={styles.cacheNotice}>
                     <Text style={styles.cacheText}>
@@ -405,6 +434,7 @@ const UserBaseChartScreen: React.FC<{navigation: any}> = ({navigation}) => {
                     </View>
                   </View>
                 )}
+                */}
                 
                 {isMockData && (
                   <View style={styles.mockDataNotice}>

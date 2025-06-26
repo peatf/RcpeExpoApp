@@ -197,7 +197,7 @@ const LivingLogScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.bg, // Use theme background
+    backgroundColor: 'transparent', // Updated from theme.colors.bg for app-wide transparency
   },
   contentWrapper: {
     flex: 1,
@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
   },
   header: {
     fontWeight: 'bold',
-    color: '#2c3e50',
+    color: theme.colors.textPrimary, // Updated
     paddingHorizontal: 16,
     paddingTop: 20,
     paddingBottom: 10,
@@ -269,27 +269,27 @@ const styles = StyleSheet.create({
   },
   entryContent: {
     fontSize: 16,
-    color: '#34495e',
+    color: theme.colors.textPrimary, // Updated
     marginBottom: 5,
   },
   entryTags: {
     fontSize: 12,
     fontStyle: 'italic',
-    color: '#7f8c8d',
+    color: theme.colors.textSecondary, // Updated
     marginBottom: 3,
   },
   entryAuthority: {
     fontSize: 12,
-    color: '#27ae60', // A greenish color for authority
+    color: theme.colors.accent, // Updated (Note: consider specific color for authority if needed)
   },
   // Basic modal style for displaying selected entry details (optional)
   modalView: {
     margin: 20,
-    backgroundColor: "white",
+    backgroundColor: theme.colors.bg, // Updated
     borderRadius: 20,
     padding: 35,
     alignItems: "center",
-    shadowColor: "#000",
+    shadowColor: theme.shadows.small.shadowColor, // Updated
     shadowOffset: {
       width: 0,
       height: 2
@@ -300,17 +300,18 @@ const styles = StyleSheet.create({
   },
   modalText: {
     marginBottom: 15,
-    textAlign: "center"
+    textAlign: "center",
+    color: theme.colors.textPrimary, // Added theme color
   },
   closeButton: {
-    backgroundColor: "#2196F3",
+    backgroundColor: theme.colors.accent, // Updated
     borderRadius: 20,
     padding: 10,
     elevation: 2,
     marginTop: 10,
   },
   closeButtonText: {
-    color: "white",
+    color: theme.colors.bg, // Updated
     fontWeight: "bold",
     textAlign: "center"
   }

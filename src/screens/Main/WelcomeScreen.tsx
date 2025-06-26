@@ -21,7 +21,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onBeginSession }) => {
             source={require('../../../assets/inoslogotextonlycharcoal.png')}
             style={styles.logo}
           />
-          <Text style={styles.subtitle}>Reality Creation & Perception Engine</Text>
+          {/* <Text style={styles.subtitle}>Reality Creation & Perception Engine</Text> */}
         </View>
         
         {/* Main Action Section */}
@@ -57,10 +57,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between', // Distribute space between sections
   },
   titleSection: {
-    flex: 1, // Takes available space, pushing others
+    flex: 0.8, // Adjusted flex
     alignItems: 'center',
     justifyContent: 'center', // Center logo and subtitle
     // paddingTop: spacing.xl, // Keep or adjust as needed
+  },
+  actionSection: {
+    flex: 1.2, // Takes more available space to potentially lower the button
+    alignItems: 'center',
+    justifyContent: 'center', // Center button and label
   },
   logo: {
     width: 240, // As per spec

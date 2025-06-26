@@ -28,6 +28,7 @@ import {
   Rect
 } from '@shopify/react-native-skia';
 import { VisualizationData } from '../../services/blueprintVisualizerService';
+import { theme } from '../../constants/theme'; // Import global theme
 
 // ### PROPS AND INTERFACES ###
 interface BlueprintCanvasProps {
@@ -52,12 +53,13 @@ interface Particle {
 }
 
 // ### CONSTANTS AND THEME ###
+// Local THEME object updated to use global theme values
 const THEME = {
-  background: '#F8F4E9',
-  primary: '#212121',
-  accent: '#BFBFBF',
-  faint: '#EAE6DA',
-  highlight: '#007AFF',
+  background: 'transparent', // Changed from #F8F4E9 to transparent as per Issue 26
+  primary: theme.colors.base6,    // Was #212121, close to textPrimary or base6
+  accent: theme.colors.base2,     // Was #BFBFBF, close to base2 or base3
+  faint: theme.colors.base2,      // Was #EAE6DA, using base2 to avoid beige from base1
+  highlight: theme.colors.accent, // Was #007AFF
 };
 
 const PIXEL_RESOLUTION = 250;
@@ -68,10 +70,10 @@ const setPixel = (
   pixelData: Uint8Array,
   x: number,
   y: number,
-  r: number,
-  g: number,
-  b: number,
-  a: number = 255
+  r: number, // Should already be pre-multiplied if alpha is not 255
+  g: number, // Should already be pre-multiplied if alpha is not 255
+  b: number, // Should already be pre-multiplied if alpha is not 255
+  a: number = 255 // This is the final alpha for the pixel
 ) => {
   const pixelIndex = (Math.floor(y) * PIXEL_RESOLUTION + Math.floor(x)) * 4;
   if (
@@ -102,9 +104,10 @@ const drawPixelLine = (
   x1: number, y1: number,
   x2: number, y2: number,
   color: string,
-  dash?: [number, number]
+  dash?: [number, number],
+  alphaValue: number = 1.0 // Added alphaValue
 ) => {
-  const [r, g, b, a] = colorToRGBA(color);
+  const [r, g, b, a] = colorToRGBA(color, alphaValue); // Pass alphaValue
   
   x1 = Math.floor(x1);
   y1 = Math.floor(y1);
@@ -185,9 +188,9 @@ const drawPixelRect = (
   color: string,
   filled: boolean = false,
   dashPattern?: [number, number],
-  alphaValue: number = 1.0
+  alphaValue: number = 1.0 // Already had alphaValue, ensure it's used
 ) => {
-  const [r, g, b, a] = colorToRGBA(color, alphaValue);
+  const [r, g, b, a] = colorToRGBA(color, alphaValue); // Uses alphaValue
   x = Math.floor(x);
   y = Math.floor(y);
   width = Math.floor(width);
@@ -364,11 +367,16 @@ const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({ data, highlightedCate
     const startX = center.x - areaWidth / 2;
     const startY = center.y - areaHeight / 2;
 
+        // Using theme colors for motivations
     const motivationColors: { [key: string]: string } = {
-        "Fear": "#FF4136", "Hope": "#3D9970", "Desire": "#FF851B",
-        "Need": "#0074D9", "Guilt": "#B10DC9", "Innocence": "#FFDC00"
+            "Fear": theme.colors.fear,
+            "Hope": theme.colors.hope,
+            "Desire": theme.colors.desire,
+            "Need": theme.colors.need,
+            "Guilt": theme.colors.guilt,
+            "Innocence": theme.colors.innocence
     };
-    const particleColor = motivationColors[data.motivation_color] || THEME.primary;
+        const particleColor = motivationColors[data.motivation_color] || THEME.primary; // THEME.primary is local to this file, consider aligning if needed
 
     for (let i = 0; i < particleCount; i++) {
         const pos = { x: startX + Math.random() * areaWidth, y: startY + Math.random() * areaHeight };
@@ -397,12 +405,17 @@ const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({ data, highlightedCate
     pixelData.fill(0);
 
     const isHighlighted = (category: string) => !highlightedCategory || highlightedCategory === category;
-    const getColor = (category: string) => isHighlighted(category) ? THEME.primary : THEME.faint;
+    const getColor = (category: string) => isHighlighted(category) ? THEME.primary : THEME.faint; // This might be less used now
 
     // ### ENERGY ARCHITECTURE ###
-    if (isHighlighted('Energy Architecture')) {
-      const color = getColor('Energy Architecture');
-      const alpha = isHighlighted('Energy Architecture') ? 1.0 : 0.3;
+    {
+      const categoryName = 'Energy Architecture';
+      const baseColor = THEME.primary; // Assuming THEME.primary is the default color for this section
+      const alpha = (!highlightedCategory || highlightedCategory === categoryName) ? 1.0 : 0.3;
+
+      // const color = getColor('Energy Architecture'); // Old way
+      // const alpha = isHighlighted('Energy Architecture') ? 1.0 : 0.3; // Old way, not consistently used
+
       const numLayers = { 'Single': 5, 'Split': 4, 'Triple Split': 3, 'Quadruple Split': 2, 'No Definition': 6 }[data.definition_type] || 4;
       const maxRadius = PIXEL_RESOLUTION * 0.45;
       
@@ -420,7 +433,8 @@ const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({ data, highlightedCate
         const dashPattern = numActiveChannels > 5 && i % 2 === 0 ? [2,1] as [number, number] : 
                            (numActiveChannels > 10 ? [1,1] as [number, number] : undefined);
         
-        drawPixelCircle(pixelData, center.x, center.y, pulsateRadius, color, 'none', dashPattern);
+        // Pass alpha to drawPixelCircle
+        drawPixelCircle(pixelData, center.x, center.y, pulsateRadius, baseColor, 'none', dashPattern, alpha);
         
         // Add animated split bridges
         if (isSplit) {
@@ -443,7 +457,7 @@ const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({ data, highlightedCate
               const x2 = center.x + Math.cos(bridgeAngle) * (radius + bridgeLength);
               const y2 = center.y + Math.sin(bridgeAngle) * (radius + bridgeLength);
               
-              drawPixelLine(pixelData, x1, y1, x2, y2, bridgeColor, bridgeDash);
+              drawPixelLine(pixelData, x1, y1, x2, y2, bridgeColor, bridgeDash, alpha); // Pass alpha
             }
           }
         }
@@ -451,7 +465,7 @@ const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({ data, highlightedCate
       
       // Draw channel connections
       if (parsedChannels.length > 0) {
-        const channelVisibility = Math.sin(t * Math.PI * 2) * 0.3 + 0.7; // Subtle pulse between 40% and 100% visibility
+        // const channelVisibility = Math.sin(t * Math.PI * 2) * 0.3 + 0.7; // This was for opacity, now handled by global alpha
         
         const dashLength = Math.floor(2 + parsedChannels.length % 3);
         parsedChannels.forEach((_, i) => {
@@ -468,26 +482,33 @@ const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({ data, highlightedCate
             const channelDash = i % 2 === 0 ? [dashLength, 2] as [number, number] : undefined;
             
             // Vary channel color slightly based on index
-            const channelColor = i % 3 === 0 ? darkenColor(color, 0.15) : 
-                               (i % 3 === 1 ? darkenColor(color, -0.1) : color);
+            const channelColorHex = i % 3 === 0 ? darkenColor(baseColor, 0.15) :
+                               (i % 3 === 1 ? darkenColor(baseColor, -0.1) : baseColor); // Use baseColor here
             
-            drawPixelLine(pixelData, innerX, innerY, outerX, outerY, channelColor, channelDash);
+            drawPixelLine(pixelData, innerX, innerY, outerX, outerY, channelColorHex, channelDash, alpha); // Pass alpha
           }
         });
       }
     }
 
     // ### ENERGY CLASS ###
-    if (isHighlighted('Energy Class')) {
-        const color = getColor('Energy Class');
+    {
+        const categoryName = 'Energy Class';
+        const baseColor = theme.colors.energyClass || THEME.primary; // Use a specific theme color or fallback
+        const alpha = (!highlightedCategory || highlightedCategory === categoryName) ? 1.0 : 0.3;
+
         const borderOffset = 20;
         const elementType = getAstroElement(data.ascendant_sign);
         // Draw the outer rectangular border
-        drawPixelRect(pixelData, borderOffset, borderOffset, PIXEL_RESOLUTION - borderOffset * 2, PIXEL_RESOLUTION - borderOffset * 2, color, false);
+        drawPixelRect(pixelData, borderOffset, borderOffset, PIXEL_RESOLUTION - borderOffset * 2, PIXEL_RESOLUTION - borderOffset * 2, baseColor, false, undefined, alpha);
+
         // Elemental pattern based on the ascendant sign's element
+        // All sub-drawing calls need to respect 'alpha'
+        const [element_r, element_g, element_b, element_a_base] = colorToRGBA(baseColor); // Get base RGBA
+        const final_element_a = Math.floor(element_a_base * alpha / 255 * alpha); // Combine alphas
+
         switch (elementType) {
             case 'Fire': {
-                // Radiating animated lines
                 const fireCount = 24;
                 const fireMaxLength = 20;
                 for (let i = 0; i < fireCount; i++) {
@@ -497,25 +518,23 @@ const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({ data, highlightedCate
                     const innerY = center.y + Math.sin(angle) * (PIXEL_RESOLUTION * 0.3);
                     const outerX = innerX + Math.cos(angle) * length;
                     const outerY = innerY + Math.sin(angle) * length;
-                    drawPixelLine(pixelData, innerX, innerY, outerX, outerY, color);
+                    drawPixelLine(pixelData, innerX, innerY, outerX, outerY, baseColor, undefined, alpha);
                 }
                 break;
             }
             case 'Earth': {
-                // Solid, defined rings with a dithered pattern
                 const earthRings = 3;
                 for (let i = 1; i <= earthRings; i++) {
                     const ringRadius = (PIXEL_RESOLUTION * 0.35) * (i / earthRings);
-                    drawPixelCircle(pixelData, center.x, center.y, ringRadius, color);
-                    // Add dithered fill pattern between rings
+                    drawPixelCircle(pixelData, center.x, center.y, ringRadius, baseColor, 'none', undefined, alpha);
                     if (i < earthRings) {
                         const innerRadius = ringRadius;
                         const outerRadius = (PIXEL_RESOLUTION * 0.35) * ((i + 1) / earthRings);
-                        for (let x = center.x - outerRadius; x <= center.x + outerRadius; x++) {
-                            for (let y = center.y - outerRadius; y <= center.y + outerRadius; y++) {
+                        for (let x = Math.floor(center.x - outerRadius); x <= Math.ceil(center.x + outerRadius); x++) {
+                            for (let y = Math.floor(center.y - outerRadius); y <= Math.ceil(center.y + outerRadius); y++) {
                                 const dist = Math.sqrt(Math.pow(x - center.x, 2) + Math.pow(y - center.y, 2));
                                 if (dist >= innerRadius && dist <= outerRadius && (x + y) % 2 === 0) {
-                                    setPixel(pixelData, x, y, ...colorToRGBA(color));
+                                    setPixel(pixelData, x, y, element_r, element_g, element_b, final_element_a);
                                 }
                             }
                         }
@@ -524,7 +543,6 @@ const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({ data, highlightedCate
                 break;
             }
             case 'Air': {
-                // Swirling, chaotic particles
                 const airParticleCount = 100;
                 const airRadius = PIXEL_RESOLUTION * 0.3;
                 for (let i = 0; i < airParticleCount; i++) {
@@ -532,12 +550,11 @@ const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({ data, highlightedCate
                     const swirl = 0.2 + 0.8 * Math.sin(i * 0.1 + t * Math.PI * 4);
                     const x = center.x + Math.cos(angle + i * 0.1) * airRadius * swirl;
                     const y = center.y + Math.sin(angle + i * 0.2) * airRadius * swirl;
-                    setPixel(pixelData, x, y, ...colorToRGBA(color));
+                    setPixel(pixelData, x, y, element_r, element_g, element_b, final_element_a);
                 }
                 break;
             }
             case 'Water': {
-                // Flowing, wavy particle patterns
                 const waterLineCount = 8;
                 const waterAmplitude = 10;
                 const waterWaveLength = 50;
@@ -545,30 +562,30 @@ const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({ data, highlightedCate
                     const yOffset = mapValue(lineIndex, 0, waterLineCount - 1, -PIXEL_RESOLUTION * 0.2, PIXEL_RESOLUTION * 0.2);
                     for (let x = center.x - PIXEL_RESOLUTION * 0.3; x <= center.x + PIXEL_RESOLUTION * 0.3; x += 2) {
                         const wavePhase = x / waterWaveLength + t * Math.PI * 2;
-                        const y = center.y + yOffset + Math.sin(wavePhase) * waterAmplitude;
-                        setPixel(pixelData, x, y, ...colorToRGBA(color));
+                        const y_coord = center.y + yOffset + Math.sin(wavePhase) * waterAmplitude;
+                        setPixel(pixelData, x_coord, y_coord, element_r, element_g, element_b, final_element_a);
                     }
                 }
                 break;
             }
         }
-        // Incarnation Cross pattern
+
         if (data.incarnation_cross) {
-            const crossColor = darkenColor(color, 0.3);
+            const crossColorHex = darkenColor(baseColor, 0.3);
             const crossRadius = 20;
-            const crossRotation = t * Math.PI * 0.5; // Slow rotation
+            const crossRotation = t * Math.PI * 0.5;
             const angles = [0, Math.PI / 2, Math.PI, Math.PI * 1.5];
             angles.forEach(baseAngle => {
                 const angle = baseAngle + crossRotation;
                 const x = center.x + Math.cos(angle) * crossRadius;
                 const y = center.y + Math.sin(angle) * crossRadius;
-                drawPixelLine(pixelData, x - 5, y, x + 5, y, crossColor);
-                drawPixelLine(pixelData, x, y - 5, x, y + 5, crossColor);
+                drawPixelLine(pixelData, x - 5, y, x + 5, y, crossColorHex, undefined, alpha);
+                drawPixelLine(pixelData, x, y - 5, x, y + 5, crossColorHex, undefined, alpha);
             });
         }
-        // Quarter Markers based on incarnation_cross_quarter
+
         if (data.incarnation_cross_quarter) {
-            const quarterColor = color;
+            const quarterColorHex = baseColor;
             const quarterRadius = PIXEL_RESOLUTION * 0.4;
             const quarters = ['RA', 'LA', 'RD', 'LD'];
             const quarterIndex = quarters.indexOf(data.incarnation_cross_quarter);
@@ -576,19 +593,18 @@ const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({ data, highlightedCate
                 const quarterAngle = Math.PI / 2 * quarterIndex;
                 const x = center.x + Math.cos(quarterAngle) * quarterRadius;
                 const y = center.y + Math.sin(quarterAngle) * quarterRadius;
-                // Draw quarter symbol - a small circle with radiating lines
-                drawPixelCircle(pixelData, x, y, 3, quarterColor);
+                drawPixelCircle(pixelData, x, y, 3, quarterColorHex, 'none', undefined, alpha);
                 for (let i = 0; i < 4; i++) {
                     const lineAngle = quarterAngle + (i * Math.PI / 2);
                     const endX = x + Math.cos(lineAngle) * 5;
                     const endY = y + Math.sin(lineAngle) * 5;
-                    drawPixelLine(pixelData, x, y, endX, endY, quarterColor);
+                    drawPixelLine(pixelData, x, y, endX, endY, quarterColorHex, undefined, alpha);
                 }
             }
         }
-        // Chart Ruler Planet Symbol
+
         if (data.chart_ruler_sign && data.chart_ruler_house) {
-            const planetColor = color;
+            const planetColorHex = baseColor;
             const rulerPlanet = getRulingPlanet(data.chart_ruler_sign);
             const rulerHouseStr = String(data.chart_ruler_house).replace(/\D/g,'');
             const rulerHouse = parseInt(rulerHouseStr) || 1;
@@ -596,16 +612,17 @@ const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({ data, highlightedCate
             const rulerRadius = PIXEL_RESOLUTION * 0.35;
             const x = center.x + Math.cos(rulerAngle) * rulerRadius;
             const y = center.y + Math.sin(rulerAngle) * rulerRadius;
-            // Use a simple planet symbol: a cross
-            drawPixelCircle(pixelData, x, y, 4, planetColor);
-            drawPixelLine(pixelData, x - 2, y, x + 2, y, planetColor);
-            drawPixelLine(pixelData, x, y - 2, x, y + 2, planetColor);
+            drawPixelCircle(pixelData, x, y, 4, planetColorHex, 'none', undefined, alpha);
+            drawPixelLine(pixelData, x - 2, y, x + 2, y, planetColorHex, undefined, alpha);
+            drawPixelLine(pixelData, x, y - 2, x, y + 2, planetColorHex, undefined, alpha);
         }
     }
 
     // ### EVOLUTIONARY PATH ###
-    if (isHighlighted('Evolutionary Path')) {
-        const color = getColor('Evolutionary Path');
+    {
+        const categoryName = 'Evolutionary Path';
+        const baseColor = theme.colors.evolutionary || THEME.primary;
+        const alpha = (!highlightedCategory || highlightedCategory === categoryName) ? 1.0 : 0.3;
         const pathHash = simpleHash(data.incarnation_cross);
         const pathLength = 50;
         const startRadius = PIXEL_RESOLUTION * 0.1;
@@ -620,16 +637,17 @@ const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({ data, highlightedCate
             const angle = startAngle + progress * (parseInt(data.conscious_line || '0') + parseInt(data.unconscious_line || '0')) + Math.sin(t * Math.PI * 2) * 0.1;
             const currentX = center.x + Math.cos(angle) * radius;
             const currentY = center.y + Math.sin(angle) * radius;
-            drawPixelLine(pixelData, lastX, lastY, currentX, currentY, color, lineStyle);
+            drawPixelLine(pixelData, lastX, lastY, currentX, currentY, baseColor, lineStyle, alpha); // Pass alpha
             lastX = currentX;
             lastY = currentY;
         }
     }
 
     // ### PROCESSING CORE ###
-    if (isHighlighted('Processing Core')) {
-        const color = getColor('Processing Core');
-        const alpha = isHighlighted('Processing Core') ? 1.0 : 0.3;
+    {
+        const categoryName = 'Processing Core';
+        const baseColor = theme.colors.processingCore || THEME.primary;
+        const alpha = (!highlightedCategory || highlightedCategory === categoryName) ? 1.0 : 0.3;
         const baseRadius = PIXEL_RESOLUTION * 0.08;
         const centersInfo = [
           { state: data.head_state || 'Defined', name: 'Head', originalIndex: 0 },

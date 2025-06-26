@@ -483,7 +483,7 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.sm,
   },
   recommendationsContainer: {
-    backgroundColor: theme.colors.base1, // Subtle background for this section
+    backgroundColor: 'transparent',      // Subtle background for this section
     padding: theme.spacing.sm,
     borderRadius: theme.borderRadius.sm,
     marginTop: theme.spacing.sm,

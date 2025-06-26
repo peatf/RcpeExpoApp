@@ -48,7 +48,7 @@ const styles = StyleSheet.create({
   container: {
     paddingVertical: theme.spacing.sm,     // Use theme spacing
     paddingHorizontal: theme.spacing.md,   // Use theme spacing
-    backgroundColor: theme.colors.base1,   // Use theme color
+    backgroundColor: 'transparent',        // Changed from theme.colors.base1
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.base2, // Use theme color
   },

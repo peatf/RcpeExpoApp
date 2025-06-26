@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { BirthData, TypologyResponse, MasteryResponse } from '../../types';
 import { TYPOLOGY_SPECTRUMS, MASTERY_SECTIONS } from '../../data/quizData';
+import { theme } from '../../constants/theme'; // Import theme
 
 interface ReviewStepProps {
   birthData: BirthData;
@@ -146,7 +147,7 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
         >
           {isSubmitting ? (
             <View style={styles.submittingContainer}>
-              <ActivityIndicator size="small" color="#fff" />
+              <ActivityIndicator size="small" color={theme.colors.bg} />
               <Text style={styles.submittingText}>Creating Profile...</Text>
             </View>
           ) : (
@@ -169,24 +170,24 @@ const styles = StyleSheet.create({
   stepTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#2c3e50',
+    color: theme.colors.textPrimary, // Updated
     marginBottom: 8,
   },
   stepDescription: {
     fontSize: 16,
-    color: '#6c757d',
+    color: theme.colors.textSecondary, // Updated
     lineHeight: 24,
   },
   content: {
     flex: 1,
   },
   section: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.bg, // Updated
     borderRadius: 12,
     padding: 20,
     marginBottom: 16,
     elevation: 2,
-    shadowColor: '#000',
+    shadowColor: theme.shadows.small.shadowColor, // Updated
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -194,7 +195,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#2c3e50',
+    color: theme.colors.textPrimary, // Updated
     marginBottom: 16,
   },
   dataRow: {
@@ -203,54 +204,54 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#f8f9fa',
+    borderBottomColor: theme.colors.base1, // Updated
   },
   dataLabel: {
     fontSize: 14,
-    color: '#6c757d',
+    color: theme.colors.textSecondary, // Updated
     flex: 1,
   },
   dataValue: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#2c3e50',
+    color: theme.colors.textPrimary, // Updated
     flex: 1,
     textAlign: 'right',
   },
   masteryRow: {
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#f8f9fa',
+    borderBottomColor: theme.colors.base1, // Updated
   },
   masteryQuestion: {
     fontSize: 14,
-    color: '#6c757d',
+    color: theme.colors.textSecondary, // Updated
     marginBottom: 4,
     lineHeight: 20,
   },
   masteryAnswer: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#2c3e50',
+    color: theme.colors.textPrimary, // Updated
     lineHeight: 20,
   },
   summary: {
-    backgroundColor: '#f8f9ff',
+    backgroundColor: theme.colors.accentGlow, // Updated
     borderRadius: 12,
     padding: 20,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#007bff',
+    borderColor: theme.colors.accent, // Updated
   },
   summaryTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#007bff',
+    color: theme.colors.accent, // Updated
     marginBottom: 12,
   },
   summaryText: {
     fontSize: 14,
-    color: '#495057',
+    color: theme.colors.textPrimary, // Updated
     lineHeight: 22,
   },
   buttonContainer: {
@@ -261,30 +262,30 @@ const styles = StyleSheet.create({
   },
   previousButton: {
     flex: 1,
-    backgroundColor: '#6c757d',
+    backgroundColor: theme.colors.base3, // Updated
     paddingVertical: 16,
     paddingHorizontal: 32,
     borderRadius: 8,
     alignItems: 'center',
   },
   previousButtonText: {
-    color: '#fff',
+    color: theme.colors.bg, // Updated
     fontSize: 16,
     fontWeight: '600',
   },
   submitButton: {
     flex: 1,
-    backgroundColor: '#28a745',
+    backgroundColor: theme.colors.accent, // Updated (Note: success color)
     paddingVertical: 16,
     paddingHorizontal: 32,
     borderRadius: 8,
     alignItems: 'center',
   },
   disabledButton: {
-    backgroundColor: '#6c757d',
+    backgroundColor: theme.colors.base3, // Updated
   },
   submitButtonText: {
-    color: '#fff',
+    color: theme.colors.bg, // Updated
     fontSize: 16,
     fontWeight: '600',
   },
@@ -294,7 +295,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   submittingText: {
-    color: '#fff',
+    color: theme.colors.bg, // Updated
     fontSize: 16,
     fontWeight: '600',
   },
