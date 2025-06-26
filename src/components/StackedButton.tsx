@@ -185,24 +185,31 @@ const styles = StyleSheet.create({
         zIndex: 10,
         justifyContent: 'center',
         alignItems: 'center',
+        // Add a subtle shadow to the container for overall depth
+        textShadowColor: 'rgba(0, 0, 0, 0.75)',
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 2,
     },
     glowContainer: {
-        // Add glow effect to icons/children
+        // Adjust glow effect for icons/children
         shadowColor: '#fafaf2',
         shadowOffset: { width: 0, height: 0 },
-        shadowRadius: 8,
-        shadowOpacity: 0.6,
-        elevation: 10,
+        shadowRadius: 5, // Reduced radius
+        shadowOpacity: 0.5, // Reduced opacity
+        elevation: 8, // Adjusted elevation
+        // Apply textShadow here if children can be text-like icons
+        // For actual <Text> components, styles.buttonText will handle it.
+        // If children are complex, this might need a different approach.
     },
     buttonText: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#fafaf2',
+        color: '#fafaf2', // This should ideally be a theme color
         textAlign: 'center',
-        // Add text glow effect
-        textShadowColor: '#fafaf2',
-        textShadowOffset: { width: 0, height: 0 },
-        textShadowRadius: 6,
+        // Adjust text glow effect
+        textShadowColor: 'rgba(0, 0, 0, 0.5)', // Darker shadow for better blending
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 3, // Slightly increased blur
     },
 });
 

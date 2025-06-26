@@ -9,6 +9,7 @@ import {
   Dimensions,
   ActivityIndicator
 } from 'react-native';
+import { theme } from '../../constants/theme'; // Import theme
 import { useAuth } from '../../contexts/AuthContext';
 import baseChartService from '../../services/baseChartService';
 import blueprintVisualizerService from '../../services/blueprintVisualizerService';
@@ -98,7 +99,7 @@ const EnergeticBlueprintScreen: React.FC<{navigation: any}> = ({ navigation }) =
     if (isLoading || authLoading) {
       return (
         <View style={styles.centeredContent}>
-          <ActivityIndicator size="large" color="#212121" />
+          <ActivityIndicator size="large" color={theme.colors.base6} />
           <Text style={styles.loadingText}>Loading your energetic blueprint...</Text>
         </View>
       );
@@ -138,7 +139,7 @@ const EnergeticBlueprintScreen: React.FC<{navigation: any}> = ({ navigation }) =
           />
           {!canvasReady && (
             <View style={styles.canvasOverlay}>
-              <ActivityIndicator size="large" color="#212121" />
+              <ActivityIndicator size="large" color={theme.colors.base6} />
             </View>
           )}
         </View>
@@ -183,7 +184,7 @@ const EnergeticBlueprintScreen: React.FC<{navigation: any}> = ({ navigation }) =
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F4E9',
+    backgroundColor: theme.colors.bg, // Updated
   },
   landscapeContainer: {
     flex: 1,
@@ -196,25 +197,25 @@ const styles = StyleSheet.create({
   canvasContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#F8F4E9',
+    backgroundColor: theme.colors.bg, // Updated (or transparent)
   },
   canvasOverlay: {
     ...StyleSheet.absoluteFillObject,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(248, 244, 233, 0.7)',
+    backgroundColor: `${theme.colors.bg}B3`, // Updated (bg with 70% opacity)
   },
   landscapeSidebar: {
     flex: 1,
-    backgroundColor: 'rgba(239, 234, 224, 0.5)',
+    backgroundColor: `${theme.colors.base1}80`, // Updated (base1 with 50% opacity)
     borderLeftWidth: 2,
-    borderLeftColor: '#DCD7C5',
+    borderLeftColor: theme.colors.base2, // Updated
   },
   portraitSidebar: {
     flex: 1,
-    backgroundColor: 'rgba(239, 234, 224, 0.5)',
+    backgroundColor: `${theme.colors.base1}80`, // Updated (base1 with 50% opacity)
     borderTopWidth: 2,
-    borderTopColor: '#DCD7C5',
+    borderTopColor: theme.colors.base2, // Updated
   },
   descriptionContainer: {
     padding: 16,
@@ -223,16 +224,16 @@ const styles = StyleSheet.create({
     fontFamily: 'monospace',
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#212121',
+    color: theme.colors.base6, // Updated
     marginBottom: 4,
   },
   subtitle: {
     fontSize: 14,
-    color: '#555',
+    color: theme.colors.base4, // Updated
     marginBottom: 16,
   },
   button: {
-    backgroundColor: '#212121',
+    backgroundColor: theme.colors.base6, // Updated
     padding: 16,
     alignItems: 'center',
     marginBottom: 16,
@@ -241,7 +242,7 @@ const styles = StyleSheet.create({
     fontFamily: 'monospace',
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#F8F4E9',
+    color: theme.colors.bg, // Updated
   },
   descriptionsWrapper: {
     marginTop: 16,
@@ -255,17 +256,17 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#555',
+    color: theme.colors.base4, // Updated
   },
   errorText: {
     fontSize: 16,
-    color: '#e53935',
+    color: theme.colors.warning, // Updated (Note: error color needed)
     marginBottom: 16,
     textAlign: 'center',
   },
   emptyText: {
     fontSize: 16,
-    color: '#555',
+    color: theme.colors.base4, // Updated
     marginBottom: 16,
     textAlign: 'center',
   },

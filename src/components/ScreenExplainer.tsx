@@ -27,7 +27,7 @@ const styles = StyleSheet.create({
   container: {
     paddingHorizontal: theme.spacing.lg, // Use theme spacing
     paddingVertical: theme.spacing.md,   // Use theme spacing
-    backgroundColor: theme.colors.base1, // Subtle background
+    backgroundColor: 'transparent',      // Subtle background
     borderRadius: theme.borderRadius.sm, // Add border radius
     marginBottom: theme.spacing.md,      // Add margin bottom
     alignItems: 'center',

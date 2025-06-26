@@ -133,7 +133,7 @@ const MainTabNavigator: React.FC = () => {
               <Ionicons
                 name="menu" // Icon for opening the sidebar
                 size={24} // Slightly larger for visibility
-                color={colors.text} // Use theme text color
+                color={colors.textPrimary} // Changed to textPrimary as iconDefault is not defined
               />
             </StackedButton>
           </View>
@@ -150,7 +150,7 @@ const MainTabNavigator: React.FC = () => {
                 <Ionicons
                   name={'chevron-back'} // Always back when panel is open
                   size={20}
-                  color="#fafaf2"
+                  color={colors.bg} // Updated
                 />
               </StackedButton>
             </View>
@@ -171,7 +171,7 @@ const MainTabNavigator: React.FC = () => {
                 <Ionicons
                   name={item.icon as keyof typeof Ionicons.glyphMap}
                   size={20}
-                  color="#fafaf2"
+                  color={colors.bg} // Updated
                 />
               </StackedButton>
             </View>

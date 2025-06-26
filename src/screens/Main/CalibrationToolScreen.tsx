@@ -16,6 +16,7 @@ import {
   Animated,
 } from 'react-native';
 import {useNavigation, useRoute} from '@react-navigation/native';
+import { theme } from '../../constants/theme'; // Import theme
 import StepTracker from '../../components/StepTracker'; // Import StepTracker
 import { FLOW_STEPS, STEP_LABELS } from '../../constants/flowSteps'; // Import constants
 import {Ionicons} from '@expo/vector-icons';
@@ -30,6 +31,8 @@ import aiCalibrationToolService, {
   CalibrationToOracleHandoff,
   EnhancedSliderUI
 } from '../../services/aiCalibrationToolService';
+import OnboardingBanner from '../../components/OnboardingBanner';
+import useOnboardingBanner from '../../hooks/useOnboardingBanner';
 
 interface CalibrationToolScreenProps {
   navigation: any;
@@ -38,6 +41,7 @@ interface CalibrationToolScreenProps {
 
 const CalibrationToolScreen: React.FC<CalibrationToolScreenProps> = ({navigation, route}) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const { showBanner, dismissBanner, isLoadingBanner } = useOnboardingBanner('CalibrationTool');
   
   // Core state
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -321,7 +325,7 @@ const CalibrationToolScreen: React.FC<CalibrationToolScreenProps> = ({navigation
   // Render loading screen
   const renderLoadingScreen = () => (
     <View style={styles.loadingContainer}>
-      <ActivityIndicator size="large" color="#007AFF" />
+      <ActivityIndicator size="large" color={theme.colors.accent} />
       <Text style={styles.loadingText}>{loadingMessage}</Text>
       <Text style={styles.loadingSubtext}>
         Preparing your personalized coaching experience...
@@ -332,7 +336,7 @@ const CalibrationToolScreen: React.FC<CalibrationToolScreenProps> = ({navigation
   // Render error/no data screen
   const renderNoDataScreen = () => (
     <View style={styles.centerContainer}>
-      <Ionicons name="alert-circle-outline" size={64} color="#999" />
+      <Ionicons name="alert-circle-outline" size={64} color={theme.colors.base2} />
       <Text style={styles.noDataTitle}>No Frequency Mapper Data</Text>
       <Text style={styles.noDataText}>
         Please complete the Frequency Mapper first to calibrate your alignment.
@@ -385,19 +389,19 @@ const CalibrationToolScreen: React.FC<CalibrationToolScreenProps> = ({navigation
           
           <View style={styles.dimensionsList}>
             <View style={styles.dimensionItem}>
-              <Ionicons name="checkmark-circle" size={20} color="#007AFF" />
+              <Ionicons name="checkmark-circle" size={20} color={theme.colors.accent} />
               <Text style={styles.dimensionText}>
                 <Text style={styles.dimensionLabel}>Belief</Text> - How much you trust it's possible & logical
               </Text>
             </View>
             <View style={styles.dimensionItem}>
-              <Ionicons name="heart-circle" size={20} color="#007AFF" />
+              <Ionicons name="heart-circle" size={20} color={theme.colors.accent} />
               <Text style={styles.dimensionText}>
                 <Text style={styles.dimensionLabel}>Openness</Text> - Willingness to receive & accept current reality
               </Text>
             </View>
             <View style={styles.dimensionItem}>
-              <Ionicons name="star-outline" size={20} color="#007AFF" />
+              <Ionicons name="star-outline" size={20} color={theme.colors.accent} />
               <Text style={styles.dimensionText}>
                 <Text style={styles.dimensionLabel}>Worthiness</Text> - How much you deserve it & comfort receiving
               </Text>
@@ -410,7 +414,7 @@ const CalibrationToolScreen: React.FC<CalibrationToolScreenProps> = ({navigation
           onPress={() => setCurrentStep('sliders')}
         >
           <Text style={styles.continueButtonText}>Begin Calibration</Text>
-          <Ionicons name="arrow-forward" size={18} color="#fff" style={{marginLeft: 8}} />
+          <Ionicons name="arrow-forward" size={18} color={theme.colors.bg} style={{marginLeft: 8}} />
         </TouchableOpacity>
       </Animated.View>
     );
@@ -442,9 +446,9 @@ const CalibrationToolScreen: React.FC<CalibrationToolScreenProps> = ({navigation
             step={0.01}
             value={value}
             onValueChange={(newValue) => handleSliderChange(dimension, newValue)}
-            minimumTrackTintColor="#007AFF"
-            maximumTrackTintColor="#e0e0e0"
-            thumbTintColor="#007AFF"
+            minimumTrackTintColor={theme.colors.accent}
+            maximumTrackTintColor={theme.colors.base1}
+            thumbTintColor={theme.colors.accent}
           />
           <Text style={styles.anchorMax}>{sliderConfig.anchor_max || "Max"}</Text>
         </View>
@@ -479,7 +483,7 @@ const CalibrationToolScreen: React.FC<CalibrationToolScreenProps> = ({navigation
         onPress={handleContinueToReflections}
       >
         <Text style={styles.continueButtonText}>Continue to Reflection</Text>
-        <Ionicons name="arrow-forward" size={18} color="#fff" style={{marginLeft: 8}} />
+        <Ionicons name="arrow-forward" size={18} color={theme.colors.bg} style={{marginLeft: 8}} />
       </TouchableOpacity>
     </View>
   );
@@ -530,13 +534,13 @@ const CalibrationToolScreen: React.FC<CalibrationToolScreenProps> = ({navigation
           disabled={isProcessing}
         >
           {isProcessing ? (
-            <ActivityIndicator size="small" color="#fff" />
+            <ActivityIndicator size="small" color={theme.colors.bg} />
           ) : (
             <>
               <Text style={styles.continueButtonText}>
                 {isLastStep ? 'Process Calibration' : 'Next Reflection'}
               </Text>
-              <Ionicons name="arrow-forward" size={18} color="#fff" style={{marginLeft: 8}} />
+              <Ionicons name="arrow-forward" size={18} color={theme.colors.bg} style={{marginLeft: 8}} />
             </>
           )}
         </TouchableOpacity>
@@ -563,7 +567,7 @@ const CalibrationToolScreen: React.FC<CalibrationToolScreenProps> = ({navigation
           <Text style={styles.resultCardTitle}>Key Insights</Text>
           {recommendation.core_insights.map((insight, index) => (
             <View key={index} style={styles.insightRow}>
-              <Ionicons name="bulb-outline" size={16} color="#007AFF" />
+              <Ionicons name="bulb-outline" size={16} color={theme.colors.accent} />
               <Text style={styles.insightText}>{insight}</Text>
             </View>
           ))}
@@ -602,7 +606,7 @@ const CalibrationToolScreen: React.FC<CalibrationToolScreenProps> = ({navigation
             onPress={handleNavigateToOracle}
           >
             <Text style={styles.oracleButtonText}>{recommendation.button_ctas.oracle_ready}</Text>
-            <Ionicons name="arrow-forward" size={18} color="#fff" style={{marginLeft: 8}} />
+            <Ionicons name="arrow-forward" size={18} color={theme.colors.bg} style={{marginLeft: 8}} />
           </TouchableOpacity>
         </View>
       </View>
@@ -628,12 +632,19 @@ const CalibrationToolScreen: React.FC<CalibrationToolScreenProps> = ({navigation
 
   return (
     <SafeAreaView style={styles.container}>
+      {!isLoadingBanner && showBanner && (
+        <OnboardingBanner
+          toolName="Calibration Tool"
+          description="Fine-tune your energetic alignment with your stated desires."
+          onDismiss={dismissBanner}
+        />
+      )}
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Ionicons name="arrow-back" size={24} color="#333" />
+          <Ionicons name="arrow-back" size={24} color={theme.colors.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.title}>Calibration Tool</Text>
         <View style={styles.headerSpacer} />
@@ -656,15 +667,15 @@ const CalibrationToolScreen: React.FC<CalibrationToolScreenProps> = ({navigation
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: theme.colors.bg, // Updated
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.bg, // Updated
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: theme.colors.base1, // Updated
   },
   backButton: {
     padding: 8,
@@ -673,7 +684,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 20,
     fontWeight: '600',
-    color: '#333',
+    color: theme.colors.textPrimary, // Updated
     textAlign: 'center',
   },
   headerSpacer: {
@@ -694,13 +705,13 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#333',
+    color: theme.colors.textPrimary, // Updated
     marginTop: 16,
     textAlign: 'center',
   },
   loadingSubtext: {
     fontSize: 14,
-    color: '#666',
+    color: theme.colors.textSecondary, // Updated
     marginTop: 8,
     textAlign: 'center',
   },
@@ -713,26 +724,26 @@ const styles = StyleSheet.create({
   noDataTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#333',
+    color: theme.colors.textPrimary, // Updated
     marginTop: 16,
     textAlign: 'center',
   },
   noDataText: {
     fontSize: 16,
-    color: '#666',
+    color: theme.colors.textSecondary, // Updated
     marginTop: 8,
     textAlign: 'center',
     lineHeight: 22,
   },
   actionButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: theme.colors.accent, // Updated
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,
     marginTop: 20,
   },
   actionButtonText: {
-    color: '#fff',
+    color: theme.colors.bg, // Updated
     fontSize: 16,
     fontWeight: '600',
   },
@@ -740,13 +751,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   desiredStateCard: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.bg, // Updated
     padding: 24,
     borderRadius: 16,
     marginBottom: 20,
     borderLeftWidth: 4,
-    borderLeftColor: '#007AFF',
-    shadowColor: '#000',
+    borderLeftColor: theme.colors.accent, // Updated
+    shadowColor: theme.shadows.small.shadowColor, // Updated
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -755,23 +766,23 @@ const styles = StyleSheet.create({
   welcomeBack: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#007AFF',
+    color: theme.colors.accent, // Updated
     marginBottom: 8,
   },
   desiredStateLabel: {
     fontSize: 14,
-    color: '#666',
+    color: theme.colors.textSecondary, // Updated
     marginBottom: 8,
   },
   desiredStateText: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#333',
+    color: theme.colors.textPrimary, // Updated
     lineHeight: 28,
     marginBottom: 16,
   },
   journeyPath: {
-    backgroundColor: '#f8f9fa',
+    backgroundColor: theme.colors.base1, // Updated
     padding: 16,
     borderRadius: 12,
     marginBottom: 16,
@@ -779,28 +790,28 @@ const styles = StyleSheet.create({
   journeyLabel: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#333',
+    color: theme.colors.textPrimary, // Updated
     marginBottom: 8,
   },
   journeyStep: {
     fontSize: 14,
-    color: '#666',
+    color: theme.colors.textSecondary, // Updated
     marginBottom: 4,
   },
   energeticQuality: {
     fontSize: 14,
-    color: '#666',
+    color: theme.colors.textSecondary, // Updated
   },
   energyText: {
     fontWeight: '500',
-    color: '#007AFF',
+    color: theme.colors.accent, // Updated
   },
   calibrationExplanation: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.bg, // Updated
     padding: 20,
     borderRadius: 16,
     marginBottom: 24,
-    shadowColor: '#000',
+    shadowColor: theme.shadows.small.shadowColor, // Updated
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -809,12 +820,12 @@ const styles = StyleSheet.create({
   explanationTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: theme.colors.textPrimary, // Updated
     marginBottom: 12,
   },
   explanationText: {
     fontSize: 16,
-    color: '#666',
+    color: theme.colors.textSecondary, // Updated
     lineHeight: 22,
     marginBottom: 16,
   },
@@ -829,14 +840,14 @@ const styles = StyleSheet.create({
   dimensionText: {
     flex: 1,
     fontSize: 15,
-    color: '#333',
+    color: theme.colors.textPrimary, // Updated
     lineHeight: 20,
   },
   dimensionLabel: {
     fontWeight: '600',
   },
   continueButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: theme.colors.accent, // Updated
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -845,7 +856,7 @@ const styles = StyleSheet.create({
     marginTop: 'auto',
   },
   continueButtonText: {
-    color: '#fff',
+    color: theme.colors.bg, // Updated
     fontSize: 16,
     fontWeight: '600',
   },
@@ -855,23 +866,23 @@ const styles = StyleSheet.create({
   stepTitle: {
     fontSize: 24,
     fontWeight: '600',
-    color: '#333',
+    color: theme.colors.textPrimary, // Updated
     marginBottom: 8,
     textAlign: 'center',
   },
   stepSubtitle: {
     fontSize: 16,
-    color: '#666',
+    color: theme.colors.textSecondary, // Updated
     marginBottom: 24,
     textAlign: 'center',
     lineHeight: 22,
   },
   sliderCard: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.bg, // Updated
     padding: 20,
     borderRadius: 16,
     marginBottom: 16,
-    shadowColor: '#000',
+    shadowColor: theme.shadows.small.shadowColor, // Updated
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -880,7 +891,7 @@ const styles = StyleSheet.create({
   sliderLabel: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: theme.colors.textPrimary, // Updated
     marginBottom: 16,
   },
   sliderContainer: {
@@ -890,7 +901,7 @@ const styles = StyleSheet.create({
   },
   anchorMin: {
     fontSize: 12,
-    color: '#666',
+    color: theme.colors.textSecondary, // Updated
     width: 80,
     textAlign: 'left',
   },
@@ -901,19 +912,19 @@ const styles = StyleSheet.create({
   },
   anchorMax: {
     fontSize: 12,
-    color: '#666',
+    color: theme.colors.textSecondary, // Updated
     width: 80,
     textAlign: 'right',
   },
   microcopy: {
     fontSize: 14,
-    color: '#666',
+    color: theme.colors.textSecondary, // Updated
     marginBottom: 8,
     lineHeight: 20,
   },
   processingNote: {
     fontSize: 12,
-    color: '#007AFF',
+    color: theme.colors.accent, // Updated
     fontStyle: 'italic',
     marginBottom: 12,
   },
@@ -923,17 +934,17 @@ const styles = StyleSheet.create({
   valueText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#007AFF',
+    color: theme.colors.accent, // Updated
   },
   reflectionContainer: {
     flex: 1,
   },
   reflectionCard: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.bg, // Updated
     padding: 20,
     borderRadius: 16,
     marginBottom: 24,
-    shadowColor: '#000',
+    shadowColor: theme.shadows.small.shadowColor, // Updated
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -942,29 +953,29 @@ const styles = StyleSheet.create({
   reflectionPrompt: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#333',
+    color: theme.colors.textPrimary, // Updated
     marginBottom: 16,
     lineHeight: 22,
   },
   reflectionInput: {
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: theme.colors.base1, // Updated
     borderRadius: 12,
     padding: 16,
     fontSize: 16,
     minHeight: 120,
     textAlignVertical: 'top',
-    backgroundColor: '#f9f9f9',
+    backgroundColor: theme.colors.bg, // Updated (or base1 for different shade)
   },
   resultsContainer: {
     flex: 1,
   },
   resultCard: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.bg, // Updated
     padding: 20,
     borderRadius: 16,
     marginBottom: 16,
-    shadowColor: '#000',
+    shadowColor: theme.shadows.small.shadowColor, // Updated
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -972,21 +983,21 @@ const styles = StyleSheet.create({
   },
   shadowCard: {
     borderLeftWidth: 4,
-    borderLeftColor: '#7952b3',
+    borderLeftColor: theme.colors.processingCore, // Updated
   },
   expansionCard: {
     borderLeftWidth: 4,
-    borderLeftColor: '#28a745',
+    borderLeftColor: theme.colors.driveMechanics, // Updated
   },
   resultCardTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: theme.colors.textPrimary, // Updated
     marginBottom: 12,
   },
   resultText: {
     fontSize: 15,
-    color: '#666',
+    color: theme.colors.textSecondary, // Updated
     lineHeight: 22,
   },
   insightRow: {
@@ -998,29 +1009,29 @@ const styles = StyleSheet.create({
   insightText: {
     flex: 1,
     fontSize: 15,
-    color: '#666',
+    color: theme.colors.textSecondary, // Updated
     lineHeight: 22,
   },
   pathText: {
     fontSize: 15,
-    color: '#666',
+    color: theme.colors.textSecondary, // Updated
     lineHeight: 22,
     marginBottom: 16,
   },
   microPlanContainer: {
-    backgroundColor: '#f8f9fa',
+    backgroundColor: theme.colors.base1, // Updated
     padding: 16,
     borderRadius: 12,
   },
   microPlanTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: theme.colors.textPrimary, // Updated
     marginBottom: 8,
   },
   microPlanStep: {
     fontSize: 14,
-    color: '#666',
+    color: theme.colors.textSecondary, // Updated
     marginBottom: 4,
     lineHeight: 20,
   },
@@ -1031,13 +1042,13 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     flex: 1,
-    backgroundColor: '#6c757d',
+    backgroundColor: theme.colors.base3, // Updated
     padding: 16,
     borderRadius: 12,
     alignItems: 'center',
   },
   saveButtonText: {
-    color: '#fff',
+    color: theme.colors.bg, // Updated
     fontSize: 16,
     fontWeight: '600',
   },
@@ -1050,13 +1061,13 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   shadowButton: {
-    backgroundColor: '#7952b3',
+    backgroundColor: theme.colors.processingCore, // Updated
   },
   expansionButton: {
-    backgroundColor: '#28a745',
+    backgroundColor: theme.colors.driveMechanics, // Updated
   },
   oracleButtonText: {
-    color: '#fff',
+    color: theme.colors.bg, // Updated
     fontSize: 16,
     fontWeight: '600',
   },

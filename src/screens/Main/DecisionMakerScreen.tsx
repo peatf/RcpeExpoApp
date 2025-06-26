@@ -3,30 +3,76 @@ import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import DecisionMakerTab from '../../components/DecisionMakerTab'; // Adjust path if necessary
 import { HDType } from '../../types/humanDesign'; // Adjust path if necessary
 import { colors, spacing, typography } from '../../constants/theme'; // Assuming theme file exists
+import AsyncStorage from '@react-native-async-storage/async-storage';
+// React, useState, useEffect are imported once now
+import OnboardingBanner from '../../components/OnboardingBanner';
+import useOnboardingBanner from '../../hooks/useOnboardingBanner';
+
+const DEV_OVERRIDE_HD_TYPE_KEY = 'dev_override_hd_type';
 
 // Placeholder for fetching user type. In a real app, this would come from auth context or a user service.
-const useUserHDType = (): HDType | null => {
-  // Simulate fetching user type. Replace with actual logic.
-  // For testing, you can cycle through types:
-  // const types: HDType[] = ['Generator', 'Projector', 'Manifestor', 'Reflector', 'Manifesting Generator'];
-  // return types[Math.floor(Math.random() * types.length)];
-  return 'Generator'; // Default to Generator for now
+const useUserHDType = (): { userType: HDType | null; isLoading: boolean } => {
+  const [userType, setUserType] = useState<HDType | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUserType = async () => {
+      setIsLoading(true);
+      try {
+        const overrideType = await AsyncStorage.getItem(DEV_OVERRIDE_HD_TYPE_KEY);
+        if (overrideType && ['Generator', 'Projector', 'Manifestor', 'Reflector', 'Manifesting Generator'].includes(overrideType)) {
+          console.log(`DEV OVERRIDE: Using HDType '${overrideType}' from AsyncStorage.`);
+          setUserType(overrideType as HDType);
+        } else {
+          // Simulate fetching actual user type. Replace with actual logic.
+          // For now, default to 'Generator' if no override.
+          const actualUserType: HDType = 'Generator';
+          setUserType(actualUserType);
+        }
+      } catch (e) {
+        console.error("Failed to fetch user HD type or override:", e);
+        setUserType('Generator'); // Fallback
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUserType();
+  }, []);
+
+  return { userType, isLoading };
 };
 
 const DecisionMakerScreen: React.FC = () => {
-  const userType = useUserHDType();
+  const { userType, isLoading: isLoadingUserType } = useUserHDType();
+  const { showBanner, dismissBanner, isLoadingBanner } = useOnboardingBanner('DecisionMaker');
 
-  // In a real app, you might want to show a loading state while userType is being determined.
-  if (!userType) {
+  if (isLoadingUserType || isLoadingBanner) { // Combined loading states
     return (
       <View style={styles.centered}>
         <Text style={typography.bodyLarge}>Loading user information...</Text>
+        {/* Optionally, add an ActivityIndicator here */}
+      </View>
+    );
+  }
+
+  if (!userType) {
+    return (
+      <View style={styles.centered}>
+        <Text style={typography.bodyLarge}>Could not determine user Human Design type.</Text>
       </View>
     );
   }
 
   return (
     <ScrollView style={styles.screenContainer}>
+      {showBanner && (
+        <OnboardingBanner
+          toolName="Decision Maker"
+          description="Tools to help you make decisions aligned with your Human Design type."
+          onDismiss={dismissBanner}
+        />
+      )}
       <View style={styles.headerContainer}>
         <Text style={typography.headingLarge}>Decision-Maker Tools</Text>
         <Text style={typography.bodyMedium}>
@@ -41,13 +87,13 @@ const DecisionMakerScreen: React.FC = () => {
 const styles = StyleSheet.create({
   screenContainer: {
     flex: 1,
-    backgroundColor: colors.bg,
+    backgroundColor: 'transparent', // Updated
   },
   centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.bg,
+    backgroundColor: 'transparent', // Updated
   },
   headerContainer: {
     paddingHorizontal: spacing.md,

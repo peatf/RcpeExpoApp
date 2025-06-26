@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.base2,      // Themed border color
     borderRadius: theme.borderRadius.md,  // Themed border radius
-    backgroundColor: theme.colors.base1,  // Themed background (e.g., a light off-white/gray)
+    backgroundColor: 'transparent',  // Themed background (e.g., a light off-white/gray)
   },
   blockTitle: {
     fontFamily: theme.fonts.mono, // Or display/body if more prominent

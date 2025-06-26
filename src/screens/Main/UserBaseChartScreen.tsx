@@ -14,6 +14,8 @@ import baseChartService, {BaseChartData} from '../../services/baseChartService';
 import blueprintVisualizerService, { VisualizationData } from '../../services/blueprintVisualizerService';
 import BlueprintCanvas from '../../components/EnergeticBlueprint/BlueprintCanvas';
 import BlueprintDescription from '../../components/EnergeticBlueprint/BlueprintDescription';
+import OnboardingBanner from '../../components/OnboardingBanner';
+import useOnboardingBanner from '../../hooks/useOnboardingBanner';
 
 // Helper functions for extracting data remain unchanged
 const extractDisplayData = (data: BaseChartData) => {
@@ -22,9 +24,13 @@ const extractDisplayData = (data: BaseChartData) => {
     strategy: data.decision_growth_vector?.strategy || 'Unknown',
     inner_authority: data.decision_growth_vector?.authority || 'Unknown',
     profile: data.energy_family?.profile_lines || 'Unknown',
-    defined_centers: getDefinedCenters(data),
-    undefined_centers: getUndefinedCenters(data),
-    active_gates: getActiveGates(data),
+    // defined_centers: getDefinedCenters(data), // Related to removed cards
+    // undefined_centers: getUndefinedCenters(data), // Related to removed cards
+    // active_gates: getActiveGates(data), // Related to removed cards
+    sun_sign: data.energy_family?.astro_sun_sign || 'Unknown',
+    moon_sign: data.processing_core?.astro_moon_sign || 'Unknown',
+    rising_sign: data.energy_class?.ascendant_sign || 'Unknown',
+    chart_ruler: data.energy_class?.chart_ruler_sign || 'Unknown',
   };
 };
 
@@ -69,9 +75,10 @@ const UserBaseChartScreen: React.FC<{navigation: any}> = ({navigation}) => {
   const [isMockData, setIsMockData] = useState(false);
   
   // Blueprint visualization state
-  const [viewMode, setViewMode] = useState<'text' | 'visualization'>('text');
+  const [viewMode, setViewMode] = useState<'text' | 'visualization'>('visualization'); // Updated initial state
   const [highlightedCategory, setHighlightedCategory] = useState<string | null>(null);
   const [canvasReady, setCanvasReady] = useState(false);
+  const { showBanner, dismissBanner, isLoadingBanner } = useOnboardingBanner('UserBaseChart');
   
   // Derived state for display data
   const displayData = useMemo(() => chartData ? extractDisplayData(chartData) : null, [chartData]);
@@ -103,27 +110,30 @@ const UserBaseChartScreen: React.FC<{navigation: any}> = ({navigation}) => {
       astro_mars_sign: chartData.decision_growth_vector?.astro_mars_sign || '',
       north_node_house: String(chartData.decision_growth_vector?.north_node_house || ''),
       jupiter_placement: '', // Add if available in BaseChartData
-      motivation_color: chartData.drive_mechanics?.motivation_color || '',
-      heart_state: chartData.drive_mechanics?.heart_state || '',
-      root_state: chartData.drive_mechanics?.root_state || '',
-      venus_sign: chartData.drive_mechanics?.venus_sign || '',
-      kinetic_drive_spectrum: chartData.drive_mechanics?.kinetic_drive_spectrum || '',
-      resonance_field_spectrum: chartData.drive_mechanics?.resonance_field_spectrum || '',
-      perspective_variable: chartData.drive_mechanics?.perspective_variable || '',
+      motivation_color: chartData.drive_mechanics?.motivation_color || 'Hope', // Default motivation
+      heart_state: chartData.drive_mechanics?.heart_state || 'Undefined',
+      root_state: chartData.drive_mechanics?.root_state || 'Undefined',
+      venus_sign: chartData.drive_mechanics?.venus_sign || 'Unknown',
+      kinetic_drive_spectrum: chartData.drive_mechanics?.kinetic_drive_spectrum || 'Balanced Grid', // Default
+      resonance_field_spectrum: chartData.drive_mechanics?.resonance_field_spectrum || '50x50', // Default
+      perspective_variable: chartData.drive_mechanics?.perspective_variable || 'Unknown',
       saturn_placement: '', // Add if available in BaseChartData
-      throat_definition: chartData.manifestation_interface_rhythm?.throat_definition || '',
-      throat_gates: String(chartData.manifestation_interface_rhythm?.throat_gates || ''),
-      throat_channels: chartData.manifestation_interface_rhythm?.throat_channels?.join(',') || '',
-      manifestation_rhythm_spectrum: chartData.manifestation_interface_rhythm?.manifestation_rhythm_spectrum || '',
+      throat_definition: chartData.manifestation_interface_rhythm?.throat_definition || 'Undefined',
+      throat_gates: String(chartData.manifestation_interface_rhythm?.throat_gates || 'None'),
+      throat_channels: chartData.manifestation_interface_rhythm?.throat_channels?.join(',') || 'None',
+      manifestation_rhythm_spectrum: chartData.manifestation_interface_rhythm?.manifestation_rhythm_spectrum || 'Variable',
       mars_aspects: '', // Add if available in BaseChartData
-      channel_list: chartData.energy_architecture?.channel_list?.join(',') || '',
-      definition_type: chartData.energy_architecture?.definition_type || '',
-      split_bridges: chartData.energy_architecture?.split_bridges?.join(',') || '',
+      channel_list: chartData.energy_architecture?.channel_list?.join(',') || 'None',
+      definition_type: chartData.energy_architecture?.definition_type || 'No Definition',
+      split_bridges: chartData.energy_architecture?.split_bridges?.join(',') || 'None',
       soft_aspects: '', // Add if available in BaseChartData
-      g_center_access: chartData.evolutionary_path?.g_center_access || '',
-      conscious_line: String(chartData.evolutionary_path?.conscious_line || ''),
-      unconscious_line: String(chartData.evolutionary_path?.unconscious_line || ''),
-      core_priorities: chartData.evolutionary_path?.core_priorities?.join(',') || '',
+      g_center_access: chartData.evolutionary_path?.g_center_access || 'Unknown',
+      conscious_line: String(chartData.evolutionary_path?.conscious_line || '0'),
+      unconscious_line: String(chartData.evolutionary_path?.unconscious_line || '0'),
+      core_priorities: chartData.evolutionary_path?.core_priorities?.join(',') || 'None',
+      tension_planets: chartData.tension_planets || [], // Default to empty array
+      // Ensure chiron_gate is also part of VisualizationData if used by BlueprintCanvas for Tension Points
+      // It's already mapped: chiron_gate: String(chartData.processing_core?.chiron_gate || '0'),
     } as VisualizationData;
   }, [chartData]);
   
@@ -271,8 +281,26 @@ const UserBaseChartScreen: React.FC<{navigation: any}> = ({navigation}) => {
               <Text style={styles.dataLabel}>Profile:</Text>
               <Text style={styles.dataValue}>{displayData.profile}</Text>
             </View>
+            <View style={styles.dataRow}>
+              <Text style={styles.dataLabel}>Sun Sign:</Text>
+              <Text style={styles.dataValue}>{displayData.sun_sign}</Text>
+            </View>
+            <View style={styles.dataRow}>
+              <Text style={styles.dataLabel}>Moon Sign:</Text>
+              <Text style={styles.dataValue}>{displayData.moon_sign}</Text>
+            </View>
+            <View style={styles.dataRow}>
+              <Text style={styles.dataLabel}>Rising Sign:</Text>
+              <Text style={styles.dataValue}>{displayData.rising_sign}</Text>
+            </View>
+            <View style={styles.dataRow}>
+              <Text style={styles.dataLabel}>Chart Ruler:</Text>
+              <Text style={styles.dataValue}>{displayData.chart_ruler}</Text>
+            </View>
           </View>
 
+          {/* Issue 22: Removed Centers and Active Gates cards */}
+          {/*
           <View style={styles.sectionCard}>
             <Text style={styles.sectionTitle}>Centers</Text>
             <View style={styles.dataRow}>
@@ -291,6 +319,7 @@ const UserBaseChartScreen: React.FC<{navigation: any}> = ({navigation}) => {
               <Text style={styles.dataValue}>{String(displayData.active_gates.join(', '))}</Text>
             </View>
           )}
+          */}
         </>
       )}
     </View>
@@ -343,6 +372,13 @@ const UserBaseChartScreen: React.FC<{navigation: any}> = ({navigation}) => {
   // Main render function
   return (
     <View style={styles.container}>
+      {!isLoadingBanner && showBanner && (
+        <OnboardingBanner
+          toolName="Base Chart"
+          description="Explore your foundational Human Design chart, either in text or visual format."
+          onDismiss={dismissBanner}
+        />
+      )}
       <View style={styles.contentWrapper}>
         <View style={styles.titleSection}>
           <Text style={styles.pageTitle}>BASE CHART</Text>
@@ -391,6 +427,7 @@ const UserBaseChartScreen: React.FC<{navigation: any}> = ({navigation}) => {
                   onPress={toggleViewMode}
                 />
                 
+                {/* Issue 24: Removed "REFRESH DATA" button
                 {fromCache && (
                   <View style={styles.cacheNotice}>
                     <Text style={styles.cacheText}>
@@ -405,6 +442,7 @@ const UserBaseChartScreen: React.FC<{navigation: any}> = ({navigation}) => {
                     </View>
                   </View>
                 )}
+                */}
                 
                 {isMockData && (
                   <View style={styles.mockDataNotice}>

@@ -5,7 +5,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image } from 'react-native';
 import StackedButton from '../../components/StackedButton';
-import { colors, spacing, typography, borderRadius, fonts } from '../../constants/theme'; // Import individual theme constants
+import { colors, spacing, typography, borderRadius, fonts, theme } from '../../constants/theme'; // Import individual theme constants
+import { Ionicons } from '@expo/vector-icons'; // Assuming Ionicons
 
 interface WelcomeScreenProps {
   onBeginSession?: () => void;
@@ -21,15 +22,21 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onBeginSession }) => {
             source={require('../../../assets/inoslogotextonlycharcoal.png')}
             style={styles.logo}
           />
-          <Text style={styles.subtitle}>Reality Creation & Perception Engine</Text>
+          {/* <Text style={styles.subtitle}>Reality Creation & Perception Engine</Text> */}
         </View>
         
         {/* Main Action Section */}
         <View style={styles.actionSection}>
-          <StackedButton
-            shape="circle"
-            onPress={() => onBeginSession?.()}
-          />
+          <View style={styles.startButtonWrapper}>
+            <StackedButton
+              shape="circle"
+              onPress={() => onBeginSession?.()}
+              style={styles.startButton} // This style might only affect the TouchableOpacity wrapper of StackedButton
+            >
+              <Ionicons name="play" size={48} color={theme.colors.bg} />
+              {/* Increased icon size a bit as button is now 120. Color assumes icon is on dark top layer of button */}
+            </StackedButton>
+          </View>
           <Text style={styles.actionLabel}>Begin Session</Text>
         </View>
 
@@ -57,10 +64,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between', // Distribute space between sections
   },
   titleSection: {
-    flex: 1, // Takes available space, pushing others
+    flex: 0.8, // Adjusted flex
     alignItems: 'center',
     justifyContent: 'center', // Center logo and subtitle
     // paddingTop: spacing.xl, // Keep or adjust as needed
+  },
+  actionSection: {
+    flex: 1.2, // Takes more available space to potentially lower the button
+    alignItems: 'center',
+    justifyContent: 'center', // Center button and label
   },
   logo: {
     width: 240, // As per spec
@@ -76,10 +88,25 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: spacing.sm,
   },
-  actionSection: {
-    flex: 1, // Takes available space
+  actionSection: { // This definition was duplicated, ensuring one correct one
+    flex: 1.2, // Takes more available space to potentially lower the button (as per previous adjustment)
     alignItems: 'center',
     justifyContent: 'center', // Center button and label
+  },
+  startButtonWrapper: {
+    // flex: 1, // If actionSection is already flex and centering, this might not be needed or could conflict.
+                // Per instruction, using flex:1, justifyContent: "center"
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: spacing.lg, // Nudge up or down
+  },
+  startButton: { // This style is applied to StackedButton's outer TouchableOpacity.
+                 // It will make the touchable area 120x120.
+                 // The visual layers of StackedButton itself won't scale with this
+                 // unless StackedButton is modified to use this style for its layer calculations.
+    width: 120,
+    height: 120,
   },
   actionLabel: {
     fontFamily: fonts.mono,

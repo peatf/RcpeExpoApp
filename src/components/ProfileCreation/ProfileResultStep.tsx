@@ -14,6 +14,7 @@ import {
   Alert,
 } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
+import { theme } from '../../constants/theme'; // Import theme
 
 interface ProfileResultStepProps {
   profileId: string | null;
@@ -77,7 +78,7 @@ export const ProfileResultStep: React.FC<ProfileResultStepProps> = ({
           >
             {isLoading ? (
               <View style={styles.loadingContainer}>
-                <ActivityIndicator size="small" color="#fff" />
+                <ActivityIndicator size="small" color={theme.colors.bg} />
                 <Text style={styles.loadingText}>Fetching Profile...</Text>
               </View>
             ) : (
@@ -130,13 +131,13 @@ const styles = StyleSheet.create({
   stepTitle: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#28a745',
+    color: theme.colors.accent, // Updated (Note: consider a dedicated success color)
     marginBottom: 8,
     textAlign: 'center',
   },
   stepDescription: {
     fontSize: 16,
-    color: '#6c757d',
+    color: theme.colors.textSecondary, // Updated
     textAlign: 'center',
     lineHeight: 24,
     paddingHorizontal: 20,
@@ -145,12 +146,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   section: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.bg, // Updated
     borderRadius: 12,
     padding: 20,
     marginBottom: 20,
     elevation: 2,
-    shadowColor: '#000',
+    shadowColor: theme.shadows.small.shadowColor, // Updated
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -158,59 +159,61 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#2c3e50',
+    color: theme.colors.textPrimary, // Updated
     marginBottom: 12,
   },
   sectionDescription: {
     fontSize: 14,
-    color: '#6c757d',
+    color: theme.colors.textSecondary, // Updated
     marginBottom: 16,
     lineHeight: 20,
   },
   profileIdContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8f9fa',
+    backgroundColor: theme.colors.bg, // Updated (ensure distinction via border/shadow if needed)
     borderRadius: 8,
     padding: 16,
     marginBottom: 8,
+    borderWidth: 1, // Added for distinction
+    borderColor: theme.colors.base1 // Added for distinction
   },
   profileId: {
     flex: 1,
     fontSize: 16,
     fontFamily: 'monospace',
-    color: '#2c3e50',
+    color: theme.colors.textPrimary, // Updated
     fontWeight: '600',
   },
   copyButton: {
-    backgroundColor: '#007bff',
+    backgroundColor: theme.colors.accent, // Updated
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 6,
     marginLeft: 12,
   },
   copyButtonText: {
-    color: '#fff',
+    color: theme.colors.bg, // Updated
     fontSize: 14,
     fontWeight: '600',
   },
   idDescription: {
     fontSize: 12,
-    color: '#6c757d',
+    color: theme.colors.textSecondary, // Updated
     fontStyle: 'italic',
   },
   fetchButton: {
-    backgroundColor: '#007bff',
+    backgroundColor: theme.colors.accent, // Updated
     paddingVertical: 16,
     paddingHorizontal: 32,
     borderRadius: 8,
     alignItems: 'center',
   },
   disabledButton: {
-    backgroundColor: '#6c757d',
+    backgroundColor: theme.colors.base3, // Updated
   },
   fetchButtonText: {
-    color: '#fff',
+    color: theme.colors.bg, // Updated
     fontSize: 16,
     fontWeight: '600',
   },
@@ -220,15 +223,17 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   loadingText: {
-    color: '#fff',
+    color: theme.colors.bg, // Updated
     fontSize: 16,
     fontWeight: '600',
   },
   profileDataContainer: {
-    backgroundColor: '#f8f9fa',
+    backgroundColor: theme.colors.bg, // Updated
     borderRadius: 8,
     padding: 16,
     maxHeight: 300,
+    borderWidth: 1, // Added for distinction
+    borderColor: theme.colors.base1 // Added for distinction
   },
   profileDataScroll: {
     flex: 1,
@@ -236,7 +241,7 @@ const styles = StyleSheet.create({
   profileDataText: {
     fontSize: 12,
     fontFamily: 'monospace',
-    color: '#2c3e50',
+    color: theme.colors.textPrimary, // Updated
     lineHeight: 18,
   },
   actionsSection: {
@@ -244,14 +249,14 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   createAnotherButton: {
-    backgroundColor: '#6c757d',
+    backgroundColor: theme.colors.base3, // Updated
     paddingVertical: 16,
     paddingHorizontal: 32,
     borderRadius: 8,
     alignItems: 'center',
   },
   createAnotherText: {
-    color: '#fff',
+    color: theme.colors.bg, // Updated
     fontSize: 16,
     fontWeight: '600',
   },

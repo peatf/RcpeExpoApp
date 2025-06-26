@@ -13,6 +13,7 @@ import {
   Alert,
 } from 'react-native';
 import { BirthData } from '../../types';
+import { theme } from '../../constants/theme'; // Import theme
 
 interface BirthDataStepProps {
   initialData: BirthData;
@@ -96,7 +97,7 @@ export const BirthDataStep: React.FC<BirthDataStepProps> = ({
             value={formData.birth_date}
             onChangeText={(value) => updateField('birth_date', value)}
             placeholder="YYYY-MM-DD (e.g., 1990-01-01)"
-            placeholderTextColor="#999"
+            placeholderTextColor={theme.colors.base2}
           />
           {errors.birth_date && (
             <Text style={styles.errorText}>{errors.birth_date}</Text>
@@ -110,7 +111,7 @@ export const BirthDataStep: React.FC<BirthDataStepProps> = ({
             value={formData.birth_time}
             onChangeText={(value) => updateField('birth_time', value)}
             placeholder="HH:MM:SS (e.g., 14:30:00)"
-            placeholderTextColor="#999"
+            placeholderTextColor={theme.colors.base2}
           />
           {errors.birth_time && (
             <Text style={styles.errorText}>{errors.birth_time}</Text>
@@ -124,7 +125,7 @@ export const BirthDataStep: React.FC<BirthDataStepProps> = ({
             value={formData.city_of_birth}
             onChangeText={(value) => updateField('city_of_birth', value)}
             placeholder="e.g., Los Angeles"
-            placeholderTextColor="#999"
+            placeholderTextColor={theme.colors.base2}
           />
           {errors.city_of_birth && (
             <Text style={styles.errorText}>{errors.city_of_birth}</Text>
@@ -138,7 +139,7 @@ export const BirthDataStep: React.FC<BirthDataStepProps> = ({
             value={formData.country_of_birth}
             onChangeText={(value) => updateField('country_of_birth', value)}
             placeholder="e.g., USA"
-            placeholderTextColor="#999"
+            placeholderTextColor={theme.colors.base2}
           />
           {errors.country_of_birth && (
             <Text style={styles.errorText}>{errors.country_of_birth}</Text>
@@ -161,12 +162,12 @@ const styles = StyleSheet.create({
   stepTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#2c3e50',
+    color: theme.colors.textPrimary, // Updated
     marginBottom: 8,
   },
   stepDescription: {
     fontSize: 16,
-    color: '#6c757d',
+    color: theme.colors.textSecondary, // Updated
     marginBottom: 32,
     lineHeight: 24,
   },
@@ -179,27 +180,27 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#2c3e50',
+    color: theme.colors.textPrimary, // Updated
     marginBottom: 8,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#dee2e6',
+    borderColor: theme.colors.base1, // Updated
     borderRadius: 8,
     padding: 16,
     fontSize: 16,
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.bg, // Updated
   },
   inputError: {
-    borderColor: '#dc3545',
+    borderColor: theme.colors.warning, // Updated (Note: theme.colors.error would be better)
   },
   errorText: {
     fontSize: 14,
-    color: '#dc3545',
+    color: theme.colors.warning, // Updated (Note: theme.colors.error would be better)
     marginTop: 4,
   },
   nextButton: {
-    backgroundColor: '#007bff',
+    backgroundColor: theme.colors.accent, // Updated
     paddingVertical: 16,
     paddingHorizontal: 32,
     borderRadius: 8,
@@ -207,7 +208,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   nextButtonText: {
-    color: '#fff',
+    color: theme.colors.bg, // Updated
     fontSize: 18,
     fontWeight: '600',
   },

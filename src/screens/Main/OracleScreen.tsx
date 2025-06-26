@@ -15,6 +15,7 @@ import {
   Animated,
   Modal,
   Easing, // Import Easing
+  SafeAreaView,
 } from 'react-native';
 // Navigation hooks not needed in this implementation
 import StepTracker from '../../components/StepTracker'; // Import StepTracker
@@ -30,6 +31,8 @@ import aiOracleService, {
   QuestCompletion,
   OracleSession
 } from '../../services/aiOracleService';
+import OnboardingBanner from '../../components/OnboardingBanner'; // Import OnboardingBanner
+import useOnboardingBanner from '../../hooks/useOnboardingBanner'; // Import useOnboardingBanner
 
 interface OracleScreenProps {
   navigation?: any;
@@ -72,6 +75,7 @@ const OracleScreen: React.FC<OracleScreenProps> = ({navigation, route}) => {
   const [isThinking, setIsThinking] = useState<boolean>(false);
   const [oracleMessages, setOracleMessages] = useState<any[]>([]);
   const [isInputFocused, setIsInputFocused] = useState<boolean>(false);
+  const { showBanner, dismissBanner, isLoadingBanner } = useOnboardingBanner('Oracle');
 
   // Initialize Oracle on mount
   useEffect(() => {
@@ -409,13 +413,13 @@ const OracleScreen: React.FC<OracleScreenProps> = ({navigation, route}) => {
   const renderLoadingScreen = () => (
     <View style={styles.loadingContainer}>
       <Animated.View style={[styles.oracleSymbol, { opacity: fadeAnim }]}>
-        <Ionicons name="eye-outline" size={80} color="#6c5ce7" />
+        <Ionicons name="eye-outline" size={80} color={theme.colors.accent} />
       </Animated.View>
       <Text style={styles.loadingText}>{loadingMessage}</Text>
       <Text style={styles.loadingSubtext}>
         Integrating your complete energetic journey...
       </Text>
-      <ActivityIndicator size="large" color="#6c5ce7" style={{marginTop: 20}} />
+      <ActivityIndicator size="large" color={theme.colors.accent} style={{marginTop: 20}} />
     </View>
   );
 
@@ -437,14 +441,14 @@ const OracleScreen: React.FC<OracleScreenProps> = ({navigation, route}) => {
               <Text style={styles.journeyText}>"{source_statement}"</Text>
             </View>
             
-            <Ionicons name="arrow-down" size={24} color="#6c5ce7" style={styles.journeyArrow} />
+            <Ionicons name="arrow-down" size={24} color={theme.colors.accent} style={styles.journeyArrow} />
             
             <View style={styles.journeyStep}>
               <Text style={styles.journeyLabel}>To:</Text>
               <Text style={styles.journeyText}>"{desired_state}"</Text>
             </View>
             
-            <Ionicons name="arrow-down" size={24} color="#6c5ce7" style={styles.journeyArrow} />
+            <Ionicons name="arrow-down" size={24} color={theme.colors.accent} style={styles.journeyArrow} />
             
             <View style={styles.journeyStep}>
               <Text style={styles.journeyLabel}>Path:</Text>
@@ -488,7 +492,7 @@ const OracleScreen: React.FC<OracleScreenProps> = ({navigation, route}) => {
             <Text style={styles.commitmentButtonText}>
               Begin {chosen_path === 'shadow' ? 'Shadow' : 'Hero'} Quest Journey
             </Text>
-            <Ionicons name="arrow-forward" size={20} color="#fff" style={{marginLeft: 8}} />
+            <Ionicons name="arrow-forward" size={20} color={theme.colors.bg} style={{marginLeft: 8}} />
           </TouchableOpacity>
         </View>
       </Animated.View>
@@ -596,7 +600,7 @@ const OracleScreen: React.FC<OracleScreenProps> = ({navigation, route}) => {
                 style={styles.hintCard}
                 onPress={() => handleShowHint(hint)}
               >
-                <Ionicons name="bulb-outline" size={20} color="#6c5ce7" />
+                <Ionicons name="bulb-outline" size={20} color={theme.colors.accent} />
                 <Text style={styles.hintPreview}>{hint.hint_text.substring(0, 60)}...</Text>
               </TouchableOpacity>
             ))}
@@ -710,8 +714,8 @@ const OracleScreen: React.FC<OracleScreenProps> = ({navigation, route}) => {
           {/* Action Button */}
           {!isThinking && (
             <StackedButton
-              type="rect"
-              text={isThinking ? 'CONTEMPLATING...' : 'SUBMIT QUERY'}
+              shape="rectangle" // Changed from type="rect"
+              text="Ask" // Changed from SUBMIT QUERY
               onPress={handleAskOracle}
             />
           )}
@@ -753,16 +757,23 @@ const OracleScreen: React.FC<OracleScreenProps> = ({navigation, route}) => {
   // Main render
   if (isLoading) {
     return (
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
         {renderLoadingScreen()}
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {/* Render StepTracker if not in wisdom mode or if desired */}
       {/* For now, always render it based on current logic */}
+      {!isLoadingBanner && showBanner && (
+        <OnboardingBanner
+          toolName="Oracle"
+          description="Welcome to the Oracle. Explore personalized quests or seek direct wisdom."
+          onDismiss={dismissBanner}
+        />
+      )}
       <StepTracker
         currentStep={visualCurrentStep}
         totalSteps={FLOW_STEPS.ORACLE}
@@ -776,7 +787,7 @@ const OracleScreen: React.FC<OracleScreenProps> = ({navigation, route}) => {
       </ScrollView>
 
       {renderHintModal()}
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -944,13 +955,13 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: theme.colors.textPrimary, // Updated
     marginBottom: 8,
     textAlign: 'center',
   },
   loadingSubtext: {
     fontSize: 14,
-    color: '#666',
+    color: theme.colors.textSecondary, // Updated
     textAlign: 'center',
     lineHeight: 20,
   },
@@ -958,13 +969,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   journeySummary: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.bg, // Updated
     padding: 24,
     borderRadius: 16,
     marginBottom: 20,
     borderLeftWidth: 4,
-    borderLeftColor: '#6c5ce7',
-    shadowColor: '#000',
+    borderLeftColor: theme.colors.accent, // Updated
+    shadowColor: theme.shadows.small.shadowColor, // Updated
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -973,7 +984,7 @@ const styles = StyleSheet.create({
   oracleTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#6c5ce7',
+    color: theme.colors.accent, // Updated
     marginBottom: 20,
     textAlign: 'center',
   },
@@ -988,12 +999,12 @@ const styles = StyleSheet.create({
   journeyLabel: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#666',
+    color: theme.colors.textSecondary, // Updated
     marginBottom: 4,
   },
   journeyText: {
     fontSize: 16,
-    color: '#333',
+    color: theme.colors.textPrimary, // Updated
     textAlign: 'center',
     fontStyle: 'italic',
   },
@@ -1006,26 +1017,26 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   shadowPath: {
-    color: '#7952b3',
+    color: theme.colors.processingCore, // Updated
   },
   heroPath: {
-    color: '#28a745',
+    color: theme.colors.driveMechanics, // Updated
   },
   energeticSignature: {
     fontSize: 14,
-    color: '#666',
+    color: theme.colors.textSecondary, // Updated
     textAlign: 'center',
   },
   energyText: {
     fontWeight: '600',
-    color: '#6c5ce7',
+    color: theme.colors.accent, // Updated
   },
   chartAcknowledgment: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.bg, // Updated
     padding: 20,
     borderRadius: 16,
     marginBottom: 20,
-    shadowColor: '#000',
+    shadowColor: theme.shadows.small.shadowColor, // Updated
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -1034,26 +1045,26 @@ const styles = StyleSheet.create({
   chartTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: theme.colors.textPrimary, // Updated
     marginBottom: 12,
   },
   chartSummary: {
     fontSize: 15,
-    color: '#666',
+    color: theme.colors.textSecondary, // Updated
     lineHeight: 22,
     marginBottom: 12,
   },
   chartGifts: {
     fontSize: 15,
-    color: '#6c5ce7',
+    color: theme.colors.accent, // Updated
     fontWeight: '500',
   },
   pathCommitment: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.bg, // Updated
     padding: 24,
     borderRadius: 16,
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: theme.shadows.small.shadowColor, // Updated
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -1062,7 +1073,7 @@ const styles = StyleSheet.create({
   commitmentTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: theme.colors.textPrimary, // Updated
     textAlign: 'center',
     lineHeight: 26,
     marginBottom: 24,
@@ -1072,20 +1083,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     borderRadius: 12,
-    shadowColor: '#000',
+    shadowColor: theme.shadows.small.shadowColor, // Updated
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 3,
   },
   shadowButton: {
-    backgroundColor: '#7952b3',
+    backgroundColor: theme.colors.processingCore, // Updated
   },
   heroButton: {
-    backgroundColor: '#28a745',
+    backgroundColor: theme.colors.driveMechanics, // Updated
   },
   commitmentButtonText: {
-    color: '#fff',
+    color: theme.colors.bg, // Updated
     fontSize: 16,
     fontWeight: '600',
   },
@@ -1095,23 +1106,23 @@ const styles = StyleSheet.create({
   questSelectionTitle: {
     fontSize: 24,
     fontWeight: '600',
-    color: '#333',
+    color: theme.colors.textPrimary, // Updated
     textAlign: 'center',
     marginBottom: 8,
   },
   questSelectionSubtitle: {
     fontSize: 16,
-    color: '#666',
+    color: theme.colors.textSecondary, // Updated
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: 24,
   },
   questCard: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.bg, // Updated
     padding: 20,
     borderRadius: 16,
     marginBottom: 16,
-    shadowColor: '#000',
+    shadowColor: theme.shadows.small.shadowColor, // Updated
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -1119,11 +1130,11 @@ const styles = StyleSheet.create({
   },
   shadowQuestCard: {
     borderLeftWidth: 4,
-    borderLeftColor: '#7952b3',
+    borderLeftColor: theme.colors.processingCore, // Updated
   },
   heroQuestCard: {
     borderLeftWidth: 4,
-    borderLeftColor: '#28a745',
+    borderLeftColor: theme.colors.driveMechanics, // Updated
   },
   questHeader: {
     flexDirection: 'row',
@@ -1135,7 +1146,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: theme.colors.textPrimary, // Updated
     marginRight: 12,
   },
   questTypeTag: {
@@ -1144,19 +1155,19 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   shadowTag: {
-    backgroundColor: '#7952b3',
+    backgroundColor: theme.colors.processingCore, // Updated
   },
   heroTag: {
-    backgroundColor: '#28a745',
+    backgroundColor: theme.colors.driveMechanics, // Updated
   },
   questTypeText: {
-    color: '#fff',
+    color: theme.colors.bg, // Updated
     fontSize: 12,
     fontWeight: '500',
   },
   questDescription: {
     fontSize: 15,
-    color: '#666',
+    color: theme.colors.textSecondary, // Updated
     lineHeight: 22,
     marginBottom: 16,
   },
@@ -1165,38 +1176,38 @@ const styles = StyleSheet.create({
   },
   questObjective: {
     fontSize: 15,
-    color: '#333',
+    color: theme.colors.textPrimary, // Updated
     fontWeight: '500',
     marginBottom: 8,
   },
   questDuration: {
     fontSize: 14,
-    color: '#666',
+    color: theme.colors.textSecondary, // Updated
   },
   questChartIntegration: {
-    backgroundColor: '#f8f9fa',
+    backgroundColor: theme.colors.base1, // Updated
     padding: 12,
     borderRadius: 8,
   },
   chartIntegrationTitle: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#333',
+    color: theme.colors.textPrimary, // Updated
     marginBottom: 4,
   },
   chartIntegrationText: {
     fontSize: 13,
-    color: '#666',
+    color: theme.colors.textSecondary, // Updated
   },
   activeQuestContainer: {
     flex: 1,
   },
   questProgress: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.bg, // Updated
     padding: 20,
     borderRadius: 16,
     marginBottom: 16,
-    shadowColor: '#000',
+    shadowColor: theme.shadows.small.shadowColor, // Updated
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -1205,32 +1216,32 @@ const styles = StyleSheet.create({
   activeQuestTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#333',
+    color: theme.colors.textPrimary, // Updated
     marginBottom: 16,
     textAlign: 'center',
   },
   progressBar: {
     height: 8,
-    backgroundColor: '#e0e0e0',
+    backgroundColor: theme.colors.base1, // Updated
     borderRadius: 4,
     marginBottom: 8,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#6c5ce7',
+    backgroundColor: theme.colors.accent, // Updated
   },
   progressText: {
     fontSize: 14,
-    color: '#666',
+    color: theme.colors.textSecondary, // Updated
     textAlign: 'center',
   },
   questContent: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.bg, // Updated
     padding: 20,
     borderRadius: 16,
     marginBottom: 16,
-    shadowColor: '#000',
+    shadowColor: theme.shadows.small.shadowColor, // Updated
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -1239,41 +1250,41 @@ const styles = StyleSheet.create({
   questObjectiveTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: theme.colors.textPrimary, // Updated
     marginBottom: 8,
   },
   questObjectiveText: {
     fontSize: 15,
-    color: '#666',
+    color: theme.colors.textSecondary, // Updated
     lineHeight: 22,
     marginBottom: 16,
   },
   dailyPracticeTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: theme.colors.textPrimary, // Updated
     marginBottom: 8,
   },
   dailyPracticeText: {
     fontSize: 15,
-    color: '#666',
+    color: theme.colors.textSecondary, // Updated
     lineHeight: 22,
     marginBottom: 16,
   },
   successCriteria: {
-    backgroundColor: '#f8f9fa',
+    backgroundColor: theme.colors.base1, // Updated
     padding: 16,
     borderRadius: 12,
   },
   successCriteriaTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: theme.colors.textPrimary, // Updated
     marginBottom: 8,
   },
   criteriaItem: {
     fontSize: 14,
-    color: '#666',
+    color: theme.colors.textSecondary, // Updated
     marginBottom: 4,
     lineHeight: 20,
   },
@@ -1284,33 +1295,33 @@ const styles = StyleSheet.create({
   },
   progressButton: {
     flex: 1,
-    backgroundColor: '#6c5ce7',
+    backgroundColor: theme.colors.accent, // Updated
     padding: 16,
     borderRadius: 12,
     alignItems: 'center',
   },
   progressButtonText: {
-    color: '#fff',
+    color: theme.colors.bg, // Updated
     fontSize: 16,
     fontWeight: '600',
   },
   completeButton: {
     flex: 1,
-    backgroundColor: '#28a745',
+    backgroundColor: theme.colors.driveMechanics, // Updated (or accent)
     padding: 16,
     borderRadius: 12,
     alignItems: 'center',
   },
   completeButtonText: {
-    color: '#fff',
+    color: theme.colors.bg, // Updated
     fontSize: 16,
     fontWeight: '600',
   },
   hintsSection: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.bg, // Updated
     padding: 20,
     borderRadius: 16,
-    shadowColor: '#000',
+    shadowColor: theme.shadows.small.shadowColor, // Updated
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -1319,13 +1330,13 @@ const styles = StyleSheet.create({
   hintsTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: theme.colors.textPrimary, // Updated
     marginBottom: 16,
   },
   hintCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8f9fa',
+    backgroundColor: theme.colors.base1, // Updated
     padding: 12,
     borderRadius: 8,
     marginBottom: 8,
@@ -1333,18 +1344,18 @@ const styles = StyleSheet.create({
   hintPreview: {
     flex: 1,
     fontSize: 14,
-    color: '#666',
+    color: theme.colors.textSecondary, // Updated
     marginLeft: 12,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: `${theme.colors.base6}80`, // Updated (base6 with 50% opacity)
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
   },
   hintModal: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.bg, // Updated
     padding: 24,
     borderRadius: 16,
     width: '100%',
@@ -1353,174 +1364,175 @@ const styles = StyleSheet.create({
   hintModalTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#333',
+    color: theme.colors.textPrimary, // Updated
     marginBottom: 16,
     textAlign: 'center',
   },
   hintModalText: {
     fontSize: 16,
-    color: '#666',
+    color: theme.colors.textSecondary, // Updated
     lineHeight: 24,
     marginBottom: 16,
   },
   hintModalPractice: {
     fontSize: 15,
-    color: '#6c5ce7',
+    color: theme.colors.accent, // Updated
     fontWeight: '500',
     marginBottom: 16,
   },
   hintModalEncouragement: {
     fontSize: 15,
-    color: '#28a745',
+    color: theme.colors.driveMechanics, // Updated (or accent)
     fontStyle: 'italic',
     marginBottom: 24,
   },
   hintModalButton: {
-    backgroundColor: '#6c5ce7',
+    backgroundColor: theme.colors.accent, // Updated
     padding: 16,
     borderRadius: 12,
     alignItems: 'center',
   },
   hintModalButtonText: {
-    color: '#fff',
+    color: theme.colors.bg, // Updated
     fontSize: 16,
     fontWeight: '600',
   },
-  wisdomContainer: {
+  wisdomContainer: { // This style might be redundant if oracleWisdomViewWrapper covers it
     flex: 1,
   },
-  wisdomHeader: {
-    backgroundColor: '#fff',
+  wisdomHeader: { // This seems to be covered by titleSection now
+    backgroundColor: theme.colors.bg, // Updated
     padding: 20,
     borderRadius: 16,
     marginBottom: 16,
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: theme.shadows.small.shadowColor, // Updated
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
   },
-  wisdomTitle: {
+  wisdomTitle: { // Covered by pageTitle
     fontSize: 24,
     fontWeight: '700',
-    color: '#6c5ce7',
+    color: theme.colors.accent, // Updated
     marginBottom: 8,
   },
-  wisdomSubtitle: {
+  wisdomSubtitle: { // Covered by pageSubtitle
     fontSize: 14,
-    color: '#666',
+    color: theme.colors.textSecondary, // Updated
     textAlign: 'center',
   },
-  messagesContainer: {
+  messagesContainer: { // Covered by messagesScrollView
     flex: 1,
     marginBottom: 16,
   },
-  welcomeCard: {
-    backgroundColor: '#fff',
+  welcomeCard: { // This is the "Oracle Awaits" card, covered by descriptiveParagraph + oracleInteractiveContent
+    backgroundColor: theme.colors.bg, // Updated
     padding: 24,
     borderRadius: 12,
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: theme.shadows.small.shadowColor, // Updated
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 3,
     elevation: 5,
   },
-  welcomeTitle: {
+  welcomeTitle: { // Part of descriptiveParagraph styling
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
+    color: theme.colors.textPrimary, // Updated
     marginBottom: 12,
   },
-  welcomeText: {
+  welcomeText: { // Part of descriptiveParagraph styling
     fontSize: 14,
-    color: '#666',
+    color: theme.colors.textSecondary, // Updated
     textAlign: 'center',
     lineHeight: 20,
   },
-  thinkingCard: {
-    backgroundColor: '#e8f4fd',
+  thinkingCard: { // Covered by pulseLoaderContainer
+    backgroundColor: theme.colors.accentGlow, // Updated (e.g. light blue)
     padding: 20,
     borderRadius: 12,
     alignItems: 'center',
     marginBottom: 16,
   },
-  thinkingText: {
+  thinkingText: { // Part of pulseLoaderContainer visual
     fontSize: 16,
-    color: '#6c5ce7',
+    color: theme.colors.accent, // Updated
     fontStyle: 'italic',
     marginBottom: 12,
   },
-  thinkingDots: {
+  thinkingDots: { // Covered by pulseBlips
     flexDirection: 'row',
   },
-  dot: {
+  dot: { // Covered by pulseBlip style
     fontSize: 20,
-    color: '#6c5ce7',
+    color: theme.colors.accent, // Updated
     marginHorizontal: 4,
   },
-  messageCard: {
-    backgroundColor: '#fff',
-    padding: 20,
-    borderRadius: 12,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 5,
-  },
-  questionSection: {
+  // messageCard is already themed for new Oracle, this is for legacy if still used
+  // messageCard: { // Styles for previously asked questions
+  //   backgroundColor: theme.colors.bg, // Updated
+  //   padding: 20,
+  //   borderRadius: 12,
+  //   marginBottom: 16,
+  //   shadowColor: theme.shadows.small.shadowColor, // Updated
+  //   shadowOffset: {width: 0, height: 2},
+  //   shadowOpacity: 0.1,
+  //   shadowRadius: 3,
+  //   elevation: 5,
+  // },
+  questionSection: { // Within messageCard
     marginBottom: 16,
     paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: theme.colors.base1, // Updated
   },
-  questionLabel: {
+  questionLabel: { // Within messageCard
     fontSize: 12,
-    color: '#666',
+    color: theme.colors.textSecondary, // Updated
     textTransform: 'uppercase',
     marginBottom: 4,
   },
-  questionText: {
+  questionText: { // Within messageCard
     fontSize: 16,
-    color: '#333',
+    color: theme.colors.textPrimary, // Updated
     fontStyle: 'italic',
   },
-  answerSection: {
+  answerSection: { // Within messageCard
     position: 'relative',
   },
-  answerLabel: {
+  answerLabel: { // Within messageCard
     fontSize: 12,
-    color: '#666',
+    color: theme.colors.textSecondary, // Updated
     textTransform: 'uppercase',
     marginBottom: 8,
   },
-  answerText: {
+  answerText: { // Within messageCard
     fontSize: 16,
-    color: '#333',
+    color: theme.colors.textPrimary, // Updated
     lineHeight: 22,
     marginBottom: 8,
   },
-  timestamp: {
+  timestamp: { // Within messageCard
     fontSize: 12,
-    color: '#999',
+    color: theme.colors.base2, // Updated
     textAlign: 'right',
   },
-  inputContainer: {
-    backgroundColor: '#fff',
-    padding: 16,
+  inputContainer: { // This is inputPanelContainer now
+    backgroundColor: theme.colors.bg, // Updated
+    padding: 16, // This was likely for the old input structure, inputPanelContainer has its own padding logic
     borderRadius: 16,
-    shadowColor: '#000',
+    shadowColor: theme.shadows.small.shadowColor, // Updated
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
   },
-  questionInput: {
+  questionInput: { // This is textInputMain now
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: theme.colors.base2, // Updated
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
@@ -1528,17 +1540,17 @@ const styles = StyleSheet.create({
     minHeight: 60,
     textAlignVertical: 'top',
   },
-  askButton: {
-    backgroundColor: '#6c5ce7',
+  askButton: { // This is the StackedButton now
+    backgroundColor: theme.colors.accent, // Updated
     padding: 16,
     borderRadius: 8,
     alignItems: 'center',
   },
-  buttonDisabled: {
-    backgroundColor: '#ccc',
+  buttonDisabled: { // StackedButton might have its own disabled style
+    backgroundColor: theme.colors.base2, // Updated
   },
-  buttonText: {
-    color: '#fff',
+  buttonText: { // For StackedButton text, usually theme.colors.bg
+    color: theme.colors.bg, // Updated
     fontSize: 16,
     fontWeight: '600',
   },
