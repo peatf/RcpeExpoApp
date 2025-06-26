@@ -31,6 +31,8 @@ import aiCalibrationToolService, {
   CalibrationToOracleHandoff,
   EnhancedSliderUI
 } from '../../services/aiCalibrationToolService';
+import OnboardingBanner from '../../components/OnboardingBanner';
+import useOnboardingBanner from '../../hooks/useOnboardingBanner';
 
 interface CalibrationToolScreenProps {
   navigation: any;
@@ -39,6 +41,7 @@ interface CalibrationToolScreenProps {
 
 const CalibrationToolScreen: React.FC<CalibrationToolScreenProps> = ({navigation, route}) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const { showBanner, dismissBanner, isLoadingBanner } = useOnboardingBanner('CalibrationTool');
   
   // Core state
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -629,6 +632,13 @@ const CalibrationToolScreen: React.FC<CalibrationToolScreenProps> = ({navigation
 
   return (
     <SafeAreaView style={styles.container}>
+      {!isLoadingBanner && showBanner && (
+        <OnboardingBanner
+          toolName="Calibration Tool"
+          description="Fine-tune your energetic alignment with your stated desires."
+          onDismiss={dismissBanner}
+        />
+      )}
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}

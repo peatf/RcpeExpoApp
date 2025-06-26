@@ -3,8 +3,10 @@ import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import DecisionMakerTab from '../../components/DecisionMakerTab'; // Adjust path if necessary
 import { HDType } from '../../types/humanDesign'; // Adjust path if necessary
 import { colors, spacing, typography } from '../../constants/theme'; // Assuming theme file exists
-import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage
-import React, { useState, useEffect } from 'react'; // Import useState, useEffect
+import AsyncStorage from '@react-native-async-storage/async-storage';
+// React, useState, useEffect are imported once now
+import OnboardingBanner from '../../components/OnboardingBanner';
+import useOnboardingBanner from '../../hooks/useOnboardingBanner';
 
 const DEV_OVERRIDE_HD_TYPE_KEY = 'dev_override_hd_type';
 
@@ -43,8 +45,9 @@ const useUserHDType = (): { userType: HDType | null; isLoading: boolean } => {
 
 const DecisionMakerScreen: React.FC = () => {
   const { userType, isLoading: isLoadingUserType } = useUserHDType();
+  const { showBanner, dismissBanner, isLoadingBanner } = useOnboardingBanner('DecisionMaker');
 
-  if (isLoadingUserType) {
+  if (isLoadingUserType || isLoadingBanner) { // Combined loading states
     return (
       <View style={styles.centered}>
         <Text style={typography.bodyLarge}>Loading user information...</Text>
@@ -63,6 +66,13 @@ const DecisionMakerScreen: React.FC = () => {
 
   return (
     <ScrollView style={styles.screenContainer}>
+      {showBanner && (
+        <OnboardingBanner
+          toolName="Decision Maker"
+          description="Tools to help you make decisions aligned with your Human Design type."
+          onDismiss={dismissBanner}
+        />
+      )}
       <View style={styles.headerContainer}>
         <Text style={typography.headingLarge}>Decision-Maker Tools</Text>
         <Text style={typography.bodyMedium}>

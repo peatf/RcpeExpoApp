@@ -133,7 +133,7 @@ const MainTabNavigator: React.FC = () => {
               <Ionicons
                 name="menu" // Icon for opening the sidebar
                 size={24} // Slightly larger for visibility
-                color={colors.bg} // Changed from colors.text to match other icons in the nav
+                color={colors.textPrimary} // Changed to textPrimary as iconDefault is not defined
               />
             </StackedButton>
           </View>
