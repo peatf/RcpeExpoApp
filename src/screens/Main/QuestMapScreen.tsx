@@ -7,12 +7,15 @@ import { QuestTransition } from '../../components/Transitions/QuestTransition';
 import { RootState } from '../../state/store';
 import { Quest } from '../../state/quests/questSlice';
 import { useNarrativeCopy } from '../../hooks/useNarrativeCopy';
+import { useAesthetics } from '../../hooks/useAesthetics';
+import { AmbientBackground } from '../../components/Animations/AmbientBackground';
 
 export const QuestMapScreen: React.FC = () => {
   const dispatch = useDispatch();
   const navigation = useNavigation();
   const route = useRoute();
   const { getCopy } = useNarrativeCopy();
+  const { currentTheme } = useAesthetics();
   const { activeQuests, completedQuests } = useSelector((state: RootState) => state.quests);
 
   const handleQuestNavigation = (quest: Quest) => {
@@ -40,9 +43,11 @@ export const QuestMapScreen: React.FC = () => {
 
   return (
     <QuestTransition transitionKey={route.key}>
-      <ScrollView style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.screenTitle}>{getCopy('questMap.title')}</Text>
+      <View style={[styles.container, { backgroundColor: currentTheme.primary }]}>
+        <AmbientBackground animationType="questMap" />
+        <ScrollView>
+          <View style={styles.header}>
+            <Text style={[styles.screenTitle, { color: currentTheme.text }]}>{getCopy('questMap.title')}</Text>
         <Text style={styles.subtitle}>{getCopy('questMap.subtitle')}</Text>
       </View>
 
@@ -65,7 +70,8 @@ export const QuestMapScreen: React.FC = () => {
         <Text style={styles.personalSymbolText}>{getCopy('questMap.sections.personalSymbol')}</Text>
         <View style={styles.symbolPlaceholder} />
       </View>
-    </ScrollView>
+        </ScrollView>
+      </View>
     </QuestTransition>
   );
 };
