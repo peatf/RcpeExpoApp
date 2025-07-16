@@ -14,11 +14,12 @@ import FrequencyMapperScreen from '../screens/Main/FrequencyMapperScreen';
 import OracleScreen from '../screens/Main/OracleScreen';
 import UserBaseChartScreen from '../screens/Main/UserBaseChartScreen';
 import LivingLogScreen from '../screens/Main/HumanDesignTools/LivingLogScreen';
+import { QuestLogScreen } from '../screens/Main/QuestLogScreen';
 import DecisionMakerScreen from '../screens/Main/DecisionMakerScreen';
 import ProfileCreationScreen from '../screens/Main/ProfileCreationScreen';
 import UserProfileScreen from '../screens/Main/UserProfileScreen';
 
-type ScreenName = 'questMap' | 'frequencyMapper' | 'oracle' | 'baseChart' | 'livingLog' | 'decisionMaker' | 'profileCreation' | 'userProfile';
+type ScreenName = 'questMap' | 'questLog' | 'frequencyMapper' | 'oracle' | 'baseChart' | 'livingLog' | 'decisionMaker' | 'profileCreation' | 'userProfile';
 
 const MainTabNavigator: React.FC = () => {
   const [currentScreen, setCurrentScreen] = useState<ScreenName>('questMap');
@@ -57,6 +58,12 @@ const MainTabNavigator: React.FC = () => {
       icon: 'document-text',
       label: 'Log',
       component: LivingLogScreen,
+    },
+    {
+      id: 'questLog',
+      icon: 'book-outline',
+      label: 'Quest Log',
+      component: QuestLogScreen,
     },
     {
       id: 'decisionMaker',
@@ -99,6 +106,8 @@ const MainTabNavigator: React.FC = () => {
         case 'livingLog':
           // @ts-ignore - LivingLogScreen may have different prop requirements
           return <LivingLogScreen />;
+        case 'questLog':
+          return <QuestLogScreen />;
         case 'decisionMaker':
           // @ts-ignore - DecisionMakerScreen may have different prop requirements
           return <DecisionMakerScreen />;

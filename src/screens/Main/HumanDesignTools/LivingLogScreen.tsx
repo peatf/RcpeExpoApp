@@ -9,6 +9,7 @@ import { useOnboarding } from '../../../hooks/useOnboarding';
 import { MicroQuestTracker } from '../../../components/Quests/MicroQuestTracker';
 import { QuestCompletionToast } from '../../../components/Feedback/QuestCompletionToast';
 import { useMicroQuests } from '../../../hooks/useMicroQuests';
+import { useQuestLog } from '../../../hooks/useQuestLog';
 import StackedButton from '../../../components/StackedButton';
 import { theme } from '../../../constants/theme'; // Import full theme
 import { InfoCard, LogInput, InsightDisplay } from '../../../components/HumanDesignTools';
@@ -23,6 +24,7 @@ const MOCK_USER_AUTHORITY = AuthorityType.Sacral; // Example, replace with actua
 const LivingLogScreen: React.FC = () => {
   const { showBanner, dismissBanner } = useOnboarding('living_log');
   const { completeMicroQuestAction, showToast, completedQuestTitle, hideToast } = useMicroQuests();
+  const { logJournalEntry } = useQuestLog();
   // newEntryText state removed as LogInput manages its own state.
   const [logEntries, setLogEntries] = useState<LogEntry[]>([]);
   const [patterns, setPatterns] = useState<LivingLogPattern[]>([]);
@@ -77,6 +79,7 @@ const LivingLogScreen: React.FC = () => {
         loadLogData();
         // Complete the micro-quest
         completeMicroQuestAction('living_log_entry');
+        logJournalEntry('New Log Entry', text);
         // Potentially clear input if LogInput doesn't do it itself or if newEntryText was used
         // setNewEntryText('');
       } else {

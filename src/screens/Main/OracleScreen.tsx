@@ -33,6 +33,7 @@ import aiOracleService, {
 } from '../../services/aiOracleService';
 import { OnboardingBanner } from '../../components/Onboarding/OnboardingBanner';
 import { useOnboarding } from '../../hooks/useOnboarding';
+import { useQuestLog } from '../../hooks/useQuestLog';
 
 interface OracleScreenProps {
   navigation?: any;
@@ -76,6 +77,7 @@ const OracleScreen: React.FC<OracleScreenProps> = ({navigation, route}) => {
   const [oracleMessages, setOracleMessages] = useState<any[]>([]);
   const [isInputFocused, setIsInputFocused] = useState<boolean>(false);
   const { showBanner, dismissBanner } = useOnboarding('oracle');
+  const { logOracleInsight } = useQuestLog();
 
   // Initialize Oracle on mount
   useEffect(() => {
@@ -403,6 +405,7 @@ const OracleScreen: React.FC<OracleScreenProps> = ({navigation, route}) => {
       setOracleMessages(prev => [newMessage, ...prev]);
       setOracleQuestion('');
       setIsThinking(false);
+      logOracleInsight(oracleQuestion, response);
     }, 2500);
   };
 

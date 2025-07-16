@@ -36,6 +36,7 @@ import useOnboardingBanner from '../../hooks/useOnboardingBanner';
 import { MicroQuestTracker } from '../../components/Quests/MicroQuestTracker';
 import { QuestCompletionToast } from '../../components/Feedback/QuestCompletionToast';
 import { useMicroQuests } from '../../hooks/useMicroQuests';
+import { useQuestLog } from '../../hooks/useQuestLog';
 
 interface CalibrationToolScreenProps {
   navigation: any;
@@ -46,6 +47,7 @@ const CalibrationToolScreen: React.FC<CalibrationToolScreenProps> = ({navigation
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const { showBanner, dismissBanner, isLoadingBanner } = useOnboardingBanner('CalibrationTool');
   const { completeMicroQuestAction, showToast, completedQuestTitle, hideToast } = useMicroQuests();
+  const { logCalibrationResult } = useQuestLog();
   
   // Core state
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -281,6 +283,7 @@ const CalibrationToolScreen: React.FC<CalibrationToolScreenProps> = ({navigation
       console.log('Calibration: Moving to results view...');
       setCurrentStep('results');
       completeMicroQuestAction('calibration_complete');
+      logCalibrationResult(recommendation.map_summary);
       
     } catch (error) {
       console.error('Failed to process calibration:', error);

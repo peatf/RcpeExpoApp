@@ -1,5 +1,6 @@
 // src/state/quests/questSlice.ts
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { QuestLogEntry, QuestLogState } from '../../types/questLog';
 
 interface Quest {
   id: string;
@@ -23,6 +24,7 @@ interface QuestState {
   completedQuests: Quest[];
   microQuests: MicroQuest[];
   dailyMicroQuests: MicroQuest[];
+  questLog: QuestLogState;
 }
 
 const initialState: QuestState = {
@@ -48,6 +50,10 @@ const initialState: QuestState = {
     },
   ],
   dailyMicroQuests: [],
+  questLog: {
+    entries: [],
+    lastUpdated: Date.now(),
+  },
 };
 
 const questSlice = createSlice({
@@ -81,8 +87,28 @@ const questSlice = createSlice({
         quest.completedAt = undefined;
       });
     },
+    addQuestLogEntry: (state, action: PayloadAction<Omit<QuestLogEntry, 'id' | 'timestamp'>>) => {
+      const entry: QuestLogEntry = {
+        id: `log_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        timestamp: Date.now(),
+        ...action.payload,
+      };
+      state.questLog.entries.unshift(entry); // Add to beginning for chronological order
+      state.questLog.lastUpdated = Date.now();
+    },
+    clearQuestLog: (state) => {
+      state.questLog.entries = [];
+      state.questLog.lastUpdated = Date.now();
+    },
   },
 });
 
-export const { completeQuest, addQuest, completeMicroQuest, resetDailyMicroQuests } = questSlice.actions;
+export const {
+  completeQuest,
+  addQuest,
+  completeMicroQuest,
+  resetDailyMicroQuests,
+  addQuestLogEntry,
+  clearQuestLog
+} = questSlice.actions;
 export default questSlice.reducer;

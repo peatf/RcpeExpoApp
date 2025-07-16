@@ -1,20 +1,20 @@
 // src/hooks/useMicroQuests.ts
 import { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { completeMicroQuest } from '../state/quests/questSlice';
+import { useSelector } from 'react-redux';
+import { useQuestLog } from './useQuestLog';
 import { RootState } from '../state/store';
 
 export const useMicroQuests = () => {
-  const dispatch = useDispatch();
   const [showToast, setShowToast] = useState(false);
   const [completedQuestTitle, setCompletedQuestTitle] = useState('');
+  const { logAndCompleteMicroQuest } = useQuestLog();
 
   const microQuests = useSelector((state: RootState) => state.quests.microQuests);
 
   const completeMicroQuestAction = (action: string) => {
     const quest = microQuests.find((q) => q.action === action);
     if (quest && !quest.isComplete) {
-      dispatch(completeMicroQuest(quest.id));
+      logAndCompleteMicroQuest(quest.id, quest.title);
       setCompletedQuestTitle(quest.title);
       setShowToast(true);
     }
