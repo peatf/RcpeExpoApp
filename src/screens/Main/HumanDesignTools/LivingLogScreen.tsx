@@ -6,6 +6,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, FlatList, ActivityIndicator, RefreshControl, TouchableOpacity } from 'react-native';
 import { OnboardingBanner } from '../../../components/Onboarding/OnboardingBanner';
 import { useOnboarding } from '../../../hooks/useOnboarding';
+import { MicroQuestTracker } from '../../../components/Quests/MicroQuestTracker';
+import { QuestCompletionToast } from '../../../components/Feedback/QuestCompletionToast';
+import { useMicroQuests } from '../../../hooks/useMicroQuests';
 import StackedButton from '../../../components/StackedButton';
 import { theme } from '../../../constants/theme'; // Import full theme
 import { InfoCard, LogInput, InsightDisplay } from '../../../components/HumanDesignTools';
@@ -19,6 +22,7 @@ const MOCK_USER_AUTHORITY = AuthorityType.Sacral; // Example, replace with actua
 
 const LivingLogScreen: React.FC = () => {
   const { showBanner, dismissBanner } = useOnboarding('living_log');
+  const { completeMicroQuestAction, showToast, completedQuestTitle, hideToast } = useMicroQuests();
   // newEntryText state removed as LogInput manages its own state.
   const [logEntries, setLogEntries] = useState<LogEntry[]>([]);
   const [patterns, setPatterns] = useState<LivingLogPattern[]>([]);
@@ -71,6 +75,8 @@ const LivingLogScreen: React.FC = () => {
       if (result.success) {
         // Refresh entries
         loadLogData();
+        // Complete the micro-quest
+        completeMicroQuestAction('living_log_entry');
         // Potentially clear input if LogInput doesn't do it itself or if newEntryText was used
         // setNewEntryText('');
       } else {
@@ -132,6 +138,7 @@ const LivingLogScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
+      <MicroQuestTracker action="living_log_entry" />
       {showBanner && (
         <OnboardingBanner
           toolName="Living Log"
@@ -139,6 +146,11 @@ const LivingLogScreen: React.FC = () => {
           onDismiss={dismissBanner}
         />
       )}
+      <QuestCompletionToast
+        questTitle={completedQuestTitle}
+        visible={showToast}
+        onHide={hideToast}
+      />
       <View style={styles.contentWrapper}>
         <View style={styles.titleSection}>
           <Text style={styles.pageTitle}>LIVING LOG</Text>

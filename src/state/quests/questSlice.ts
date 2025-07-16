@@ -9,9 +9,20 @@ interface Quest {
   type: 'main' | 'micro' | 'long-term';
 }
 
+interface MicroQuest {
+  id: string;
+  title: string;
+  description: string;
+  action: string; // e.g., 'living_log_entry', 'calibration_complete'
+  isComplete: boolean;
+  completedAt?: number;
+}
+
 interface QuestState {
   activeQuests: Quest[];
   completedQuests: Quest[];
+  microQuests: MicroQuest[];
+  dailyMicroQuests: MicroQuest[];
 }
 
 const initialState: QuestState = {
@@ -20,6 +31,23 @@ const initialState: QuestState = {
     { id: '2', title: 'Consult the Oracle', description: 'Ask the Oracle a question.', isComplete: false, type: 'main' },
   ],
   completedQuests: [],
+  microQuests: [
+    {
+      id: 'micro_1',
+      title: 'Record Your Experience',
+      description: 'Document your current state in the Living Log',
+      action: 'living_log_entry',
+      isComplete: false
+    },
+    {
+      id: 'micro_2',
+      title: 'Calibrate Your Energy',
+      description: 'Use the Calibration tool to tune your frequency',
+      action: 'calibration_complete',
+      isComplete: false
+    },
+  ],
+  dailyMicroQuests: [],
 };
 
 const questSlice = createSlice({
@@ -39,9 +67,22 @@ const questSlice = createSlice({
       const newQuest = { ...action.payload, isComplete: false };
       state.activeQuests.push(newQuest);
     },
-    // Add reducers for adding new quests
+    completeMicroQuest: (state, action: PayloadAction<string>) => {
+      const microQuestId = action.payload;
+      const microQuest = state.microQuests.find(q => q.id === microQuestId);
+      if (microQuest) {
+        microQuest.isComplete = true;
+        microQuest.completedAt = Date.now();
+      }
+    },
+    resetDailyMicroQuests: (state) => {
+      state.microQuests.forEach(quest => {
+        quest.isComplete = false;
+        quest.completedAt = undefined;
+      });
+    },
   },
 });
 
-export const { completeQuest, addQuest } = questSlice.actions;
+export const { completeQuest, addQuest, completeMicroQuest, resetDailyMicroQuests } = questSlice.actions;
 export default questSlice.reducer;
