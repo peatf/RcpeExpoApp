@@ -94,9 +94,9 @@ export const SignUpScreen: React.FC = () => {
       >
         <ScrollView contentContainerStyle={styles.scrollContainer}>
           <View style={styles.content}>
-            <Text style={styles.title}>Create Account</Text>
+            <Text style={styles.title}>Embark on Your Quest</Text>
             <Text style={styles.subtitle}>
-              Join Reality Creation Profile Engine
+              Your adventure into the Reality Creation Profile Engine begins now.
             </Text>
 
             <View style={styles.form}>
@@ -201,7 +201,7 @@ export const SignUpScreen: React.FC = () => {
                 disabled={loading}
               >
                 <Text style={styles.buttonText}>
-                  {loading ? 'Creating Account...' : 'Sign Up'}
+                  {loading ? 'Embarking...' : 'Begin Your Quest'}
                 </Text>
               </TouchableOpacity>
             </View>

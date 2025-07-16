@@ -78,8 +78,8 @@ const LoginScreen: React.FC = () => {
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
         <View style={styles.content}>
-          <Text style={styles.title}>Welcome</Text>
-          <Text style={styles.subtitle}>Sign in to access your profile</Text>
+          <Text style={styles.title}>Welcome Back</Text>
+          <Text style={styles.subtitle}>Your quest awaits. Continue your journey.</Text>
           
           <View style={styles.panel}>
             <View style={styles.form}>
@@ -147,7 +147,7 @@ const LoginScreen: React.FC = () => {
                   disabled={isLoading}
                 >
                   <Text style={styles.buttonText}>
-                    {isLoading ? 'Signing In...' : 'Sign In'}
+                    {isLoading ? 'Resuming...' : 'Continue Your Journey'}
                   </Text>
                 </TouchableOpacity>
               </View>

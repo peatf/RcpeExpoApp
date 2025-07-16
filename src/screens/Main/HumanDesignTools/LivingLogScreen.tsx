@@ -4,8 +4,8 @@
  */
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, FlatList, ActivityIndicator, RefreshControl, TouchableOpacity } from 'react-native';
-import OnboardingBanner from '../../../components/OnboardingBanner';
-import useOnboardingBanner from '../../../hooks/useOnboardingBanner';
+import { OnboardingBanner } from '../../../components/Onboarding/OnboardingBanner';
+import { useOnboarding } from '../../../hooks/useOnboarding';
 import StackedButton from '../../../components/StackedButton';
 import { theme } from '../../../constants/theme'; // Import full theme
 import { InfoCard, LogInput, InsightDisplay } from '../../../components/HumanDesignTools';
@@ -18,7 +18,7 @@ import LogListItem from './LivingLogComponents/LogListItem'; // Import the new L
 const MOCK_USER_AUTHORITY = AuthorityType.Sacral; // Example, replace with actual source
 
 const LivingLogScreen: React.FC = () => {
-  const { showBanner, dismissBanner, isLoadingBanner } = useOnboardingBanner('Living Log');
+  const { showBanner, dismissBanner } = useOnboarding('living_log');
   // newEntryText state removed as LogInput manages its own state.
   const [logEntries, setLogEntries] = useState<LogEntry[]>([]);
   const [patterns, setPatterns] = useState<LivingLogPattern[]>([]);
@@ -121,7 +121,7 @@ const LivingLogScreen: React.FC = () => {
   );
 
 
-  if (isLoading && !isRefreshing && logEntries.length === 0 && !showBanner) {
+  if (isLoading && !isRefreshing && logEntries.length === 0) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={theme.colors.accent} />
@@ -132,7 +132,7 @@ const LivingLogScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      {!isLoadingBanner && showBanner && (
+      {showBanner && (
         <OnboardingBanner
           toolName="Living Log"
           description="Welcome to your Living Log! Track experiences and discover patterns related to your Human Design."

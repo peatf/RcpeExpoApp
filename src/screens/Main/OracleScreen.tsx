@@ -31,8 +31,8 @@ import aiOracleService, {
   QuestCompletion,
   OracleSession
 } from '../../services/aiOracleService';
-import OnboardingBanner from '../../components/OnboardingBanner'; // Import OnboardingBanner
-import useOnboardingBanner from '../../hooks/useOnboardingBanner'; // Import useOnboardingBanner
+import { OnboardingBanner } from '../../components/Onboarding/OnboardingBanner';
+import { useOnboarding } from '../../hooks/useOnboarding';
 
 interface OracleScreenProps {
   navigation?: any;
@@ -75,7 +75,7 @@ const OracleScreen: React.FC<OracleScreenProps> = ({navigation, route}) => {
   const [isThinking, setIsThinking] = useState<boolean>(false);
   const [oracleMessages, setOracleMessages] = useState<any[]>([]);
   const [isInputFocused, setIsInputFocused] = useState<boolean>(false);
-  const { showBanner, dismissBanner, isLoadingBanner } = useOnboardingBanner('Oracle');
+  const { showBanner, dismissBanner } = useOnboarding('oracle');
 
   // Initialize Oracle on mount
   useEffect(() => {
@@ -764,7 +764,7 @@ const OracleScreen: React.FC<OracleScreenProps> = ({navigation, route}) => {
     <SafeAreaView style={styles.container}>
       {/* Render StepTracker if not in wisdom mode or if desired */}
       {/* For now, always render it based on current logic */}
-      {!isLoadingBanner && showBanner && (
+      {showBanner && (
         <OnboardingBanner
           toolName="Oracle"
           description="Welcome to the Oracle. Explore personalized quests or seek direct wisdom."

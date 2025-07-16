@@ -24,6 +24,8 @@ import { theme } from '../../constants/theme'; // Import full theme
 import baseChartService, {BaseChartData} from '../../services/baseChartService';
 import aiFrequencyMapperService from '../../services/aiFrequencyMapperService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { OnboardingBanner } from '../../components/Onboarding/OnboardingBanner';
+import { useOnboarding } from '../../hooks/useOnboarding';
 
 // Drive Mechanics Types
 type MotivationColor = 'Need' | 'Want' | 'Desire' | 'Transfer' | undefined;
@@ -496,6 +498,7 @@ const getSessionId = (): string => {
 
 const FrequencyMapperScreen: React.FC = () => {
   const navigation = useNavigation();
+  const { showBanner, dismissBanner } = useOnboarding('frequency_mapper');
 
   // User state
   const [userId, setUserId] = useState<string | null>(null);
@@ -1215,6 +1218,13 @@ const FrequencyMapperScreen: React.FC = () => {
         totalSteps={FLOW_STEPS.FREQUENCY_MAPPER}
         stepLabels={STEP_LABELS.FREQUENCY_MAPPER}
       />
+      {showBanner && (
+        <OnboardingBanner
+          toolName="Frequency Mapper"
+          description="This is your first quest. Define what you desire and map its energetic signature."
+          onDismiss={dismissBanner}
+        />
+      )}
       <View style={styles.contentWrapper}>
         <View style={styles.titleSection}>
           <Text style={styles.pageTitle}>FREQUENCY MAPPER</Text>
