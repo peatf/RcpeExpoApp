@@ -206,7 +206,7 @@ const ResponseIntelligenceScreen: React.FC = () => {
             <InfoCard title="Question Framing Assist">
               <LogInput onSubmit={setQuestionForFraming} placeholder="Enter question for framing..."/>
               <View style={styles.actionButtonContainer}>
-                <StackedButton text="Get Framing Tips" onPress={handleQuestionFraming} type="rect" />
+                <StackedButton text="Get Framing Tips" onPress={handleQuestionFraming} shape="rectangle" />
               </View>
             </InfoCard>
 

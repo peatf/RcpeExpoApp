@@ -2,7 +2,7 @@
  * @file SignUpScreen.tsx
  * @description Sign up screen for new user registration
  */
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -38,6 +38,12 @@ export const SignUpScreen: React.FC = () => {
   const [emailFocused, setEmailFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
   const [confirmPasswordFocused, setConfirmPasswordFocused] = useState(false);
+  
+  // Refs for TextInput components
+  const nameRef = useRef<TextInput>(null);
+  const emailRef = useRef<TextInput>(null);
+  const passwordRef = useRef<TextInput>(null);
+  const confirmPasswordRef = useRef<TextInput>(null);
 
   const { signUp } = useAuth();
   const navigation = useNavigation<SignUpScreenNavigationProp>();
@@ -90,9 +96,10 @@ export const SignUpScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.keyboardView}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
+        enabled={true}
       >
         <ScrollView contentContainerStyle={styles.scrollContainer}>
           <View style={styles.content}>
@@ -119,9 +126,17 @@ export const SignUpScreen: React.FC = () => {
                     returnKeyType="next"
                     blurOnSubmit={false}
                     editable={!loading}
-                    selectTextOnFocus={true}
+                    selectTextOnFocus={false}
+                    clearButtonMode="never"
                     onFocus={() => setNameFocused(true)}
                     onBlur={() => setNameFocused(false)}
+                    // Critical props for React Native 0.79.3 + React 19 compatibility
+                    allowFontScaling={false}
+                    underlineColorAndroid="transparent"
+                    importantForAutofill="yes"
+                    contextMenuHidden={false}
+                    spellCheck={false}
+                    autoFocus={false}
                   />
                 </View>
               </View>
@@ -144,9 +159,17 @@ export const SignUpScreen: React.FC = () => {
                     returnKeyType="next"
                     blurOnSubmit={false}
                     editable={!loading}
-                    selectTextOnFocus={true}
+                    selectTextOnFocus={false}
+                    clearButtonMode="never"
                     onFocus={() => setEmailFocused(true)}
                     onBlur={() => setEmailFocused(false)}
+                    // Critical props for React Native 0.79.3 + React 19 compatibility
+                    allowFontScaling={false}
+                    underlineColorAndroid="transparent"
+                    importantForAutofill="yes"
+                    contextMenuHidden={false}
+                    spellCheck={false}
+                    autoFocus={false}
                   />
                 </View>
               </View>
@@ -167,9 +190,17 @@ export const SignUpScreen: React.FC = () => {
                     returnKeyType="next"
                     blurOnSubmit={false}
                     editable={!loading}
-                    selectTextOnFocus={true}
+                    selectTextOnFocus={false}
+                    clearButtonMode="never"
                     onFocus={() => setPasswordFocused(true)}
                     onBlur={() => setPasswordFocused(false)}
+                    // Critical props for React Native 0.79.3 + React 19 compatibility
+                    allowFontScaling={false}
+                    underlineColorAndroid="transparent"
+                    importantForAutofill="yes"
+                    contextMenuHidden={false}
+                    spellCheck={false}
+                    autoFocus={false}
                   />
                 </View>
               </View>
@@ -189,10 +220,18 @@ export const SignUpScreen: React.FC = () => {
                     textContentType="newPassword"
                     returnKeyType="done"
                     editable={!loading}
-                    selectTextOnFocus={true}
+                    selectTextOnFocus={false}
+                    clearButtonMode="never"
                     onFocus={() => setConfirmPasswordFocused(true)}
                     onBlur={() => setConfirmPasswordFocused(false)}
                     onSubmitEditing={handleSignUp}
+                    // Critical props for React Native 0.79.3 + React 19 compatibility
+                    allowFontScaling={false}
+                    underlineColorAndroid="transparent"
+                    importantForAutofill="yes"
+                    contextMenuHidden={false}
+                    spellCheck={false}
+                    autoFocus={false}
                   />
                 </View>
               </View>
@@ -275,6 +314,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     minHeight: 44, // Ensure adequate touch target
     justifyContent: 'center', // Center the TextInput vertically
+    // Prevent touch interference
+    pointerEvents: 'box-none',
   },
   inputPanelFocused: {
     borderColor: colors.accent,
@@ -288,6 +329,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     minHeight: 44, // Ensure adequate touch target
     borderWidth: 0, // Remove any default border
+    // Add these critical props for React Native 0.79.3 compatibility
+    includeFontPadding: false,
+    textAlignVertical: 'center',
+    // Ensure input receives touches
+    zIndex: 1,
+    position: 'relative',
   },
   button: {
     backgroundColor: colors.accent,

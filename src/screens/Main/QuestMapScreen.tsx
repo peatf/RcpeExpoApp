@@ -3,29 +3,31 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { QuestTransition } from '../../components/Transitions/QuestTransition';
 import { RootState } from '../../state/store';
 import { Quest } from '../../state/quests/questSlice';
 import { useNarrativeCopy } from '../../hooks/useNarrativeCopy';
-import { useAesthetics } from '../../hooks/useAesthetics';
+import { useTheming } from '../../contexts/ThemingContext';
 import { AmbientBackground } from '../../components/Animations/AmbientBackground';
+import { RootStackParamList } from '../../types';
+
+type QuestMapNavigationProp = StackNavigationProp<RootStackParamList>;
 
 export const QuestMapScreen: React.FC = () => {
   const dispatch = useDispatch();
-  const navigation = useNavigation();
+  const navigation = useNavigation<QuestMapNavigationProp>();
   const route = useRoute();
   const { getCopy } = useNarrativeCopy();
-  const { currentTheme } = useAesthetics();
+  const { currentTheme } = useTheming();
   const { activeQuests, completedQuests } = useSelector((state: RootState) => state.quests);
 
   const handleQuestNavigation = (quest: Quest) => {
     switch (quest.id) {
       case '1':
-        // @ts-ignore
         navigation.navigate('CalibrationTool');
         break;
       case '2':
-        // @ts-ignore
         navigation.navigate('Oracle');
         break;
       default:

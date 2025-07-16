@@ -32,10 +32,12 @@ import aiOracleService, {
   OracleSession
 } from '../../services/aiOracleService';
 import { OnboardingBanner } from '../../components/Onboarding/OnboardingBanner';
-import { useOnboarding } from '../../hooks/useOnboarding';
+import useOnboarding from '../../hooks/useOnboardingBanner';
 import { useQuestLog } from '../../hooks/useQuestLog';
 import { useNarrativeCopy } from '../../hooks/useNarrativeCopy';
 import { QuestTransition } from '../../components/Transitions/QuestTransition';
+
+interface OracleScreenProps {
   navigation?: any;
   route?: any;
 }

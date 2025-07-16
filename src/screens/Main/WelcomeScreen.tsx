@@ -31,7 +31,6 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onBeginSession }) => {
             <StackedButton
               shape="circle"
               onPress={() => onBeginSession?.()}
-              style={styles.startButton} // This style might only affect the TouchableOpacity wrapper of StackedButton
             >
               <Ionicons name="compass-outline" size={48} color={theme.colors.bg} />
               {/* Increased icon size a bit as button is now 120. Color assumes icon is on dark top layer of button */}
@@ -87,11 +86,6 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textAlign: 'center',
     marginTop: spacing.sm,
-  },
-  actionSection: { // This definition was duplicated, ensuring one correct one
-    flex: 1.2, // Takes more available space to potentially lower the button (as per previous adjustment)
-    alignItems: 'center',
-    justifyContent: 'center', // Center button and label
   },
   startButtonWrapper: {
     // flex: 1, // If actionSection is already flex and centering, this might not be needed or could conflict.

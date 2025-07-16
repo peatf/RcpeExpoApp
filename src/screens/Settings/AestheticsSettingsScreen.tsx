@@ -17,7 +17,7 @@ export const AestheticsSettingsScreen: React.FC = () => {
         <Picker
           selectedValue={settings.theme}
           style={{ height: 50, width: 150, color: currentTheme.text }}
-          onValueChange={(itemValue) => updateSettings({ theme: itemValue })}
+          onValueChange={(itemValue: string) => updateSettings({ theme: itemValue as any })}
         >
           {Object.keys(aestheticsConfig.themes).map((theme) => (
             <Picker.Item key={theme} label={theme} value={theme} />
@@ -38,7 +38,7 @@ export const AestheticsSettingsScreen: React.FC = () => {
         <Picker
           selectedValue={settings.animationIntensity}
           style={{ height: 50, width: 150, color: currentTheme.text }}
-          onValueChange={(itemValue) => updateSettings({ animationIntensity: itemValue })}
+          onValueChange={(itemValue: string) => updateSettings({ animationIntensity: itemValue as any })}
         >
           {Object.keys(aestheticsConfig.animations.intensity).map((intensity) => (
             <Picker.Item key={intensity} label={intensity} value={intensity} />
@@ -59,7 +59,7 @@ export const AestheticsSettingsScreen: React.FC = () => {
         <Picker
           selectedValue={settings.soundscape}
           style={{ height: 50, width: 150, color: currentTheme.text }}
-          onValueChange={(itemValue) => updateSettings({ soundscape: itemValue })}
+          onValueChange={(itemValue: string) => updateSettings({ soundscape: itemValue as any })}
         >
           {Object.keys(aestheticsConfig.soundscapes.ambient).map((soundscape) => (
             <Picker.Item key={soundscape} label={soundscape} value={soundscape} />
@@ -72,7 +72,7 @@ export const AestheticsSettingsScreen: React.FC = () => {
         <Picker
           selectedValue={settings.soundVolume}
           style={{ height: 50, width: 150, color: currentTheme.text }}
-          onValueChange={(itemValue) => updateSettings({ soundVolume: itemValue })}
+          onValueChange={(itemValue: number) => updateSettings({ soundVolume: itemValue })}
         >
           {Object.entries(aestheticsConfig.soundscapes.volume).map(([name, value]) => (
             <Picker.Item key={name} label={name} value={value} />

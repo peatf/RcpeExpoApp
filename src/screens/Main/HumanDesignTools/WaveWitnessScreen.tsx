@@ -155,7 +155,7 @@ const WaveWitnessScreen: React.FC = () => {
 
             <InfoCard title="Record Decision Outcome">
               <View style={styles.actionButtonContainer}>
-                <StackedButton text="Record Example Decision" onPress={handleRecordDecision} type="rect"/>
+                <StackedButton text="Record Example Decision" onPress={handleRecordDecision} shape="rectangle"/>
               </View>
             </InfoCard>
           </View>

@@ -126,6 +126,15 @@ export interface MasterySection {
 export type RootStackParamList = {
   Auth: undefined;
   Main: undefined;
+  CalibrationTool: {
+    sessionId?: string;
+    frequencyMapperOutput?: FrequencyMapperOutput;
+    previousTool?: 'frequency_mapper';
+  } | undefined;
+  Oracle: {
+    handoffData?: any;
+    previousTool?: 'calibration' | 'frequency_mapper';
+  } | undefined;
 };
 
 export type MainTabParamList = {

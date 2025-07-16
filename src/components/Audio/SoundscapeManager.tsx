@@ -20,7 +20,7 @@ export const SoundscapeManager: React.FC = () => {
         if (soundFile) {
           try {
             const { sound: newSound } = await Audio.Sound.createAsync(
-              soundFile,
+              soundFile as any,
               {
                 isLooping: true,
                 volume: settings.soundVolume,

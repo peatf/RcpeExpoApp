@@ -14,6 +14,8 @@ import {
   Alert,
   ActivityIndicator,
   Animated,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import { theme } from '../../constants/theme'; // Import theme
@@ -32,13 +34,12 @@ import aiCalibrationToolService, {
   EnhancedSliderUI
 } from '../../services/aiCalibrationToolService';
 import OnboardingBanner from '../../components/OnboardingBanner';
-import useOnboardingBanner from '../../hooks/useOnboardingBanner';
 import { MicroQuestTracker } from '../../components/Quests/MicroQuestTracker';
 import { QuestCompletionToast } from '../../components/Feedback/QuestCompletionToast';
-import { useMicroQuests } from '../../hooks/useMicroQuests';
-import { useQuestLog } from '../../hooks/useQuestLog';
-import { useNarrativeCopy } from '../../hooks/useNarrativeCopy';
+import { useOnboardingBanner, useMicroQuests, useQuestLog, useNarrativeCopy } from '../../hooks';
 import { QuestTransition } from '../../components/Transitions/QuestTransition';
+
+interface CalibrationToolScreenProps {
   navigation: any;
   route: any;
 }
@@ -369,7 +370,11 @@ const CalibrationToolScreen: React.FC<CalibrationToolScreenProps> = ({navigation
       desired_state = "aligned and authentic", 
       energetic_quality = "harmonious energy", 
       refinement_path = ["authentic", "connected"] 
-    } = frequencyOutput;
+    } = frequencyOutput as {
+      desired_state?: string;
+      energetic_quality?: string;
+      refinement_path?: string[];
+    };
     
     return (
       <Animated.View style={[styles.introContainer, { opacity: fadeAnim }]}>
@@ -526,21 +531,33 @@ const CalibrationToolScreen: React.FC<CalibrationToolScreenProps> = ({navigation
         <View style={styles.reflectionCard}>
           <Text style={styles.reflectionPrompt}>{currentSlider.reflection_prompt}</Text>
           
-          <TextInput
-            style={styles.reflectionInput}
-            placeholder="Share your thoughts..."
-            value={reflections[`${currentReflectionStep}_reflection` as keyof CalibrationReflections]}
-            onChangeText={(text) => handleReflectionChange(`${currentReflectionStep}_reflection` as keyof CalibrationReflections, text)}
-            multiline
-            numberOfLines={4}
-            textAlignVertical="top"
-            editable={true}
-            selectTextOnFocus={true}
-            blurOnSubmit={false}
-            autoCapitalize="sentences"
-            autoCorrect={true}
-            spellCheck={true}
-          />
+          <View style={styles.inputWrapper}>
+            <TextInput
+              style={styles.reflectionInput}
+              placeholder="Share your thoughts..."
+              placeholderTextColor={theme.colors.textSecondary}
+              value={reflections[`${currentReflectionStep}_reflection` as keyof CalibrationReflections]}
+              onChangeText={(text) => handleReflectionChange(`${currentReflectionStep}_reflection` as keyof CalibrationReflections, text)}
+              multiline
+              numberOfLines={4}
+              textAlignVertical="top"
+              editable={true}
+              selectTextOnFocus={true}
+              blurOnSubmit={false}
+              autoCapitalize="sentences"
+              autoCorrect={true}
+              spellCheck={true}
+              keyboardType="default"
+              returnKeyType="default"
+              scrollEnabled={true}
+              onFocus={() => {}}
+              onBlur={() => {}}
+              // Critical props for React Native 0.79.3 + React 19 compatibility
+              allowFontScaling={false}
+              underlineColorAndroid="transparent"
+              importantForAutofill="no"
+            />
+          </View>
         </View>
         
         <TouchableOpacity
@@ -676,12 +693,23 @@ const CalibrationToolScreen: React.FC<CalibrationToolScreenProps> = ({navigation
           totalSteps={FLOW_STEPS.CALIBRATION}
           stepLabels={STEP_LABELS.CALIBRATION}
         />
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        {currentStep === 'intro' && renderIntroScreen()}
-        {currentStep === 'sliders' && renderSlidersScreen()}
-        {currentStep === 'reflections' && renderReflectionScreen()}
-        {currentStep === 'results' && renderResultsScreen()}
-      </ScrollView>
+      <KeyboardAvoidingView 
+        style={styles.keyboardContainer}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
+      >
+        <ScrollView 
+          style={styles.scrollView} 
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          {currentStep === 'intro' && renderIntroScreen()}
+          {currentStep === 'sliders' && renderSlidersScreen()}
+          {currentStep === 'reflections' && renderReflectionScreen()}
+          {currentStep === 'results' && renderResultsScreen()}
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
     </QuestTransition>
   );
@@ -712,6 +740,9 @@ const styles = StyleSheet.create({
   },
   headerSpacer: {
     width: 40,
+  },
+  keyboardContainer: {
+    flex: 1,
   },
   scrollView: {
     flex: 1,
@@ -982,13 +1013,21 @@ const styles = StyleSheet.create({
   },
   reflectionInput: {
     borderWidth: 1,
-    borderColor: theme.colors.base1, // Updated
+    borderColor: theme.colors.base1,
     borderRadius: 12,
     padding: 16,
     fontSize: 16,
+    color: theme.colors.textPrimary, // Added missing text color
     minHeight: 120,
     textAlignVertical: 'top',
-    backgroundColor: theme.colors.bg, // Updated (or base1 for different shade)
+    backgroundColor: theme.colors.bg,
+    fontFamily: theme.fonts.body, // Added font family for consistency
+    // Add these critical props for React Native 0.79.3 compatibility
+    includeFontPadding: false,
+  },
+  inputWrapper: {
+    // Wrapper to help with touch handling
+    backgroundColor: 'transparent',
   },
   resultsContainer: {
     flex: 1,

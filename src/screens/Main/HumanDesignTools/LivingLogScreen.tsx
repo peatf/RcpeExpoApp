@@ -5,7 +5,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, FlatList, ActivityIndicator, RefreshControl, TouchableOpacity } from 'react-native';
 import { OnboardingBanner } from '../../../components/Onboarding/OnboardingBanner';
-import { useOnboarding } from '../../../hooks/useOnboarding';
+import { useOnboarding } from '../../../hooks/useOnboardingBanner';
 import { MicroQuestTracker } from '../../../components/Quests/MicroQuestTracker';
 import { QuestCompletionToast } from '../../../components/Feedback/QuestCompletionToast';
 import { useMicroQuests } from '../../../hooks/useMicroQuests';

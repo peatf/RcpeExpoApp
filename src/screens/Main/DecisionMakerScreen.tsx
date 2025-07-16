@@ -6,7 +6,7 @@ import { colors, spacing, typography } from '../../constants/theme'; // Assuming
 import AsyncStorage from '@react-native-async-storage/async-storage';
 // React, useState, useEffect are imported once now
 import OnboardingBanner from '../../components/OnboardingBanner';
-import useOnboardingBanner from '../../hooks/useOnboardingBanner';
+import { useOnboardingBanner } from '../../hooks';
 import baseChartService from '../../services/baseChartService';
 import { useAuth } from '../../contexts/AuthContext';
 

@@ -2,7 +2,7 @@
  * @file LoginScreen.tsx
  * @description Login screen for user authentication
  */
-import React, {useState} from 'react';
+import React, {useState, useRef} from 'react';
 import {
   View,
   Text,
@@ -32,6 +32,14 @@ const LoginScreen: React.FC = () => {
   const [passwordFocused, setPasswordFocused] = useState(false); // Focus state for password
   const navigation = useNavigation<LoginScreenNavigationProp>();
   const { login } = useAuth();
+  
+  // Refs for manual focus control
+  const emailRef = useRef<TextInput>(null);
+  const passwordRef = useRef<TextInput>(null);
+  
+  // Focus lock to prevent rapid focus/blur cycling
+  const emailFocusLock = useRef(false);
+  const passwordFocusLock = useRef(false);
 
   const handleLogin = async () => {
     // Input validation
@@ -76,8 +84,9 @@ const LoginScreen: React.FC = () => {
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView 
         style={styles.keyboardView}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
+        enabled={true}
       >
         <View style={styles.content}>
           <Text style={styles.title}>{getCopy('auth.login.title')}</Text>
@@ -88,8 +97,15 @@ const LoginScreen: React.FC = () => {
               {/* Email Input */}
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>Email</Text>
-                <View style={[styles.inputPanel, emailFocused && styles.inputPanelFocused]}>
+                <TouchableOpacity 
+                  style={[styles.inputPanel, emailFocused && styles.inputPanelFocused]}
+                  activeOpacity={1}
+                  onPress={() => {
+                    emailRef.current?.focus();
+                  }}
+                >
                   <TextInput
+                    ref={emailRef}
                     style={styles.input}
                     value={email}
                     onChangeText={setEmail}
@@ -103,18 +119,49 @@ const LoginScreen: React.FC = () => {
                     returnKeyType="next"
                     blurOnSubmit={false}
                     editable={!isLoading}
-                    selectTextOnFocus={true}
-                    onFocus={() => setEmailFocused(true)}
-                    onBlur={() => setEmailFocused(false)}
+                    selectTextOnFocus={false}
+                    clearButtonMode="never"
+                    onFocus={() => {
+                      emailFocusLock.current = true;
+                      setEmailFocused(true);
+                      // Prevent immediate blur for 500ms
+                      setTimeout(() => {
+                        emailFocusLock.current = false;
+                      }, 500);
+                    }}
+                    onBlur={() => {
+                      // Only blur if not locked
+                      if (!emailFocusLock.current) {
+                        setEmailFocused(false);
+                      } else {
+                        setTimeout(() => emailRef.current?.focus(), 10);
+                      }
+                    }}
+                    onSubmitEditing={() => passwordRef.current?.focus()}
+                    // Critical props for React Native 0.79.3 + React 19 compatibility
+                    allowFontScaling={false}
+                    underlineColorAndroid="transparent"
+                    importantForAutofill="yes"
+                    // Additional focus retention props
+                    contextMenuHidden={false}
+                    spellCheck={false}
+                    autoFocus={false}
                   />
-                </View>
+                </TouchableOpacity>
               </View>
               
               {/* Password Input */}
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>Password</Text>
-                <View style={[styles.inputPanel, passwordFocused && styles.inputPanelFocused]}>
+                <TouchableOpacity 
+                  style={[styles.inputPanel, passwordFocused && styles.inputPanelFocused]}
+                  activeOpacity={1}
+                  onPress={() => {
+                    passwordRef.current?.focus();
+                  }}
+                >
                   <TextInput
+                    ref={passwordRef}
                     style={styles.input}
                     value={password}
                     onChangeText={setPassword}
@@ -125,12 +172,35 @@ const LoginScreen: React.FC = () => {
                     textContentType="password"
                     returnKeyType="done"
                     editable={!isLoading}
-                    selectTextOnFocus={true}
-                    onFocus={() => setPasswordFocused(true)}
-                    onBlur={() => setPasswordFocused(false)}
+                    selectTextOnFocus={false}
+                    clearButtonMode="never"
+                    onFocus={() => {
+                      passwordFocusLock.current = true;
+                      setPasswordFocused(true);
+                      // Prevent immediate blur for 500ms
+                      setTimeout(() => {
+                        passwordFocusLock.current = false;
+                      }, 500);
+                    }}
+                    onBlur={() => {
+                      // Only blur if not locked
+                      if (!passwordFocusLock.current) {
+                        setPasswordFocused(false);
+                      } else {
+                        setTimeout(() => passwordRef.current?.focus(), 10);
+                      }
+                    }}
                     onSubmitEditing={handleLogin}
+                    // Critical props for React Native 0.79.3 + React 19 compatibility
+                    allowFontScaling={false}
+                    underlineColorAndroid="transparent"
+                    importantForAutofill="yes"
+                    // Additional focus retention props
+                    contextMenuHidden={false}
+                    spellCheck={false}
+                    autoFocus={false}
                   />
-                </View>
+                </TouchableOpacity>
               </View>
               
               {/* Forgot Password Link */}
@@ -231,6 +301,12 @@ const styles = StyleSheet.create({
     minHeight: 44, // Ensure adequate touch target
     backgroundColor: 'transparent',
     borderWidth: 0, // Remove any default border
+    // Add these critical props for React Native 0.79.3 compatibility
+    includeFontPadding: false,
+    textAlignVertical: 'center',
+    // Ensure input receives touches
+    zIndex: 1,
+    position: 'relative',
   },
   forgotPassword: {
     alignSelf: 'flex-end',

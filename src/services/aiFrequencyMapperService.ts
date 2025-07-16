@@ -80,7 +80,7 @@ export const aiFrequencyMapperService = {
 
       const response = await Promise.race([apiPromise, timeoutPromise]);
       console.log(`API response received for template: ${templateId}`);
-      return response.data;
+      return (response as any).data;
     } catch (error) {
       console.warn(`AI Service failed for template ${templateId}, using fallback:`, error);
       
@@ -163,7 +163,7 @@ export const aiFrequencyMapperService = {
       });
 
       const response = await Promise.race([apiPromise, timeoutPromise]);
-      return response.data;
+      return (response as any).data;
     } catch (error) {
       console.warn('Session completion failed:', error);
       return { handoff_prepared: true, next_session_id: uuidv4() };

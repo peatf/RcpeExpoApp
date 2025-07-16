@@ -52,6 +52,7 @@ export interface OracleInputSynthesis {
     undefined_centers: string[];
     active_gates: number[];
     chiron_gate?: number;
+    incarnation_cross?: string;
     sun_sign: string;
     moon_sign: string;
     mercury_sign: string;
@@ -235,7 +236,7 @@ export const aiOracleService = {
       });
       
       const response = await Promise.race([apiPromise, timeoutPromise]);
-      return response.data.synthesis;
+      return (response as any).data.synthesis;
     } catch (error) {
       console.warn('Oracle initialization failed, using simulation:', error);
       // Always fallback to simulation for reliable experience
@@ -268,7 +269,7 @@ export const aiOracleService = {
       });
 
       const response = await Promise.race([apiPromise, timeoutPromise]);
-      return response.data;
+      return (response as any).data;
     } catch (error) {
       console.warn('Quest generation failed, using simulation:', error);
       // Always fallback to simulation for reliable experience
@@ -297,7 +298,7 @@ export const aiOracleService = {
       });
 
       const response = await Promise.race([apiPromise, timeoutPromise]);
-      return response.data.hints;
+      return (response as any).data.hints;
     } catch (error) {
       console.warn('Hints generation failed, using simulation:', error);
       // Always fallback to simulation for reliable experience
@@ -321,7 +322,7 @@ export const aiOracleService = {
         success_criteria_met: successCriteriaMet
       });
 
-      return response.data;
+      return (response as any).data;
     } catch (error) {
       console.error('Failed to process quest completion:', error);
       // Fallback to simulation
@@ -335,7 +336,7 @@ export const aiOracleService = {
   getOracleSession: async (sessionId: string): Promise<OracleSession | null> => {
     try {
       const response = await apiClient.get(`/api/v1/ai/oracle/session/${sessionId}`);
-      return response.data;
+      return (response as any).data;
     } catch (error) {
       console.error('Failed to get Oracle session:', error);
       return null;
@@ -438,10 +439,15 @@ async function simulateOracleInitialization(
       strategy: "To respond",
       inner_authority: "Emotional",
       profile: "3/5",
-      active_gates: ["25", "51", "40"],
+      active_gates: [25, 51, 40],
       defined_centers: ["Heart", "Sacral"],
-      open_centers: ["Head", "Ajna", "Throat", "Root"],
-      incarnation_cross: "Right Angle Cross of the Four Ways"
+      undefined_centers: ["Head", "Ajna", "Throat", "Root"],
+      incarnation_cross: "Right Angle Cross of the Four Ways",
+      sun_sign: "Taurus",
+      moon_sign: "Scorpio",
+      mercury_sign: "Gemini",
+      mars_sign: "Cancer",
+      jupiter_sign: "Leo"
     }
   };
 }
@@ -529,7 +535,7 @@ async function simulateQuestCompletion(
     completion_date: new Date().toISOString(),
     success_criteria_met: successCriteriaMet,
     user_reflection: userReflection,
-    completion_rating: completionRating,
+    completion_rating: Math.max(1, Math.min(5, completionRating)) as 1 | 2 | 3 | 4 | 5,
     desired_state_progress: {
       belief_shift: 0.1,
       openness_shift: 0.15,

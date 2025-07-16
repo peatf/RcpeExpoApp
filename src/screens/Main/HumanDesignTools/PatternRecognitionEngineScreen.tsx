@@ -262,7 +262,7 @@ const PatternRecognitionEngineScreen: React.FC = () => {
               <StackedButton
                 text="Refresh Patterns"
                 onPress={loadPatterns}
-                type="rect"
+                shape="rectangle"
                 // isLoading prop can be added to StackedButton if available for loading state
               />
             </View>

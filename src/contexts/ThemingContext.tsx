@@ -15,7 +15,7 @@ interface AestheticsSettings {
 interface ThemingContextType {
   settings: AestheticsSettings;
   updateSettings: (newSettings: Partial<AestheticsSettings>) => void;
-  currentTheme: typeof aestheticsConfig.themes.default;
+  currentTheme: (typeof aestheticsConfig.themes)[ThemeName];
   isLoading: boolean;
 }
 
@@ -28,7 +28,7 @@ const defaultSettings: AestheticsSettings = {
   enableAnimations: true,
 };
 
-const ThemingContext = createContext<ThemingContextType | undefined>(undefined);
+export const ThemingContext = createContext<ThemingContextType | undefined>(undefined);
 
 const STORAGE_KEY = '@aesthetics_settings';
 

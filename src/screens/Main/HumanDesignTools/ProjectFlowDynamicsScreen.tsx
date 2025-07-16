@@ -189,7 +189,7 @@ const ProjectFlowDynamicsScreen: React.FC = () => {
                   />
                 </View>
               </View>
-              <StackedButton text="Log Step" onPress={handleRecordStep} type="rect" />
+              <StackedButton text="Log Step" onPress={handleRecordStep} shape="rectangle" />
             </InfoCard>
 
             <InfoCard title="Record Frustration Point">
@@ -208,7 +208,7 @@ const ProjectFlowDynamicsScreen: React.FC = () => {
                   />
                 </View>
               </View>
-              <StackedButton text="Log Frustration" onPress={handleRecordFrustration} type="rect" />
+              <StackedButton text="Log Frustration" onPress={handleRecordFrustration} shape="rectangle" />
             </InfoCard>
 
             {isLoadingData && !isRefreshing && <ActivityIndicator style={styles.loader} color={theme.colors.accent}/>}

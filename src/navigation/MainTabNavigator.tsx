@@ -3,13 +3,16 @@
  * @description Main app layout with side navigation matching mockup design
  */
 import React, { useState, useRef } from 'react'; // Added useRef
-import { View, StyleSheet, ScrollView, Animated } from 'react-native'; // Added ScrollView, Animated
+import { View, StyleSheet, Animated } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
 import StackedButton from '../components/StackedButton';
 import { colors, fonts, spacing, borderRadius } from '../constants/theme'; // Import individual constants
+import { RootStackParamList } from '../types';
 import { QuestMapScreen } from '../screens/Main/QuestMapScreen';
-import { CalibrationToolScreen } from '../screens/Main/CalibrationToolScreen';
+import CalibrationToolScreen from '../screens/Main/CalibrationToolScreen';
 import FrequencyMapperScreen from '../screens/Main/FrequencyMapperScreen';
 import OracleScreen from '../screens/Main/OracleScreen';
 import UserBaseChartScreen from '../screens/Main/UserBaseChartScreen';
@@ -22,7 +25,10 @@ import UserProfileScreen from '../screens/Main/UserProfileScreen';
 
 type ScreenName = 'questMap' | 'questLog' | 'frequencyMapper' | 'oracle' | 'baseChart' | 'livingLog' | 'decisionMaker' | 'profileCreation' | 'userProfile';
 
+type MainTabNavigatorProp = StackNavigationProp<RootStackParamList, 'Main'>;
+
 const MainTabNavigator: React.FC = () => {
+  const navigation = useNavigation<MainTabNavigatorProp>();
   const { getCopy } = useNarrativeCopy();
   const [currentScreen, setCurrentScreen] = useState<ScreenName>('questMap');
   const [isNavCollapsed, setIsNavCollapsed] = useState<boolean>(true); // Start collapsed
@@ -97,11 +103,9 @@ const MainTabNavigator: React.FC = () => {
         case 'questMap':
           return <QuestMapScreen />;
         case 'frequencyMapper':
-          // @ts-ignore - FrequencyMapperScreen doesn't need navigation prop in our simplified implementation
           return <FrequencyMapperScreen />;
         case 'oracle':
-          // @ts-ignore - OracleScreen may have different prop requirements
-          return <OracleScreen />;
+          return <OracleScreen navigation={navigation} route={{ params: {} }} />;
         case 'baseChart':
           // @ts-ignore - UserBaseChartScreen may have different prop requirements  
           return <UserBaseChartScreen />;
@@ -202,13 +206,7 @@ const MainTabNavigator: React.FC = () => {
 
         {/* Content Area */}
         <View style={styles.contentArea}>
-          <ScrollView
-            style={styles.scrollView}
-            contentContainerStyle={styles.scrollViewContent}
-            showsVerticalScrollIndicator={false}
-          >
-            {getCurrentComponent()}
-          </ScrollView>
+          {getCurrentComponent()}
         </View>
       </View>
     </View>
@@ -246,14 +244,7 @@ const styles = StyleSheet.create({
   contentArea: {
     flex: 1,
     backgroundColor: 'transparent', // Allow background to show through
-    overflow: 'hidden', // For x-axis, ScrollView handles y-axis
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollViewContent: {
-    // Potential padding for scroll content if needed
-    // flexGrow: 1, // Ensures content can take full height if not scrolling
+    overflow: 'hidden',
   },
   // Old styles have been removed.
 });

@@ -8,6 +8,8 @@ import {createStackNavigator, TransitionPresets} from '@react-navigation/stack';
 import {useAuth} from '../contexts/AuthContext';
 import AuthNavigator from './AuthNavigator';
 import MainTabNavigator from './MainTabNavigator';
+import CalibrationToolScreen from '../screens/Main/CalibrationToolScreen';
+import OracleScreen from '../screens/Main/OracleScreen';
 import {RootStackParamList} from '../types';
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -16,13 +18,13 @@ const questTransitionConfig = {
   ...TransitionPresets.FadeFromBottomAndroid,
   transitionSpec: {
     open: {
-      animation: 'timing',
+      animation: 'timing' as const,
       config: {
         duration: 400,
       },
     },
     close: {
-      animation: 'timing',
+      animation: 'timing' as const,
       config: {
         duration: 400,
       },
@@ -86,9 +88,13 @@ const AppNavigator: React.FC = () => {
         }
       }
     }}>
-      <Stack.Navigator screenOptions={{...questTransitionConfig, headerShown: false, cardStyle: {backgroundColor: 'transparent'}}}>
+      <Stack.Navigator id={undefined} screenOptions={{...questTransitionConfig, headerShown: false, cardStyle: {backgroundColor: 'transparent'}}}>
         {isAuthenticated ? (
-          <Stack.Screen name="Main" component={MainTabNavigator} />
+          <>
+            <Stack.Screen name="Main" component={MainTabNavigator} />
+            <Stack.Screen name="CalibrationTool" component={CalibrationToolScreen} />
+            <Stack.Screen name="Oracle" component={OracleScreen} />
+          </>
         ) : (
           <Stack.Screen name="Auth" component={AuthNavigator} />
         )}

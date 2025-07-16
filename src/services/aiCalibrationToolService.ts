@@ -289,7 +289,11 @@ async function simulatePersonalizedSliders(
     desired_state = "aligned and authentic", 
     energetic_quality = "harmonious energy", 
     sensation_preview = "positive sensations" 
-  } = frequencyOutput;
+  } = frequencyOutput as {
+    desired_state?: string;
+    energetic_quality?: string;
+    sensation_preview?: string;
+  };
   const processingCore = handoffData.processing_core_summary || {};
 
   return {
@@ -356,7 +360,11 @@ async function simulateIntegratedRecommendation(
     desired_state = "aligned and authentic", 
     energetic_quality = "harmonious energy", 
     source_statement = "personal growth" 
-  } = frequencyOutput;
+  } = frequencyOutput as {
+    desired_state?: string;
+    energetic_quality?: string;
+    source_statement?: string;
+  };
   
   const lowestDimension = getLowestDimension(sliderValues);
   const averageAlignment = (sliderValues.belief + sliderValues.belief_logical + sliderValues.openness + sliderValues.openness_acceptance + sliderValues.worthiness + sliderValues.worthiness_receiving) / 6;

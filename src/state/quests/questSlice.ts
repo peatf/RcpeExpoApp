@@ -2,7 +2,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { QuestLogEntry, QuestLogState } from '../../types/questLog';
 
-interface Quest {
+export interface Quest {
   id: string;
   title: string;
   description: string;

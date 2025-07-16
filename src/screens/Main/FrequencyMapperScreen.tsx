@@ -18,6 +18,7 @@ import { FLOW_STEPS, STEP_LABELS } from '../../constants/flowSteps'; // Import c
 import ScreenExplainer from '../../components/ScreenExplainer'; // Import ScreenExplainer
 import { SCREEN_EXPLAINERS } from '../../constants/screenExplainers'; // Import SCREEN_EXPLAINERS
 import {useNavigation} from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import {Ionicons} from '@expo/vector-icons';
 import StackedButton from '../../components/StackedButton';
 import { theme } from '../../constants/theme'; // Import full theme
@@ -25,7 +26,8 @@ import baseChartService, {BaseChartData} from '../../services/baseChartService';
 import aiFrequencyMapperService from '../../services/aiFrequencyMapperService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { OnboardingBanner } from '../../components/Onboarding/OnboardingBanner';
-import { useOnboarding } from '../../hooks/useOnboarding';
+import { useOnboarding } from '../../hooks/useOnboardingBanner';
+import { RootStackParamList } from '../../types';
 
 // Drive Mechanics Types
 type MotivationColor = 'Need' | 'Want' | 'Desire' | 'Transfer' | undefined;
@@ -497,7 +499,7 @@ const getSessionId = (): string => {
 };
 
 const FrequencyMapperScreen: React.FC = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const { showBanner, dismissBanner } = useOnboarding('frequency_mapper');
 
   // User state
@@ -838,7 +840,6 @@ const FrequencyMapperScreen: React.FC = () => {
       });
     } else {
       console.warn('Missing finalOutput or sessionId, using fallback navigation');
-      // @ts-ignore
       navigation.navigate('CalibrationTool');
     }
   };
@@ -1154,15 +1155,11 @@ const FrequencyMapperScreen: React.FC = () => {
             shape="rectangle"
             text="Start Over"
             onPress={handleReset}
-            buttonStyle={styles.resetButton}
-            textStyle={styles.resetButtonText}
           />
           <StackedButton
             shape="rectangle"
             text="Calibrate Alignment"
             onPress={handleNavigateToCalibration}
-            buttonStyle={styles.calibrateButton}
-            textStyle={styles.buttonText}
           >
             <Ionicons name="arrow-forward" size={18} color="#fff" style={{marginLeft: 8}} />
           </StackedButton>
