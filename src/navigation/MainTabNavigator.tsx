@@ -8,19 +8,23 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import StackedButton from '../components/StackedButton';
 import { colors, fonts, spacing, borderRadius } from '../constants/theme'; // Import individual constants
-import WelcomeScreen from '../screens/Main/WelcomeScreen';
+import { QuestMapScreen } from '../screens/Main/QuestMapScreen';
+import { CalibrationToolScreen } from '../screens/Main/CalibrationToolScreen';
 import FrequencyMapperScreen from '../screens/Main/FrequencyMapperScreen';
 import OracleScreen from '../screens/Main/OracleScreen';
 import UserBaseChartScreen from '../screens/Main/UserBaseChartScreen';
 import LivingLogScreen from '../screens/Main/HumanDesignTools/LivingLogScreen';
+import { QuestLogScreen } from '../screens/Main/QuestLogScreen';
 import DecisionMakerScreen from '../screens/Main/DecisionMakerScreen';
 import ProfileCreationScreen from '../screens/Main/ProfileCreationScreen';
+import { useNarrativeCopy } from '../hooks/useNarrativeCopy';
 import UserProfileScreen from '../screens/Main/UserProfileScreen';
 
-type ScreenName = 'welcome' | 'frequencyMapper' | 'oracle' | 'baseChart' | 'livingLog' | 'decisionMaker' | 'profileCreation' | 'userProfile';
+type ScreenName = 'questMap' | 'questLog' | 'frequencyMapper' | 'oracle' | 'baseChart' | 'livingLog' | 'decisionMaker' | 'profileCreation' | 'userProfile';
 
 const MainTabNavigator: React.FC = () => {
-  const [currentScreen, setCurrentScreen] = useState<ScreenName>('welcome');
+  const { getCopy } = useNarrativeCopy();
+  const [currentScreen, setCurrentScreen] = useState<ScreenName>('questMap');
   const [isNavCollapsed, setIsNavCollapsed] = useState<boolean>(true); // Start collapsed
   // Animated value for navigation panel width
   const navPanelWidth = useRef(new Animated.Value(0)).current; // Start with 0 width
@@ -28,21 +32,21 @@ const MainTabNavigator: React.FC = () => {
 
   const navigationItems = [
     {
-      id: 'welcome',
-      icon: 'home',
-      label: 'Home',
-      component: WelcomeScreen,
+      id: 'questMap',
+      icon: 'map-outline',
+      label: getCopy('navigation.questMap'),
+      component: QuestMapScreen,
     },
     {
       id: 'frequencyMapper',
       icon: 'add',
-      label: 'Mapper',
+      label: getCopy('navigation.calibration'),
       component: FrequencyMapperScreen,
     },
     {
       id: 'oracle',
       icon: 'eye',
-      label: 'Oracle',
+      label: getCopy('navigation.oracle'),
       component: OracleScreen,
     },
     {
@@ -54,8 +58,14 @@ const MainTabNavigator: React.FC = () => {
     {
       id: 'livingLog',
       icon: 'document-text',
-      label: 'Log',
+      label: getCopy('navigation.livingLog'),
       component: LivingLogScreen,
+    },
+    {
+      id: 'questLog',
+      icon: 'book-outline',
+      label: getCopy('navigation.questLog'),
+      component: QuestLogScreen,
     },
     {
       id: 'decisionMaker',
@@ -84,8 +94,8 @@ const MainTabNavigator: React.FC = () => {
       
       // Safely render different component types with appropriate props
       switch (currentItem.id) {
-        case 'welcome':
-          return <WelcomeScreen onBeginSession={() => setCurrentScreen('frequencyMapper')} />;
+        case 'questMap':
+          return <QuestMapScreen />;
         case 'frequencyMapper':
           // @ts-ignore - FrequencyMapperScreen doesn't need navigation prop in our simplified implementation
           return <FrequencyMapperScreen />;
@@ -98,6 +108,8 @@ const MainTabNavigator: React.FC = () => {
         case 'livingLog':
           // @ts-ignore - LivingLogScreen may have different prop requirements
           return <LivingLogScreen />;
+        case 'questLog':
+          return <QuestLogScreen />;
         case 'decisionMaker':
           // @ts-ignore - DecisionMakerScreen may have different prop requirements
           return <DecisionMakerScreen />;
@@ -108,11 +120,11 @@ const MainTabNavigator: React.FC = () => {
           // @ts-ignore - UserProfileScreen expects navigation prop
           return <UserProfileScreen />;
         default:
-          return <WelcomeScreen onBeginSession={() => setCurrentScreen('frequencyMapper')} />;
+          return <QuestMapScreen />;
       }
     }
     // Fallback to welcome screen
-    return <WelcomeScreen onBeginSession={() => setCurrentScreen('frequencyMapper')} />;
+    return <QuestMapScreen />;
   };
 
   const toggleNavCollapse = () => {

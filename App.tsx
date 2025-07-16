@@ -4,6 +4,9 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider } from './src/contexts/AuthContext';
 import AppNavigator from './src/navigation/AppNavigator';
 import AppBackground from './src/components/AppBackground';
+import { Provider } from 'react-redux';
+import { store } from './src/state/store';
+import { ThemingProvider } from './src/contexts/ThemingContext';
 import { theme } from './src/constants/theme'; // Import theme
 
 import { useFonts } from 'expo-font';
@@ -58,15 +61,19 @@ export default function App() {
   }
 
   return (
-    <SafeAreaProvider>
-      <View style={styles.rootContainer}>
-        <AppBackground>
-          <AuthProvider>
-            <AppNavigator />
-          </AuthProvider>
-        </AppBackground>
-      </View>
-    </SafeAreaProvider>
+    <Provider store={store}>
+      <ThemingProvider>
+        <SafeAreaProvider>
+          <View style={styles.rootContainer}>
+            <AppBackground>
+              <AuthProvider>
+                <AppNavigator />
+              </AuthProvider>
+            </AppBackground>
+          </View>
+        </SafeAreaProvider>
+      </ThemingProvider>
+    </Provider>
   );
 }
 

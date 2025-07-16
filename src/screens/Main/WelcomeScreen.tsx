@@ -33,18 +33,18 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onBeginSession }) => {
               onPress={() => onBeginSession?.()}
               style={styles.startButton} // This style might only affect the TouchableOpacity wrapper of StackedButton
             >
-              <Ionicons name="play" size={48} color={theme.colors.bg} />
+              <Ionicons name="compass-outline" size={48} color={theme.colors.bg} />
               {/* Increased icon size a bit as button is now 120. Color assumes icon is on dark top layer of button */}
             </StackedButton>
           </View>
-          <Text style={styles.actionLabel}>Begin Session</Text>
+          <Text style={styles.actionLabel}>Begin Your First Quest</Text>
         </View>
 
         {/* Status Section */}
         <View style={styles.statusSection}>
           <View style={styles.statusPanel}>
             <Text style={styles.statusIndicator}>●</Text>
-            <Text style={styles.statusText}>ALL SYSTEMS NOMINAL</Text>
+            <Text style={styles.statusText}>AWAITING YOUR COMMAND</Text>
           </View>
         </View>
       </View>

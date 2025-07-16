@@ -33,8 +33,12 @@ import aiCalibrationToolService, {
 } from '../../services/aiCalibrationToolService';
 import OnboardingBanner from '../../components/OnboardingBanner';
 import useOnboardingBanner from '../../hooks/useOnboardingBanner';
-
-interface CalibrationToolScreenProps {
+import { MicroQuestTracker } from '../../components/Quests/MicroQuestTracker';
+import { QuestCompletionToast } from '../../components/Feedback/QuestCompletionToast';
+import { useMicroQuests } from '../../hooks/useMicroQuests';
+import { useQuestLog } from '../../hooks/useQuestLog';
+import { useNarrativeCopy } from '../../hooks/useNarrativeCopy';
+import { QuestTransition } from '../../components/Transitions/QuestTransition';
   navigation: any;
   route: any;
 }
@@ -42,6 +46,9 @@ interface CalibrationToolScreenProps {
 const CalibrationToolScreen: React.FC<CalibrationToolScreenProps> = ({navigation, route}) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const { showBanner, dismissBanner, isLoadingBanner } = useOnboardingBanner('CalibrationTool');
+  const { completeMicroQuestAction, showToast, completedQuestTitle, hideToast } = useMicroQuests();
+  const { logCalibrationResult } = useQuestLog();
+  const { getCopy } = useNarrativeCopy();
   
   // Core state
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -276,6 +283,8 @@ const CalibrationToolScreen: React.FC<CalibrationToolScreenProps> = ({navigation
       setOracleHandoffData(oracleData);
       console.log('Calibration: Moving to results view...');
       setCurrentStep('results');
+      completeMicroQuestAction('calibration_complete');
+      logCalibrationResult(recommendation.map_summary);
       
     } catch (error) {
       console.error('Failed to process calibration:', error);
@@ -413,7 +422,7 @@ const CalibrationToolScreen: React.FC<CalibrationToolScreenProps> = ({navigation
           style={styles.continueButton}
           onPress={() => setCurrentStep('sliders')}
         >
-          <Text style={styles.continueButtonText}>Begin Calibration</Text>
+          <Text style={styles.continueButtonText}>Begin Calibration Quest</Text>
           <Ionicons name="arrow-forward" size={18} color={theme.colors.bg} style={{marginLeft: 8}} />
         </TouchableOpacity>
       </Animated.View>
@@ -637,14 +646,21 @@ const CalibrationToolScreen: React.FC<CalibrationToolScreenProps> = ({navigation
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      {!isLoadingBanner && showBanner && (
+    <QuestTransition transitionKey={route.key}>
+      <SafeAreaView style={styles.container}>
+        <MicroQuestTracker action="calibration_complete" />
+        {!isLoadingBanner && showBanner && (
         <OnboardingBanner
           toolName="Calibration Tool"
           description="Fine-tune your energetic alignment with your stated desires."
           onDismiss={dismissBanner}
         />
       )}
+      <QuestCompletionToast
+        questTitle={completedQuestTitle}
+        visible={showToast}
+        onHide={hideToast}
+      />
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
@@ -652,7 +668,7 @@ const CalibrationToolScreen: React.FC<CalibrationToolScreenProps> = ({navigation
         >
           <Ionicons name="arrow-back" size={24} color={theme.colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.title}>Calibration Tool</Text>
+        <Text style={styles.title}>{getCopy('calibration.title')}</Text>
         <View style={styles.headerSpacer} />
       </View>
         <StepTracker
@@ -667,6 +683,7 @@ const CalibrationToolScreen: React.FC<CalibrationToolScreenProps> = ({navigation
         {currentStep === 'results' && renderResultsScreen()}
       </ScrollView>
     </SafeAreaView>
+    </QuestTransition>
   );
 };
 

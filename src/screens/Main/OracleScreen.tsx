@@ -31,10 +31,11 @@ import aiOracleService, {
   QuestCompletion,
   OracleSession
 } from '../../services/aiOracleService';
-import OnboardingBanner from '../../components/OnboardingBanner'; // Import OnboardingBanner
-import useOnboardingBanner from '../../hooks/useOnboardingBanner'; // Import useOnboardingBanner
-
-interface OracleScreenProps {
+import { OnboardingBanner } from '../../components/Onboarding/OnboardingBanner';
+import { useOnboarding } from '../../hooks/useOnboarding';
+import { useQuestLog } from '../../hooks/useQuestLog';
+import { useNarrativeCopy } from '../../hooks/useNarrativeCopy';
+import { QuestTransition } from '../../components/Transitions/QuestTransition';
   navigation?: any;
   route?: any;
 }
@@ -75,7 +76,9 @@ const OracleScreen: React.FC<OracleScreenProps> = ({navigation, route}) => {
   const [isThinking, setIsThinking] = useState<boolean>(false);
   const [oracleMessages, setOracleMessages] = useState<any[]>([]);
   const [isInputFocused, setIsInputFocused] = useState<boolean>(false);
-  const { showBanner, dismissBanner, isLoadingBanner } = useOnboardingBanner('Oracle');
+  const { showBanner, dismissBanner } = useOnboarding('oracle');
+  const { logOracleInsight } = useQuestLog();
+  const { getCopy } = useNarrativeCopy();
 
   // Initialize Oracle on mount
   useEffect(() => {
@@ -403,6 +406,7 @@ const OracleScreen: React.FC<OracleScreenProps> = ({navigation, route}) => {
       setOracleMessages(prev => [newMessage, ...prev]);
       setOracleQuestion('');
       setIsThinking(false);
+      logOracleInsight(oracleQuestion, response);
     }, 2500);
   };
 
@@ -620,8 +624,8 @@ const OracleScreen: React.FC<OracleScreenProps> = ({navigation, route}) => {
         {/* Title Section (Reusing titleSection, pageTitle, pageSubtitle styles from other screens if compatible) */}
         {/* These styles will be defined/updated in the StyleSheet later */}
         <View style={styles.titleSection}>
-          <Text style={styles.pageTitle}>ORACLE</Text>
-          <Text style={styles.pageSubtitle}>Ask & Receive</Text>
+          <Text style={styles.pageTitle}>{getCopy('oracle.title')}</Text>
+          <Text style={styles.pageSubtitle}>{getCopy('oracle.subtitle')}</Text>
         </View>
 
         {/* Content that needs to be centered if ScrollView is not filled */}
@@ -697,7 +701,7 @@ const OracleScreen: React.FC<OracleScreenProps> = ({navigation, route}) => {
                 style={styles.textInputMain}
                 value={oracleQuestion}
                 onChangeText={setOracleQuestion}
-                placeholder="Ask your question..."
+                placeholder={getCopy('oracle.inputPlaceholder')}
                 multiline
                 maxLength={200}
                 editable={!isThinking}
@@ -712,7 +716,7 @@ const OracleScreen: React.FC<OracleScreenProps> = ({navigation, route}) => {
           {!isThinking && (
             <StackedButton
               shape="rectangle" // Changed from type="rect"
-              text="Ask" // Changed from SUBMIT QUERY
+              text={getCopy('oracle.button')} // Changed from SUBMIT QUERY
               onPress={handleAskOracle}
             />
           )}
@@ -761,10 +765,11 @@ const OracleScreen: React.FC<OracleScreenProps> = ({navigation, route}) => {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Render StepTracker if not in wisdom mode or if desired */}
-      {/* For now, always render it based on current logic */}
-      {!isLoadingBanner && showBanner && (
+    <QuestTransition transitionKey={route.key}>
+      <SafeAreaView style={styles.container}>
+        {/* Render StepTracker if not in wisdom mode or if desired */}
+        {/* For now, always render it based on current logic */}
+      {showBanner && (
         <OnboardingBanner
           toolName="Oracle"
           description="Welcome to the Oracle. Explore personalized quests or seek direct wisdom."
@@ -785,6 +790,7 @@ const OracleScreen: React.FC<OracleScreenProps> = ({navigation, route}) => {
 
       {renderHintModal()}
     </SafeAreaView>
+    </QuestTransition>
   );
 };
 

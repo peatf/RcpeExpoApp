@@ -17,12 +17,14 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useAuth } from '../../contexts/AuthContext';
+import { useNarrativeCopy } from '../../hooks/useNarrativeCopy';
 import { AuthStackParamList } from '../../navigation/AuthNavigator';
 import { colors, spacing, typography, shadows, borderRadius, fonts } from '../../constants/theme'; // Import individual theme constants
 
 type LoginScreenNavigationProp = StackNavigationProp<AuthStackParamList, 'Login'>;
 
 const LoginScreen: React.FC = () => {
+  const { getCopy } = useNarrativeCopy();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -78,8 +80,8 @@ const LoginScreen: React.FC = () => {
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
         <View style={styles.content}>
-          <Text style={styles.title}>Welcome</Text>
-          <Text style={styles.subtitle}>Sign in to access your profile</Text>
+          <Text style={styles.title}>{getCopy('auth.login.title')}</Text>
+          <Text style={styles.subtitle}>{getCopy('auth.login.subtitle')}</Text>
           
           <View style={styles.panel}>
             <View style={styles.form}>
@@ -147,7 +149,7 @@ const LoginScreen: React.FC = () => {
                   disabled={isLoading}
                 >
                   <Text style={styles.buttonText}>
-                    {isLoading ? 'Signing In...' : 'Sign In'}
+                    {isLoading ? 'Resuming...' : getCopy('auth.login.button')}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -156,7 +158,7 @@ const LoginScreen: React.FC = () => {
           
           {/* Sign Up Link */}
           <View style={styles.signupContainer}>
-            <Text style={styles.signupText}>Don't have an account?</Text>
+            <Text style={styles.signupText}>{getCopy('auth.login.footer')}</Text>
             <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
               <Text style={styles.signupLink}>Sign Up</Text>
             </TouchableOpacity>

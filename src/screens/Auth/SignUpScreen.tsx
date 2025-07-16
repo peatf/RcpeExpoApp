@@ -18,12 +18,14 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useAuth } from '../../contexts/AuthContext';
+import { useNarrativeCopy } from '../../hooks/useNarrativeCopy';
 import { AuthStackParamList } from '../../navigation/AuthNavigator';
 import { colors, spacing, typography, shadows, borderRadius, fonts } from '../../constants/theme'; // Import individual theme constants
 
 type SignUpScreenNavigationProp = StackNavigationProp<AuthStackParamList, 'SignUp'>;
 
 export const SignUpScreen: React.FC = () => {
+  const { getCopy } = useNarrativeCopy();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -94,9 +96,9 @@ export const SignUpScreen: React.FC = () => {
       >
         <ScrollView contentContainerStyle={styles.scrollContainer}>
           <View style={styles.content}>
-            <Text style={styles.title}>Create Account</Text>
+            <Text style={styles.title}>{getCopy('auth.signUp.title')}</Text>
             <Text style={styles.subtitle}>
-              Join Reality Creation Profile Engine
+              {getCopy('auth.signUp.subtitle')}
             </Text>
 
             <View style={styles.form}>
@@ -201,13 +203,13 @@ export const SignUpScreen: React.FC = () => {
                 disabled={loading}
               >
                 <Text style={styles.buttonText}>
-                  {loading ? 'Creating Account...' : 'Sign Up'}
+                  {loading ? 'Embarking...' : getCopy('auth.signUp.button')}
                 </Text>
               </TouchableOpacity>
             </View>
 
             <View style={styles.footer}>
-              <Text style={styles.footerText}>Already have an account?</Text>
+              <Text style={styles.footerText}>{getCopy('auth.signUp.footer')}</Text>
               <TouchableOpacity onPress={() => navigation.navigate('Login')}>
                 <Text style={styles.footerLink}>Sign In</Text>
               </TouchableOpacity>
