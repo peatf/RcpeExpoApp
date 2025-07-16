@@ -8,7 +8,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import StackedButton from '../components/StackedButton';
 import { colors, fonts, spacing, borderRadius } from '../constants/theme'; // Import individual constants
-import WelcomeScreen from '../screens/Main/WelcomeScreen';
+import { QuestMapScreen } from '../screens/Main/QuestMapScreen';
+import { CalibrationToolScreen } from '../screens/Main/CalibrationToolScreen';
 import FrequencyMapperScreen from '../screens/Main/FrequencyMapperScreen';
 import OracleScreen from '../screens/Main/OracleScreen';
 import UserBaseChartScreen from '../screens/Main/UserBaseChartScreen';
@@ -17,10 +18,10 @@ import DecisionMakerScreen from '../screens/Main/DecisionMakerScreen';
 import ProfileCreationScreen from '../screens/Main/ProfileCreationScreen';
 import UserProfileScreen from '../screens/Main/UserProfileScreen';
 
-type ScreenName = 'welcome' | 'frequencyMapper' | 'oracle' | 'baseChart' | 'livingLog' | 'decisionMaker' | 'profileCreation' | 'userProfile';
+type ScreenName = 'questMap' | 'frequencyMapper' | 'oracle' | 'baseChart' | 'livingLog' | 'decisionMaker' | 'profileCreation' | 'userProfile';
 
 const MainTabNavigator: React.FC = () => {
-  const [currentScreen, setCurrentScreen] = useState<ScreenName>('welcome');
+  const [currentScreen, setCurrentScreen] = useState<ScreenName>('questMap');
   const [isNavCollapsed, setIsNavCollapsed] = useState<boolean>(true); // Start collapsed
   // Animated value for navigation panel width
   const navPanelWidth = useRef(new Animated.Value(0)).current; // Start with 0 width
@@ -28,10 +29,10 @@ const MainTabNavigator: React.FC = () => {
 
   const navigationItems = [
     {
-      id: 'welcome',
-      icon: 'home',
-      label: 'Home',
-      component: WelcomeScreen,
+      id: 'questMap',
+      icon: 'map-outline',
+      label: 'Quest Map',
+      component: QuestMapScreen,
     },
     {
       id: 'frequencyMapper',
@@ -84,8 +85,8 @@ const MainTabNavigator: React.FC = () => {
       
       // Safely render different component types with appropriate props
       switch (currentItem.id) {
-        case 'welcome':
-          return <WelcomeScreen onBeginSession={() => setCurrentScreen('frequencyMapper')} />;
+        case 'questMap':
+          return <QuestMapScreen />;
         case 'frequencyMapper':
           // @ts-ignore - FrequencyMapperScreen doesn't need navigation prop in our simplified implementation
           return <FrequencyMapperScreen />;
@@ -108,11 +109,11 @@ const MainTabNavigator: React.FC = () => {
           // @ts-ignore - UserProfileScreen expects navigation prop
           return <UserProfileScreen />;
         default:
-          return <WelcomeScreen onBeginSession={() => setCurrentScreen('frequencyMapper')} />;
+          return <QuestMapScreen />;
       }
     }
     // Fallback to welcome screen
-    return <WelcomeScreen onBeginSession={() => setCurrentScreen('frequencyMapper')} />;
+    return <QuestMapScreen />;
   };
 
   const toggleNavCollapse = () => {
