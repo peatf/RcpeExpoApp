@@ -2,13 +2,17 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { QuestTransition } from '../../components/Transitions/QuestTransition';
 import { RootState } from '../../state/store';
 import { Quest } from '../../state/quests/questSlice';
+import { useNarrativeCopy } from '../../hooks/useNarrativeCopy';
 
 export const QuestMapScreen: React.FC = () => {
   const dispatch = useDispatch();
   const navigation = useNavigation();
+  const route = useRoute();
+  const { getCopy } = useNarrativeCopy();
   const { activeQuests, completedQuests } = useSelector((state: RootState) => state.quests);
 
   const handleQuestNavigation = (quest: Quest) => {
@@ -35,28 +39,34 @@ export const QuestMapScreen: React.FC = () => {
   );
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.screenTitle}>Your Quest Map</Text>
-        <Text style={styles.subtitle}>Navigate your journey of self-discovery</Text>
+    <QuestTransition transitionKey={route.key}>
+      <ScrollView style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.screenTitle}>{getCopy('questMap.title')}</Text>
+        <Text style={styles.subtitle}>{getCopy('questMap.subtitle')}</Text>
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Active Quests</Text>
-        {activeQuests.map(renderQuestCard)}
+        <Text style={styles.sectionTitle}>{getCopy('questMap.sections.activeQuests')}</Text>
+        {activeQuests.length > 0 ? (
+          activeQuests.map(renderQuestCard)
+        ) : (
+          <Text>{getCopy('questMap.emptyState.description')}</Text>
+        )}
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Completed Quests ({completedQuests.length})</Text>
+        <Text style={styles.sectionTitle}>{getCopy('questMap.sections.completedQuests')} ({completedQuests.length})</Text>
         {completedQuests.slice(0, 3).map(renderQuestCard)}
       </View>
 
       {/* Personal Symbol placeholder */}
       <View style={styles.personalSymbolContainer}>
-        <Text style={styles.personalSymbolText}>Your Journey Symbol</Text>
+        <Text style={styles.personalSymbolText}>{getCopy('questMap.sections.personalSymbol')}</Text>
         <View style={styles.symbolPlaceholder} />
       </View>
     </ScrollView>
+    </QuestTransition>
   );
 };
 

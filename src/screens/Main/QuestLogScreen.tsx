@@ -3,10 +3,15 @@ import React from 'react';
 import { View, Text, StyleSheet, FlatList } from 'react-native';
 import { QuestLogEntry } from '../../components/QuestLog/QuestLogEntry';
 import { useQuestLog } from '../../hooks/useQuestLog';
+import { useRoute } from '@react-navigation/native';
+import { QuestTransition } from '../../components/Transitions/QuestTransition';
+import { useNarrativeCopy } from '../../hooks/useNarrativeCopy';
 import { QuestLogEntry as QuestLogEntryType } from '../../types/questLog';
 
 export const QuestLogScreen: React.FC = () => {
   const { questLogEntries } = useQuestLog();
+  const { getCopy } = useNarrativeCopy();
+  const route = useRoute();
 
   const renderEntry = ({ item }: { item: QuestLogEntryType }) => (
     <QuestLogEntry entry={item} />
@@ -14,18 +19,19 @@ export const QuestLogScreen: React.FC = () => {
 
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
-      <Text style={styles.emptyTitle}>Your Quest Log is Empty</Text>
+      <Text style={styles.emptyTitle}>{getCopy('questLog.emptyState.title')}</Text>
       <Text style={styles.emptyDescription}>
-        Complete quests, make reflections, and interact with tools to see your journey unfold here.
+        {getCopy('questLog.emptyState.description')}
       </Text>
     </View>
   );
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.screenTitle}>Quest Log</Text>
-        <Text style={styles.subtitle}>Your chronicle of discovery and growth</Text>
+    <QuestTransition transitionKey={route.key}>
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.screenTitle}>{getCopy('questLog.title')}</Text>
+        <Text style={styles.subtitle}>{getCopy('questLog.subtitle')}</Text>
       </View>
 
       <FlatList
@@ -37,6 +43,7 @@ export const QuestLogScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
       />
     </View>
+    </QuestTransition>
   );
 };
 

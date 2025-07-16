@@ -4,13 +4,49 @@
  */
 import React from 'react';
 import {NavigationContainer} from '@react-navigation/native';
-import {createStackNavigator} from '@react-navigation/stack';
+import {createStackNavigator, TransitionPresets} from '@react-navigation/stack';
 import {useAuth} from '../contexts/AuthContext';
 import AuthNavigator from './AuthNavigator';
 import MainTabNavigator from './MainTabNavigator';
 import {RootStackParamList} from '../types';
 
 const Stack = createStackNavigator<RootStackParamList>();
+
+const questTransitionConfig = {
+  ...TransitionPresets.FadeFromBottomAndroid,
+  transitionSpec: {
+    open: {
+      animation: 'timing',
+      config: {
+        duration: 400,
+      },
+    },
+    close: {
+      animation: 'timing',
+      config: {
+        duration: 400,
+      },
+    },
+  },
+  cardStyleInterpolator: ({ current, layouts }: { current: any, layouts: any }) => {
+    return {
+      cardStyle: {
+        opacity: current.progress.interpolate({
+          inputRange: [0, 1],
+          outputRange: [0, 1],
+        }),
+        transform: [
+          {
+            translateY: current.progress.interpolate({
+              inputRange: [0, 1],
+              outputRange: [layouts.screen.height * 0.1, 0],
+            }),
+          },
+        ],
+      },
+    };
+  },
+};
 
 const AppNavigator: React.FC = () => {
   const {isAuthenticated, isLoading} = useAuth();
@@ -50,7 +86,7 @@ const AppNavigator: React.FC = () => {
         }
       }
     }}>
-      <Stack.Navigator screenOptions={{headerShown: false, cardStyle: {backgroundColor: 'transparent'}}}>
+      <Stack.Navigator screenOptions={{...questTransitionConfig, headerShown: false, cardStyle: {backgroundColor: 'transparent'}}}>
         {isAuthenticated ? (
           <Stack.Screen name="Main" component={MainTabNavigator} />
         ) : (

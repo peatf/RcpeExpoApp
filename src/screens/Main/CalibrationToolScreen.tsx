@@ -37,8 +37,8 @@ import { MicroQuestTracker } from '../../components/Quests/MicroQuestTracker';
 import { QuestCompletionToast } from '../../components/Feedback/QuestCompletionToast';
 import { useMicroQuests } from '../../hooks/useMicroQuests';
 import { useQuestLog } from '../../hooks/useQuestLog';
-
-interface CalibrationToolScreenProps {
+import { useNarrativeCopy } from '../../hooks/useNarrativeCopy';
+import { QuestTransition } from '../../components/Transitions/QuestTransition';
   navigation: any;
   route: any;
 }
@@ -48,6 +48,7 @@ const CalibrationToolScreen: React.FC<CalibrationToolScreenProps> = ({navigation
   const { showBanner, dismissBanner, isLoadingBanner } = useOnboardingBanner('CalibrationTool');
   const { completeMicroQuestAction, showToast, completedQuestTitle, hideToast } = useMicroQuests();
   const { logCalibrationResult } = useQuestLog();
+  const { getCopy } = useNarrativeCopy();
   
   // Core state
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -645,9 +646,10 @@ const CalibrationToolScreen: React.FC<CalibrationToolScreenProps> = ({navigation
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <MicroQuestTracker action="calibration_complete" />
-      {!isLoadingBanner && showBanner && (
+    <QuestTransition transitionKey={route.key}>
+      <SafeAreaView style={styles.container}>
+        <MicroQuestTracker action="calibration_complete" />
+        {!isLoadingBanner && showBanner && (
         <OnboardingBanner
           toolName="Calibration Tool"
           description="Fine-tune your energetic alignment with your stated desires."
@@ -666,7 +668,7 @@ const CalibrationToolScreen: React.FC<CalibrationToolScreenProps> = ({navigation
         >
           <Ionicons name="arrow-back" size={24} color={theme.colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.title}>Calibration Tool</Text>
+        <Text style={styles.title}>{getCopy('calibration.title')}</Text>
         <View style={styles.headerSpacer} />
       </View>
         <StepTracker
@@ -681,6 +683,7 @@ const CalibrationToolScreen: React.FC<CalibrationToolScreenProps> = ({navigation
         {currentStep === 'results' && renderResultsScreen()}
       </ScrollView>
     </SafeAreaView>
+    </QuestTransition>
   );
 };
 

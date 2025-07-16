@@ -10,6 +10,9 @@ import { MicroQuestTracker } from '../../../components/Quests/MicroQuestTracker'
 import { QuestCompletionToast } from '../../../components/Feedback/QuestCompletionToast';
 import { useMicroQuests } from '../../../hooks/useMicroQuests';
 import { useQuestLog } from '../../../hooks/useQuestLog';
+import { useNarrativeCopy } from '../../../hooks/useNarrativeCopy';
+import { useRoute } from '@react-navigation/native';
+import { QuestTransition } from '../../../components/Transitions/QuestTransition';
 import StackedButton from '../../../components/StackedButton';
 import { theme } from '../../../constants/theme'; // Import full theme
 import { InfoCard, LogInput, InsightDisplay } from '../../../components/HumanDesignTools';
@@ -25,6 +28,8 @@ const LivingLogScreen: React.FC = () => {
   const { showBanner, dismissBanner } = useOnboarding('living_log');
   const { completeMicroQuestAction, showToast, completedQuestTitle, hideToast } = useMicroQuests();
   const { logJournalEntry } = useQuestLog();
+  const { getCopy } = useNarrativeCopy();
+  const route = useRoute();
   // newEntryText state removed as LogInput manages its own state.
   const [logEntries, setLogEntries] = useState<LogEntry[]>([]);
   const [patterns, setPatterns] = useState<LivingLogPattern[]>([]);
@@ -140,9 +145,10 @@ const LivingLogScreen: React.FC = () => {
   }
 
   return (
-    <View style={styles.container}>
-      <MicroQuestTracker action="living_log_entry" />
-      {showBanner && (
+    <QuestTransition transitionKey={route.key}>
+      <View style={styles.container}>
+        <MicroQuestTracker action="living_log_entry" />
+        {showBanner && (
         <OnboardingBanner
           toolName="Living Log"
           description="Welcome to your Living Log! Track experiences and discover patterns related to your Human Design."
@@ -156,8 +162,8 @@ const LivingLogScreen: React.FC = () => {
       />
       <View style={styles.contentWrapper}>
         <View style={styles.titleSection}>
-          <Text style={styles.pageTitle}>LIVING LOG</Text>
-          <Text style={styles.pageSubtitle}>A chronicle of experiences</Text>
+          <Text style={styles.pageTitle}>{getCopy('livingLog.title')}</Text>
+          <Text style={styles.pageSubtitle}>{getCopy('livingLog.subtitle')}</Text>
         </View>
 
         <ScrollView 
@@ -206,6 +212,7 @@ const LivingLogScreen: React.FC = () => {
         </ScrollView>
       </View>
     </View>
+    </QuestTransition>
   );
 };
 

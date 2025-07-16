@@ -17,11 +17,13 @@ import LivingLogScreen from '../screens/Main/HumanDesignTools/LivingLogScreen';
 import { QuestLogScreen } from '../screens/Main/QuestLogScreen';
 import DecisionMakerScreen from '../screens/Main/DecisionMakerScreen';
 import ProfileCreationScreen from '../screens/Main/ProfileCreationScreen';
+import { useNarrativeCopy } from '../hooks/useNarrativeCopy';
 import UserProfileScreen from '../screens/Main/UserProfileScreen';
 
 type ScreenName = 'questMap' | 'questLog' | 'frequencyMapper' | 'oracle' | 'baseChart' | 'livingLog' | 'decisionMaker' | 'profileCreation' | 'userProfile';
 
 const MainTabNavigator: React.FC = () => {
+  const { getCopy } = useNarrativeCopy();
   const [currentScreen, setCurrentScreen] = useState<ScreenName>('questMap');
   const [isNavCollapsed, setIsNavCollapsed] = useState<boolean>(true); // Start collapsed
   // Animated value for navigation panel width
@@ -32,19 +34,19 @@ const MainTabNavigator: React.FC = () => {
     {
       id: 'questMap',
       icon: 'map-outline',
-      label: 'Quest Map',
+      label: getCopy('navigation.questMap'),
       component: QuestMapScreen,
     },
     {
       id: 'frequencyMapper',
       icon: 'add',
-      label: 'Mapper',
+      label: getCopy('navigation.calibration'),
       component: FrequencyMapperScreen,
     },
     {
       id: 'oracle',
       icon: 'eye',
-      label: 'Oracle',
+      label: getCopy('navigation.oracle'),
       component: OracleScreen,
     },
     {
@@ -56,13 +58,13 @@ const MainTabNavigator: React.FC = () => {
     {
       id: 'livingLog',
       icon: 'document-text',
-      label: 'Log',
+      label: getCopy('navigation.livingLog'),
       component: LivingLogScreen,
     },
     {
       id: 'questLog',
       icon: 'book-outline',
-      label: 'Quest Log',
+      label: getCopy('navigation.questLog'),
       component: QuestLogScreen,
     },
     {
