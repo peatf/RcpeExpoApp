@@ -2,18 +2,44 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { HDType } from '../types/humanDesign';
 import { theme } from '../constants/theme'; // Import theme
+import ResponseIntelligenceScreen from '../screens/Main/HumanDesignTools/ResponseIntelligenceScreen';
+import RecognitionNavigationScreen from '../screens/Main/HumanDesignTools/RecognitionNavigationScreen';
+import ImpulseIntegrationScreen from '../screens/Main/HumanDesignTools/ImpulseIntegrationScreen';
+import EnvironmentalAttunementScreen from '../screens/Main/HumanDesignTools/EnvironmentalAttunementScreen';
+import SacralCheckIn from './SacralCheckIn';
 
 interface DecisionMakerTabProps {
   userType: HDType;
 }
 
-// Placeholder for actual tool components - replace later
-const ToolContentComponent: React.FC<{ toolName: string }> = ({ toolName }) => (
-  <View style={styles.toolContentContainer}>
-    <Text style={styles.toolText}>Content for {toolName}</Text>
-    {/* Replace with actual tool component later */}
-  </View>
-);
+// Component to render the actual tool content
+const ToolContentComponent: React.FC<{ toolName: string }> = ({ toolName }) => {
+  switch (toolName) {
+    case 'Response Inventory':
+      return <ResponseIntelligenceScreen />;
+    case 'Sacral Check-In':
+      return <SacralCheckIn />;
+    case 'Invitation Tracker':
+      return <RecognitionNavigationScreen />;
+    case 'Energy Management':
+      return <RecognitionNavigationScreen />; // Using Recognition Navigation for energy management too
+    case 'Impact Assessment':
+      return <ImpulseIntegrationScreen />;
+    case 'Initiative Tracker':
+      return <ImpulseIntegrationScreen />; // Using Impulse Integration for initiative tracking too
+    case 'Lunar Cycle Log':
+      return <EnvironmentalAttunementScreen />;
+    case 'Community Pulse':
+      return <EnvironmentalAttunementScreen />; // Using Environmental Attunement for community pulse too
+    default:
+      return (
+        <View style={styles.toolContentContainer}>
+          <Text style={styles.toolText}>Tool: {toolName}</Text>
+          <Text style={styles.subText}>Component not yet implemented</Text>
+        </View>
+      );
+  }
+};
 
 const DecisionMakerTab: React.FC<DecisionMakerTabProps> = ({ userType }) => {
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
@@ -151,6 +177,12 @@ const styles = StyleSheet.create({
     fontFamily: theme.fonts.body,
     fontSize: theme.typography.bodyMedium.fontSize,
     color: theme.colors.textPrimary,
+  },
+  subText: { // For descriptive text inside ToolContentComponent
+    fontFamily: theme.fonts.body,
+    fontSize: theme.typography.bodySmall.fontSize,
+    color: theme.colors.textSecondary,
+    marginTop: theme.spacing.xs,
   },
 });
 

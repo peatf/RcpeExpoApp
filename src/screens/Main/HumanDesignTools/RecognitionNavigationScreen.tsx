@@ -174,7 +174,7 @@ const RecognitionNavigationScreen: React.FC = () => {
             <InfoCard title="Record New Invitation">
               <LogInput onSubmit={setNewInvitationText} placeholder="Describe the invitation..." />
               <View style={styles.actionButtonContainer}>
-                <StackedButton text="Record Invitation" onPress={handleRecordInvitation} type="rect" />
+                <StackedButton text="Record Invitation" onPress={handleRecordInvitation} shape="rectangle" />
               </View>
             </InfoCard>
 

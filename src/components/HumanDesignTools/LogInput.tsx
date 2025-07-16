@@ -49,6 +49,11 @@ const LogInput: React.FC<LogInputProps> = ({ onSubmit, placeholder = "What's on 
           multiline
           // numberOfLines={3} // minHeight on inputPanel and flex on formElement manage height
           textAlignVertical="top"
+          returnKeyType="default"
+          blurOnSubmit={false}
+          editable={true}
+          selectTextOnFocus={true}
+          scrollEnabled={true}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
         />
@@ -74,6 +79,7 @@ const styles = StyleSheet.create({
     // position: 'relative', // Not needed if no absolute label inside
     minHeight: 120, // Or adjust based on typical content, HTML h-48 is 192px
     padding: 0, // Padding will be on the TextInput itself
+    justifyContent: 'flex-start', // Align content to top
     // marginBottom: theme.spacing.lg, // Handled by parent gap if any
   },
   inputPanelFocused: { // Focus state styling
@@ -92,7 +98,8 @@ const styles = StyleSheet.create({
     fontSize: 15, // From HTML ref
     lineHeight: 22.5, // 1.5 * 15px
     textAlignVertical: 'top',
-    // minHeight: 60, // Ensure a minimum touch area and visible lines
+    minHeight: 80, // Ensure a minimum touch area and visible lines
+    borderWidth: 0, // Remove any default border
   },
 });
 

@@ -90,6 +90,7 @@ export const SignUpScreen: React.FC = () => {
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
         <ScrollView contentContainerStyle={styles.scrollContainer}>
           <View style={styles.content}>
@@ -111,6 +112,12 @@ export const SignUpScreen: React.FC = () => {
                     placeholderTextColor={colors.textSecondary}
                     autoCapitalize="words"
                     autoCorrect={false}
+                    autoComplete="name"
+                    textContentType="name"
+                    returnKeyType="next"
+                    blurOnSubmit={false}
+                    editable={!loading}
+                    selectTextOnFocus={true}
                     onFocus={() => setNameFocused(true)}
                     onBlur={() => setNameFocused(false)}
                   />
@@ -130,6 +137,12 @@ export const SignUpScreen: React.FC = () => {
                     keyboardType="email-address"
                     autoCapitalize="none"
                     autoCorrect={false}
+                    autoComplete="email"
+                    textContentType="emailAddress"
+                    returnKeyType="next"
+                    blurOnSubmit={false}
+                    editable={!loading}
+                    selectTextOnFocus={true}
                     onFocus={() => setEmailFocused(true)}
                     onBlur={() => setEmailFocused(false)}
                   />
@@ -147,6 +160,12 @@ export const SignUpScreen: React.FC = () => {
                     placeholder="Enter your password"
                     placeholderTextColor={colors.textSecondary}
                     secureTextEntry
+                    autoComplete="password-new"
+                    textContentType="newPassword"
+                    returnKeyType="next"
+                    blurOnSubmit={false}
+                    editable={!loading}
+                    selectTextOnFocus={true}
                     onFocus={() => setPasswordFocused(true)}
                     onBlur={() => setPasswordFocused(false)}
                   />
@@ -164,8 +183,14 @@ export const SignUpScreen: React.FC = () => {
                     placeholder="Confirm your password"
                     placeholderTextColor={colors.textSecondary}
                     secureTextEntry
+                    autoComplete="password-new"
+                    textContentType="newPassword"
+                    returnKeyType="done"
+                    editable={!loading}
+                    selectTextOnFocus={true}
                     onFocus={() => setConfirmPasswordFocused(true)}
                     onBlur={() => setConfirmPasswordFocused(false)}
+                    onSubmitEditing={handleSignUp}
                   />
                 </View>
               </View>
@@ -246,6 +271,8 @@ const styles = StyleSheet.create({
     borderColor: colors.base1,
     borderRadius: borderRadius.sm,
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    minHeight: 44, // Ensure adequate touch target
+    justifyContent: 'center', // Center the TextInput vertically
   },
   inputPanelFocused: {
     borderColor: colors.accent,
@@ -256,7 +283,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
     color: colors.textPrimary,
-    fontSize: 15,
+    fontSize: 16,
+    minHeight: 44, // Ensure adequate touch target
+    borderWidth: 0, // Remove any default border
   },
   button: {
     backgroundColor: colors.accent,

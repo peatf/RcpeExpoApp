@@ -17,7 +17,23 @@ const generateUserAuth = (email: string) => {
   let userId: string;
   let token: string;
 
-  if (emailPrefix.includes('alice')) {
+  // Human Design type accounts
+  if (emailPrefix === 'generator') {
+    userId = 'generator@example.com';
+    token = 'generator-token';
+  } else if (emailPrefix === 'manifestor') {
+    userId = 'manifestor@example.com';
+    token = 'manifestor-token';
+  } else if (emailPrefix === 'projector') {
+    userId = 'projector@example.com';
+    token = 'projector-token';
+  } else if (emailPrefix === 'reflector') {
+    userId = 'reflector@example.com';
+    token = 'reflector-token';
+  } else if (emailPrefix === 'mangen') {
+    userId = 'mangen@example.com';
+    token = 'mangen-token';
+  } else if (emailPrefix.includes('alice')) {
     userId = 'alice';
     token = 'alice-token';
   } else if (emailPrefix.includes('bob')) {

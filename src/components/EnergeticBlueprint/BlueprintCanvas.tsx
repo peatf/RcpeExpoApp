@@ -449,7 +449,7 @@ const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({ data, highlightedCate
               const bridgeAngle = (j / bridgeSegments) * Math.PI * 2 + t * Math.PI * 0.5;
               const bridgeLength = (maxRadius / numLayers);
               
-              const bridgeColor = numSplitBridges > 2 ? darkenColor(color, 0.2) : color;
+              const bridgeColor = numSplitBridges > 2 ? darkenColor(baseColor, 0.2) : baseColor;
               const bridgeDash = numSplitBridges > 1 ? [3,1] as [number, number] : [2,2] as [number, number];
               
               const x1 = center.x + Math.cos(bridgeAngle) * radius;
@@ -563,7 +563,7 @@ const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({ data, highlightedCate
                     for (let x = center.x - PIXEL_RESOLUTION * 0.3; x <= center.x + PIXEL_RESOLUTION * 0.3; x += 2) {
                         const wavePhase = x / waterWaveLength + t * Math.PI * 2;
                         const y_coord = center.y + yOffset + Math.sin(wavePhase) * waterAmplitude;
-                        setPixel(pixelData, x_coord, y_coord, element_r, element_g, element_b, final_element_a);
+                        setPixel(pixelData, x, y_coord, element_r, element_g, element_b, final_element_a);
                     }
                 }
                 break;
@@ -674,19 +674,19 @@ const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({ data, highlightedCate
             centerPattern = 'none'; // No fill
             outlineDash = [1, 3]; // Very subtle dashed boundary
             // Draw a faint circle with the boundary
-            drawPixelCircle(pixelData, x, y, currentCenterRadius, color);
+            drawPixelCircle(pixelData, x, y, currentCenterRadius, baseColor);
           }
 
           // Draw base circle for Defined/Undefined
           if (centerInfo.state !== 'Open') {
-             drawPixelCircle(pixelData, x, y, currentCenterRadius, color, centerPattern);
+             drawPixelCircle(pixelData, x, y, currentCenterRadius, baseColor, centerPattern);
           }
 
           // Cognition Variable Specific Patterns
           if (centerInfo.state !== 'Open') {
              const cognition = data.cognition_variable || "Default";
              const cognHash = simpleHash(cognition);
-             const glyphColor = darkenColor(color, -0.2); // Make glyphs brighter
+             const glyphColor = darkenColor(baseColor, -0.2); // Make glyphs brighter
 
              // Glyph drawing logic
              switch (cognHash % 3) {
@@ -720,21 +720,21 @@ const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({ data, highlightedCate
             
             // Draw lunar phase
             if (phase === 4) { // Full Moon
-              drawPixelCircle(pixelData, x, y, lunarRadius, color, 'solid');
+              drawPixelCircle(pixelData, x, y, lunarRadius, baseColor, 'solid');
             } else if (phase === 0) {
               // New Moon - leave empty
             } else if (phase === 2) { // First Quarter
               for (let px = 0; px <= lunarRadius; px++)
                 for (let py = -lunarRadius; py <= lunarRadius; py++)
                   if (px*px + py*py <= lunarRadius*lunarRadius)
-                    setPixel(pixelData, x + px, y + py, ...colorToRGBA(color));
+                    setPixel(pixelData, x + px, y + py, ...colorToRGBA(baseColor));
             } else if (phase === 6) { // Last Quarter
               for (let px = -lunarRadius; px <= 0; px++)
                 for (let py = -lunarRadius; py <= lunarRadius; py++)
                   if (px*px + py*py <= lunarRadius*lunarRadius)
-                    setPixel(pixelData, x + px, y + py, ...colorToRGBA(color));
+                    setPixel(pixelData, x + px, y + py, ...colorToRGBA(baseColor));
             } else { // Crescents/Gibbous
-              drawPixelCircle(pixelData, x, y, lunarRadius, color, 'solid');
+              drawPixelCircle(pixelData, x, y, lunarRadius, baseColor, 'solid');
               const darkRadius = lunarRadius * 0.8;
               let darkOffsetX = 0;
               if (phase === 1) darkOffsetX = lunarRadius * 0.5;   // Waxing Crescent
@@ -761,12 +761,12 @@ const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({ data, highlightedCate
                 const angle = (i / 6) * Math.PI * 2 + t * Math.PI; // Rotate
                 const x2 = x + Math.cos(angle) * animatedSize;
                 const y2 = y + Math.sin(angle) * animatedSize;
-                drawPixelLine(pixelData, x, y, x2, y2, color, [1,2]); // Dashed lines
+                drawPixelLine(pixelData, x, y, x2, y2, baseColor, [1,2]); // Dashed lines
               }
             } else if (patternType === 1) { // Wave pattern
               for (let i = -Math.floor(animatedSize); i <= Math.floor(animatedSize); i++) {
                 const waveY = Math.sin((i + t * 20) * 0.5) * (patternSize / 3);
-                setPixel(pixelData, x + i, y + waveY, ...colorToRGBA(color));
+                setPixel(pixelData, x + i, y + waveY, ...colorToRGBA(baseColor));
               }
             } else { // Dots
               for (let i = 0; i < 5; i++) {
@@ -774,7 +774,7 @@ const BlueprintCanvas: React.FC<BlueprintCanvasProps> = ({ data, highlightedCate
                 const radius = animatedSize * 0.7;
                 const dotX = x + Math.cos(angle) * radius;
                 const dotY = y + Math.sin(angle) * radius;
-                drawPixelCircle(pixelData, dotX, dotY, 1, color, 'solid');
+                drawPixelCircle(pixelData, dotX, dotY, 1, baseColor, 'solid');
               }
             }
           }

@@ -171,7 +171,7 @@ const ImpulseIntegrationScreen: React.FC = () => {
               <LogInput onSubmit={setNewImpulseText} placeholder="Describe your impulse..."/>
               {/* StackedButton to actually trigger capture with the text stored in newImpulseText */}
               <View style={styles.captureButtonContainer}>
-                <StackedButton text="Capture Impulse" onPress={handleCaptureImpulse} type="rect" />
+                <StackedButton text="Capture Impulse" onPress={handleCaptureImpulse} shape="rectangle" />
               </View>
             </InfoCard>
 

@@ -1,11 +1,13 @@
 const express = require('express');
 const cors = require('cors');
 const { v4: uuidv4 } = require('uuid');
+const { MOCK_USER_CREDENTIALS, MOCK_HD_PROFILES } = require('./mock-human-design-profiles');
 
 const app = express();
 const PORT = 3001;
 
 console.log('🚀 Starting Reality Creation Profile Engine Mock Server...');
+console.log('📋 Loading Human Design mock profiles for all 5 types...');
 
 // Middleware
 app.use(cors());
@@ -19,13 +21,19 @@ function debugLog(...args) {
   console.log('[DEBUG]', ...args);
 }
 
-// Token to user ID mapping for testing
+// Extended token to user ID mapping including all HD types
 const TOKEN_MAP = {
   'mock-token-123': 'mock-user-123',
   'alice-token': 'alice@example.com',
   'bob-token': 'bob@example.com',
   'token456': 'bob@example.com',
-  'token123': 'alice@example.com'
+  'token123': 'alice@example.com',
+  // Human Design Type Tokens
+  'generator-token': 'generator@example.com',
+  'manifestor-token': 'manifestor@example.com',
+  'projector-token': 'projector@example.com',
+  'reflector-token': 'reflector@example.com',
+  'mangen-token': 'mangen@example.com'
 };
 
 // Simple function to extract user ID from auth header
@@ -50,6 +58,24 @@ function getUserIdFromAuth(req) {
     const mappedUserId = TOKEN_MAP[token];
     debugLog('Found user ID in token map:', mappedUserId);
     return mappedUserId;
+  }
+  
+  // Check for Human Design type tokens
+  if (token.includes('generator') && !token.includes('mangen')) {
+    debugLog('Identified generator from token');
+    return 'generator@example.com';
+  } else if (token.includes('manifestor') && !token.includes('mangen')) {
+    debugLog('Identified manifestor from token');
+    return 'manifestor@example.com';
+  } else if (token.includes('projector')) {
+    debugLog('Identified projector from token');
+    return 'projector@example.com';
+  } else if (token.includes('reflector')) {
+    debugLog('Identified reflector from token');
+    return 'reflector@example.com';
+  } else if (token.includes('mangen')) {
+    debugLog('Identified manifesting generator from token');
+    return 'mangen@example.com';
   }
   
   // Check for email-based tokens from frontend auth (for alice@example.com, etc)
@@ -114,6 +140,16 @@ const defaultProfile = {
   status: 'completed'
 };
 profiles.set(defaultProfileId, defaultProfile);
+
+// Initialize Human Design mock profiles for all 5 types
+console.log('🔮 Initializing Human Design mock profiles...');
+Object.entries(MOCK_HD_PROFILES).forEach(([type, profile]) => {
+  profiles.set(profile.id, profile);
+  console.log(`✅ Added ${type} profile: ${profile.name} (${profile.user_id})`);
+});
+
+console.log(`📊 Total profiles loaded: ${profiles.size}`);
+console.log('🎭 Available Human Design types:', Object.keys(MOCK_HD_PROFILES).join(', '));
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -260,6 +296,12 @@ app.get('/api/v1/profiles/:profileId/base_chart', async (req, res) => {
     const incarnationCross = generateIncarnationCross();
     
     // Generate comprehensive base chart data matching backend structure
+    // Use the actual HD type from profile, not random generation
+    const actualHDType = profile.hd_type || generateHDType(profile.assessment_responses);
+    const actualStrategy = profile.strategy || generateStrategy(profile.assessment_responses);
+    const actualAuthority = profile.authority || generateAuthority(profile.assessment_responses);
+    const actualProfileLines = profile.profile_lines || generateProfileLines(profile.assessment_responses);
+    
     const chartData = {
       status: "success",
       data: {
@@ -271,13 +313,14 @@ app.get('/api/v1/profiles/:profileId/base_chart', async (req, res) => {
           status: "completed",
           version: "1.0.0"
         },
-        hd_type: generateHDType(profile.assessment_responses),
+        hd_type: actualHDType,
         typology_pair_key: calculatedTypology,
         
         energy_family: {
-          profile_lines: generateProfileLines(profile.assessment_responses),
-          conscious_line: Math.floor(Math.random() * 6) + 1,
-          unconscious_line: Math.floor(Math.random() * 6) + 1,
+          profile_lines: actualProfileLines,
+          conscious_line: parseInt(actualProfileLines.split('/')[0]) || Math.floor(Math.random() * 6) + 1,
+          unconscious_line: parseInt(actualProfileLines.split('/')[1]) || Math.floor(Math.random() * 6) + 1,
+          strategy: actualStrategy,
           astro_sun_sign: calculateAstrologyFromBirthData(profile.birth_data),
           astro_sun_house: Math.floor(Math.random() * 12) + 1,
           astro_sun_placement: {
@@ -307,6 +350,8 @@ app.get('/api/v1/profiles/:profileId/base_chart', async (req, res) => {
         },
         
         processing_core: {
+          name: actualAuthority,
+          description: `Decision-making through ${actualAuthority.toLowerCase()}`,
           astro_moon_sign: generateRandomSign(),
           astro_moon_house: Math.floor(Math.random() * 12) + 1,
           astro_mercury_sign: generateRandomSign(),

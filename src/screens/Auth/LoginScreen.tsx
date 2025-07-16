@@ -75,6 +75,7 @@ const LoginScreen: React.FC = () => {
       <KeyboardAvoidingView 
         style={styles.keyboardView}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
         <View style={styles.content}>
           <Text style={styles.title}>Welcome</Text>
@@ -95,6 +96,12 @@ const LoginScreen: React.FC = () => {
                     keyboardType="email-address"
                     autoCapitalize="none"
                     autoCorrect={false}
+                    autoComplete="email"
+                    textContentType="emailAddress"
+                    returnKeyType="next"
+                    blurOnSubmit={false}
+                    editable={!isLoading}
+                    selectTextOnFocus={true}
                     onFocus={() => setEmailFocused(true)}
                     onBlur={() => setEmailFocused(false)}
                   />
@@ -112,8 +119,14 @@ const LoginScreen: React.FC = () => {
                     placeholder="Enter your password"
                     placeholderTextColor={colors.textSecondary}
                     secureTextEntry
+                    autoComplete="password"
+                    textContentType="password"
+                    returnKeyType="done"
+                    editable={!isLoading}
+                    selectTextOnFocus={true}
                     onFocus={() => setPasswordFocused(true)}
                     onBlur={() => setPasswordFocused(false)}
+                    onSubmitEditing={handleLogin}
                   />
                 </View>
               </View>
@@ -199,7 +212,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.base1,
     borderRadius: borderRadius.sm,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)', // Consistent with SignUpScreen
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    minHeight: 44, // Ensure adequate touch target
+    justifyContent: 'center', // Center the TextInput vertically
   },
   inputPanelFocused: {
     borderColor: colors.accent,
@@ -210,6 +225,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     fontFamily: fonts.body,
     color: colors.textPrimary,
+    fontSize: 16,
+    minHeight: 44, // Ensure adequate touch target
+    backgroundColor: 'transparent',
+    borderWidth: 0, // Remove any default border
   },
   forgotPassword: {
     alignSelf: 'flex-end',

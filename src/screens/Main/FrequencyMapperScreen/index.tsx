@@ -87,6 +87,13 @@ const FrequencyMapperScreen: React.FC = () => {
               onChangeText={setDesireInput}
               placeholder="Enter your desire here..."
               multiline
+              editable={true}
+              selectTextOnFocus={true}
+              blurOnSubmit={false}
+              textAlignVertical="top"
+              autoCapitalize="sentences"
+              autoCorrect={true}
+              spellCheck={true}
             />
           </View>
         )}

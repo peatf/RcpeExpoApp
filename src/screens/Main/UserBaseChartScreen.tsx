@@ -131,8 +131,7 @@ const UserBaseChartScreen: React.FC<{navigation: any}> = ({navigation}) => {
       conscious_line: String(chartData.evolutionary_path?.conscious_line || '0'),
       unconscious_line: String(chartData.evolutionary_path?.unconscious_line || '0'),
       core_priorities: chartData.evolutionary_path?.core_priorities?.join(',') || 'None',
-      tension_planets: chartData.tension_planets || [], // Default to empty array
-      // Ensure chiron_gate is also part of VisualizationData if used by BlueprintCanvas for Tension Points
+      tension_points: chartData.tension_points || [], // Default to empty array      // Ensure chiron_gate is also part of VisualizationData if used by BlueprintCanvas for Tension Points
       // It's already mapped: chiron_gate: String(chartData.processing_core?.chiron_gate || '0'),
     } as VisualizationData;
   }, [chartData]);

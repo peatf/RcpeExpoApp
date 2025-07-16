@@ -66,6 +66,7 @@ const LunarCheckInForm: React.FC<LunarCheckInFormProps> = ({ onSubmit, currentLu
       },
       relationships: {
         people: people.split(',').map(p=>p.trim()).filter(p => p.length > 0),
+        dynamics: [], // Add required dynamics property
         impact: 0 // Example
       },
       significant: notes.length > 50 || Math.abs(wellbeingScore - 5) > 2 || Math.abs(clarityScore - 5) > 2, // Example significance logic
@@ -95,6 +96,10 @@ const LunarCheckInForm: React.FC<LunarCheckInFormProps> = ({ onSubmit, currentLu
             keyboardType="number-pad"
             maxLength={2}
             placeholderTextColor={theme.colors.textSecondary}
+            returnKeyType="next"
+            blurOnSubmit={false}
+            editable={true}
+            selectTextOnFocus={true}
             onFocus={() => setWellbeingFocused(true)}
             onBlur={() => setWellbeingFocused(false)}
           />
@@ -126,6 +131,10 @@ const LunarCheckInForm: React.FC<LunarCheckInFormProps> = ({ onSubmit, currentLu
             onChangeText={setEnvironmentName}
             placeholder="e.g., Home Office, Park"
             placeholderTextColor={theme.colors.textSecondary}
+            returnKeyType="next"
+            blurOnSubmit={false}
+            editable={true}
+            selectTextOnFocus={true}
             onFocus={() => setEnvironmentFocused(true)}
             onBlur={() => setEnvironmentFocused(false)}
           />
@@ -163,7 +172,7 @@ const LunarCheckInForm: React.FC<LunarCheckInFormProps> = ({ onSubmit, currentLu
           />
         </View>
       </View>
-      <StackedButton text="Log Lunar Check-In" onPress={handleSubmit} type="rect" />
+      <StackedButton text="Log Lunar Check-In" onPress={handleSubmit} shape="rectangle" />
     </View>
   );
 };

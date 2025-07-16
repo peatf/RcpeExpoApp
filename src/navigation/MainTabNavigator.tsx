@@ -15,8 +15,9 @@ import UserBaseChartScreen from '../screens/Main/UserBaseChartScreen';
 import LivingLogScreen from '../screens/Main/HumanDesignTools/LivingLogScreen';
 import DecisionMakerScreen from '../screens/Main/DecisionMakerScreen';
 import ProfileCreationScreen from '../screens/Main/ProfileCreationScreen';
+import UserProfileScreen from '../screens/Main/UserProfileScreen';
 
-type ScreenName = 'welcome' | 'frequencyMapper' | 'oracle' | 'baseChart' | 'livingLog' | 'decisionMaker' | 'profileCreation';
+type ScreenName = 'welcome' | 'frequencyMapper' | 'oracle' | 'baseChart' | 'livingLog' | 'decisionMaker' | 'profileCreation' | 'userProfile';
 
 const MainTabNavigator: React.FC = () => {
   const [currentScreen, setCurrentScreen] = useState<ScreenName>('welcome');
@@ -68,6 +69,12 @@ const MainTabNavigator: React.FC = () => {
       label: 'Profile',
       component: ProfileCreationScreen,
     },
+    {
+      id: 'userProfile',
+      icon: 'settings',
+      label: 'Settings',
+      component: UserProfileScreen,
+    },
   ];
 
   const getCurrentComponent = () => {
@@ -97,6 +104,9 @@ const MainTabNavigator: React.FC = () => {
         case 'profileCreation':
           // @ts-ignore - ProfileCreationScreen expects navigation prop
           return <ProfileCreationScreen />;
+        case 'userProfile':
+          // @ts-ignore - UserProfileScreen expects navigation prop
+          return <UserProfileScreen />;
         default:
           return <WelcomeScreen onBeginSession={() => setCurrentScreen('frequencyMapper')} />;
       }

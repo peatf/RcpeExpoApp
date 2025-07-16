@@ -37,7 +37,7 @@ const CheckInForm: React.FC<CheckInFormProps> = ({ onSubmit, userAuthority }) =>
       timestamp: new Date().toISOString(),
       checkInType: "manual_form", // Differentiate from potentially other check-in methods
       authorityData: { type: userAuthority.toString(), notes: "Form submission" }, // Example, can be more detailed
-      energyLevel: level,
+      energyLevel: energyLevel,
       contextData: { notes: notes || undefined }, // Only include notes if present
     };
 
@@ -77,10 +77,17 @@ const CheckInForm: React.FC<CheckInFormProps> = ({ onSubmit, userAuthority }) =>
             numberOfLines={3}
             onFocus={() => setNotesFocused(true)}
             onBlur={() => setNotesFocused(false)}
+            editable={true}
+            selectTextOnFocus={true}
+            blurOnSubmit={false}
+            textAlignVertical="top"
+            autoCapitalize="sentences"
+            autoCorrect={true}
+            spellCheck={true}
           />
         </View>
       </View>
-      <StackedButton text="Submit Check-In" onPress={handleSubmit} type="rect" />
+      <StackedButton text="Submit Check-In" onPress={handleSubmit} shape="rectangle" />
     </View>
   );
 };

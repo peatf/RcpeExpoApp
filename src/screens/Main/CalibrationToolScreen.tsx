@@ -525,6 +525,12 @@ const CalibrationToolScreen: React.FC<CalibrationToolScreenProps> = ({navigation
             multiline
             numberOfLines={4}
             textAlignVertical="top"
+            editable={true}
+            selectTextOnFocus={true}
+            blurOnSubmit={false}
+            autoCapitalize="sentences"
+            autoCorrect={true}
+            spellCheck={true}
           />
         </View>
         

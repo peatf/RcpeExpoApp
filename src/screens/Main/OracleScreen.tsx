@@ -225,9 +225,6 @@ const OracleScreen: React.FC<OracleScreenProps> = ({navigation, route}) => {
       );
       pulseAnimation.start();
     } else {
-      if (pulseAnimation) {
-        pulseAnimation.stop();
-      }
       oraclePulseAnimVal.setValue(0); // Ensure it's reset when not thinking
     }
 
