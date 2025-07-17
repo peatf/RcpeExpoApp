@@ -507,25 +507,57 @@ app.get('/api/v1/profiles/:profileId/base_chart', async (req, res) => {
         astro_north_node_sign: 'Gemini',
         birth_location: `${birthData.city_of_birth || 'Unknown'}, ${birthData.country_of_birth || 'Unknown'}`
       },
-      energy_class: { // Example data, can be expanded
+      energy_class: { // Complete energy class data
         ascendant_sign: 'Virgo',
-        chart_ruler_sign: 'Mercury in Cancer',
+        chart_ruler_sign: 'Mercury',
         chart_ruler_house: 11,
         incarnation_cross: 'Right Angle Cross of Eden',
+        incarnation_cross_quarter: 'Quarter of Initiation',
         profile_type: 'Role Model/Hermit'
       },
-      processing_core: { // Example data
+      processing_core: { // Complete processing core data
         astro_moon_sign: 'Pisces',
         astro_moon_house: 7,
-        // ... other fields
+        astro_mercury_sign: 'Cancer',
+        astro_mercury_house: 11,
+        head_state: 'Defined',
+        ajna_state: 'Undefined',
+        emotional_state: 'Defined',
+        cognition_variable: 'Strategic',
         chiron_gate: 51
       },
-      // ... other sections of the chart, ensure they are present or have defaults
-      decision_growth_vector: profile.decision_growth_vector || {}, // Add default if not present
-      drive_mechanics: profile.drive_mechanics || {},
-      manifestation_interface_rhythm: profile.manifestation_interface_rhythm || {},
-      energy_architecture: profile.energy_architecture || {},
-      tension_points: profile.tension_points || {},
+      // Complete synthesis categories with mock data
+      decision_growth_vector: profile.decision_growth_vector || {
+        strategy: 'To Inform',
+        authority: 'Emotional',
+        choice_navigation_spectrum: 'Measured response with emotional clarity',
+        astro_mars_sign: 'Aries',
+        north_node_house: 3
+      },
+      drive_mechanics: profile.drive_mechanics || {
+        motivation_color: 'Need',
+        heart_state: 'Defined',
+        root_state: 'Undefined',
+        venus_sign: 'Taurus',
+        kinetic_drive_spectrum: 'Sustainable momentum with clear direction',
+        resonance_field_spectrum: 'Magnetic attraction through authentic expression',
+        perspective_variable: 'Active'
+      },
+      manifestation_interface_rhythm: profile.manifestation_interface_rhythm || {
+        throat_definition: 'Connected',
+        throat_gates: [20, 31, 8],
+        throat_channels: ['20-34', '31-7'],
+        manifestation_rhythm_spectrum: 'Rhythmic manifestation through authentic voice'
+      },
+      energy_architecture: profile.energy_architecture || {
+        definition_type: 'Single Definition',
+        channel_list: ['20-34', '31-7', '1-8'],
+        split_bridges: []
+      },
+      tension_points: profile.tension_points || {
+        chiron_gate: 51,
+        tension_planets: ['Mars square Saturn', 'Moon opposite Pluto']
+      },
       evolutionary_path: profile.evolutionary_path || {
         g_center_access: 'Fixed Identity', // Valid values: 'Fixed Identity' or 'Fluid Identity'
         incarnation_cross: 'Right Angle Cross of Eden',
